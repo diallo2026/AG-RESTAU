@@ -4,41 +4,32 @@ Ce package remplace le backend Node.js/PostgreSQL par **Firebase Realtime
 Database**, dans le même esprit que vos autres applications (AGP/AGM) :
 tout se passe côté navigateur, sans serveur à faire tourner vous-même.
 
+**Le projet Firebase `agr-restau` est déjà configuré** dans `index.html`,
+`.firebaserc` et le workflow GitHub — vous pouvez passer directement à
+l'étape 3.
+
 ```
 agr-firebase-deploy/
 ├── index.html                 # L'application complète (1 seul fichier)
 ├── firebase.json              # Config Firebase Hosting + Database
-├── .firebaserc                 # Référence à votre projet Firebase
+├── .firebaserc                 # Référence à votre projet Firebase (agr-restau)
 ├── database.rules.json         # Règles de la Realtime Database
 └── .github/workflows/
     └── firebase-hosting-merge.yml   # Déploiement auto à chaque push
 ```
 
-## Étape 1 — Créer votre projet Firebase
+## Étape 1 — Activer la Realtime Database (si pas déjà fait)
 
-1. Allez sur https://console.firebase.google.com → **Ajouter un projet**
-2. Une fois créé, allez dans **Realtime Database** → **Créer une base de
-   données** → choisissez une région (ex. Europe) → démarrez **en mode test**
-3. Allez dans **Paramètres du projet** (⚙️) → **Vos applications** →
-   **Ajouter une application** → **Web** (icône `</>`)
-4. Copiez l'objet `firebaseConfig` qui s'affiche
+Dans https://console.firebase.google.com → projet **agr-restau** →
+**Realtime Database** → **Créer une base de données** → région Europe →
+démarrez **en mode test**. L'URL doit correspondre à celle déjà utilisée
+dans `index.html` :
+`https://agr-restau-default-rtdb.europe-west1.firebasedatabase.app/`
 
-## Étape 2 — Configurer `index.html`
+## Étape 2 — Configuration déjà intégrée
 
-Ouvrez `index.html`, cherchez ce bloc tout en haut (`<script type="module">`)
-et remplacez les valeurs `"REMPLACER..."` par celles de votre projet :
-
-```js
-const firebaseConfig = {
-  apiKey:            "...",
-  authDomain:        "....firebaseapp.com",
-  databaseURL:       "https://....firebasedatabase.app",
-  projectId:         "...",
-  storageBucket:     "....firebasestorage.app",
-  messagingSenderId: "...",
-  appId:             "..."
-};
-```
+Le bloc `firebaseConfig` en haut de `index.html` (`<script type="module">`)
+contient déjà les clés de votre projet `agr-restau`. Rien à modifier ici.
 
 ## Étape 3 — Créer votre compte Super Admin (concepteur)
 

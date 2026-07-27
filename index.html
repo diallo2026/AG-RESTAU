@@ -2,10 +2,44 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0F1319">
 <title>AGR — Application de Gestion de Restaurant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- ===========================================================
+     FIREBASE — projet agr-restau
+     =========================================================== -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, get, set, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyCNFD0DkOeiQR3OExhmQkFis54J3fX9rMQ",
+    authDomain:        "agr-restau.firebaseapp.com",
+    databaseURL:       "https://agr-restau-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:         "agr-restau",
+    storageBucket:     "agr-restau.firebasestorage.app",
+    messagingSenderId: "257290325261",
+    appId:             "1:257290325261:web:de1f1eeacb3596aa6e7444"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // Pont vers le script principal (non-module) plus bas dans la page —
+  // c'est la même technique que dans vos autres applications AGP/AGM.
+  window._agrDb   = db;
+  window._agrRef  = ref;
+  window._agrGet  = get;
+  window._agrSet  = set;
+  window._agrPush = push;
+  window._agrReady = true;
+</script>
+
 <style>
   :root{
     --ink:#0F1319;
@@ -945,15 +979,35 @@
   </div>
 </div>
 
-<input type="hidden" id="apiBaseInput" value="http://localhost:4000">
-
 <script>
   // ---------------------------------------------------------------
   // État en mémoire (jamais de localStorage/sessionStorage ici)
   // ---------------------------------------------------------------
-  let authToken = null;
   let currentRole = null;
-  let currentTenantId = null;
+  let currentTenantId = null; // = l'identifiant/code du restaurant (clé Firebase)
+
+  // ---------------------------------------------------------------
+  // Petits utilitaires Firebase (pont vers le <script type="module"> du <head>)
+  // ---------------------------------------------------------------
+  function agrRef(path){ return window._agrRef(window._agrDb, path); }
+  async function agrGet(path){
+    const snap = await window._agrGet(agrRef(path));
+    return snap.exists() ? snap.val() : null;
+  }
+  function agrSet(path, value){ return window._agrSet(agrRef(path), value); }
+
+  function slugifyCode(name){
+    return (name || 'RESTO').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'').slice(0,10) || 'RESTO';
+  }
+  async function generateUniqueCode(name){
+    const base = slugifyCode(name);
+    for(let i = 0; i < 5; i++){
+      const candidate = base + Math.floor(100 + Math.random() * 900);
+      const existing = await agrGet('agr_tenants/' + candidate + '/info');
+      if(!existing) return candidate;
+    }
+    return base + Date.now().toString().slice(-6);
+  }
 
   // ---------------------------------------------------------------
   // Démo — page publicitaire / commande client (menu, panier, caisse)
@@ -1066,10 +1120,6 @@
     rh: 'RH', employe: 'Employé', super_admin: 'Super Admin'
   };
 
-  function apiBase(){
-    return document.getElementById('apiBaseInput').value.replace(/\/$/, '');
-  }
-
   function showView(name){
     document.getElementById('view-home').style.display = name === 'home' ? 'block' : 'none';
     document.getElementById('view-storefront').style.display = name === 'storefront' ? 'block' : 'none';
@@ -1087,30 +1137,42 @@
   // ---------------------------------------------------------------
   // Nouvelle page d'accueil — accès direct par identifiant de restaurant
   // ---------------------------------------------------------------
-  function h2GoTo(){
+  async function h2GoTo(){
     const input = document.getElementById('h2-code-input');
     const err = document.getElementById('h2-code-err');
-    const code = (input.value || '').trim();
+    const code = (input.value || '').trim().toUpperCase();
 
     if(!code){
       err.textContent = "Entrez l'identifiant de votre restaurant";
       err.style.display = 'block';
       return;
     }
-    err.style.display = 'none';
+    err.textContent = 'Recherche en cours…';
+    err.style.color = '#60a5fa';
+    err.style.display = 'block';
 
-    // Préremplit le Tenant ID sur l'écran de connexion réel (branché sur /auth/login)
-    document.getElementById('loginTenantId').value = code;
-    goToAuth('login');
+    try {
+      const info = await agrGet('agr_tenants/' + code + '/info');
+      if(!info){
+        err.textContent = 'Identifiant introuvable.';
+        err.style.color = '#ef4444';
+        return;
+      }
+      err.style.display = 'none';
+      document.getElementById('loginTenantId').value = code;
+      goToAuth('login');
+    } catch(e){
+      err.textContent = 'Impossible de joindre Firebase — vérifiez la configuration (firebaseConfig).';
+      err.style.color = '#ef4444';
+    }
   }
 
   // ---------------------------------------------------------------
-  // Espace Concepteur — authentification réelle via POST /admin/login
-  // (voir routes/adminAuth.js du backend Phase 0) — plus aucun mot de
-  // passe en dur côté frontend.
+  // Espace Concepteur — authentification via Firebase (agr_platform_admins)
+  // ⚠️ Mot de passe stocké en clair dans la Realtime Database : acceptable
+  // pour une démo/déploiement simple, mais à faire évoluer vers Firebase
+  // Authentication si vous voulez une vraie sécurité côté serveur plus tard.
   // ---------------------------------------------------------------
-  let adminToken = null;
-
   function toggleConcepteurNote(){
     const note = document.getElementById('h2ConcepteurNote');
     const isOpen = note.style.display === 'block';
@@ -1122,7 +1184,6 @@
       document.getElementById('conceptEmailInput').value = '';
       document.getElementById('conceptPasswordInput').value = '';
       document.getElementById('conceptPasswordErr').style.display = 'none';
-      adminToken = null;
     }
   }
 
@@ -1142,25 +1203,20 @@
     btn.disabled = true; btn.textContent = 'Connexion…';
 
     try {
-      const res = await fetch(apiBase() + '/admin/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ email, password })
-      });
-      const data = await res.json();
+      const admins = await agrGet('agr_platform_admins') || {};
+      const match = Object.values(admins).find(a => a.email === email && a.password === password);
 
-      if(!res.ok){
-        err.textContent = data.error || 'Identifiants invalides.';
+      if(!match){
+        err.textContent = 'Identifiants invalides.';
         err.style.display = 'block';
         return;
       }
 
-      adminToken = data.token;
       document.getElementById('conceptPasswordView').style.display = 'none';
       document.getElementById('conceptAdminView').style.display = 'block';
       loadConcepteurStats();
     } catch (e) {
-      err.textContent = 'Impossible de joindre le serveur (' + apiBase() + ').';
+      err.textContent = 'Impossible de joindre Firebase — vérifiez la configuration (firebaseConfig).';
       err.style.display = 'block';
     } finally {
       btn.disabled = false; btn.textContent = 'Accéder';
@@ -1171,20 +1227,14 @@
     const note = document.getElementById('conceptStatsNote');
     note.textContent = 'Chargement des statistiques…';
     try {
-      const res = await fetch(apiBase() + '/admin/tenants', {
-        headers: { 'Authorization': 'Bearer ' + adminToken }
-      });
-      const data = await res.json();
-      if(!res.ok){
-        note.textContent = 'Erreur : ' + (data.error || res.status);
-        return;
-      }
-      document.getElementById('conceptStatTotal').textContent = data.total;
-      document.getElementById('conceptStatActifs').textContent = data.actifs;
-      document.getElementById('conceptStatBloques').textContent = data.bloques;
+      const tenants = await agrGet('agr_tenants') || {};
+      const infos = Object.values(tenants).map(t => t.info).filter(Boolean);
+      document.getElementById('conceptStatTotal').textContent = infos.length;
+      document.getElementById('conceptStatActifs').textContent = infos.filter(i => i.statut === 'actif' || i.statut === 'essai').length;
+      document.getElementById('conceptStatBloques').textContent = infos.filter(i => i.statut === 'bloque').length;
       note.textContent = '';
     } catch (e) {
-      note.textContent = 'Serveur injoignable pour charger les statistiques.';
+      note.textContent = 'Impossible de charger les statistiques depuis Firebase.';
     }
   }
 
@@ -1213,41 +1263,16 @@
   }
 
   // ---------------------------------------------------------------
-  // Test de connexion au backend
-  // ---------------------------------------------------------------
-  async function checkApi(){
-    const dot = document.getElementById('apiDot');
-    const txt = document.getElementById('apiStatusText');
-    txt.textContent = 'test en cours…';
-    dot.className = 'dot';
-    try {
-      const res = await fetch(apiBase() + '/auth/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({}) // requête volontairement incomplète : on veut juste voir si le serveur répond
-      });
-      // Le serveur AGR répond 400 (champs manquants) : c'est le signe qu'il est bien joignable.
-      if(res.status){
-        dot.className = 'dot ok';
-        txt.textContent = 'backend joignable (HTTP ' + res.status + ')';
-      }
-    } catch(err){
-      dot.className = 'dot err';
-      txt.textContent = 'injoignable — vérifiez l\'URL et que le serveur tourne (npm run dev)';
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // Connexion réelle : POST /auth/login
+  // Connexion réelle — vérifie le restaurant et l'utilisateur dans Firebase
   // ---------------------------------------------------------------
   async function doLogin(){
     showBanner('loginError', null);
-    const tenantId = document.getElementById('loginTenantId').value.trim();
+    const tenantCode = document.getElementById('loginTenantId').value.trim().toUpperCase();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
 
-    if(!tenantId || !email || !password){
-      showBanner('loginError', 'Veuillez remplir le Tenant ID, l\'email et le mot de passe.');
+    if(!tenantCode || !email || !password){
+      showBanner('loginError', "Veuillez remplir l'identifiant du restaurant, l'email et le mot de passe.");
       return;
     }
 
@@ -1255,51 +1280,57 @@
     btn.disabled = true; btn.textContent = 'Connexion…';
 
     try {
-      const res = await fetch(apiBase() + '/auth/login', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ tenantId, email, password })
-      });
-      const data = await res.json();
+      const info = await agrGet('agr_tenants/' + tenantCode + '/info');
+      if(!info){
+        showBanner('loginError', 'Restaurant introuvable pour cet identifiant.');
+        return;
+      }
 
-      if(res.status === 402){
-        // Licence bloquée / expirée — message renvoyé tel quel par le backend
-        document.getElementById('blockedText').textContent = data.message || 'Contactez le fournisseur.';
+      // Blocage automatique si la date d'expiration est dépassée
+      if(info.statut !== 'bloque' && info.dateExpiration && Date.now() > info.dateExpiration){
+        await agrSet('agr_tenants/' + tenantCode + '/info/statut', 'bloque');
+        info.statut = 'bloque';
+      }
+
+      if(info.statut === 'bloque'){
+        document.getElementById('blockedText').textContent =
+          "par suite du non-paiement de la licence. Veuillez contacter le fournisseur afin d'obtenir votre licence.";
         showView('blocked');
         return;
       }
-      if(!res.ok){
-        showBanner('loginError', data.error || 'Identifiants invalides.');
+
+      const users = await agrGet('agr_tenants/' + tenantCode + '/users') || {};
+      const match = Object.values(users).find(u => u.email === email && u.password === password);
+
+      if(!match){
+        showBanner('loginError', 'Identifiants invalides.');
         return;
       }
 
-      authToken = data.token;
-      currentRole = data.role;
-      currentTenantId = tenantId;
+      currentRole = match.role;
+      currentTenantId = tenantCode;
       await enterDashboard();
     } catch(err){
-      showBanner('loginError', 'Impossible de joindre le serveur (' + apiBase() + '). Le backend tourne-t-il ?');
+      showBanner('loginError', 'Impossible de joindre Firebase — vérifiez la configuration (firebaseConfig) dans le fichier.');
     } finally {
       btn.disabled = false; btn.textContent = 'Se connecter';
     }
   }
 
   // ---------------------------------------------------------------
-  // Inscription réelle : POST /auth/register-restaurant
+  // Inscription réelle — crée le restaurant et son DG dans Firebase
   // ---------------------------------------------------------------
   async function doRegister(){
     showBanner('registerError', null);
     showBanner('registerSuccess', null);
 
-    const payload = {
-      nomRestaurant: document.getElementById('regNomRestaurant').value.trim(),
-      ville: document.getElementById('regVille').value.trim(),
-      dgEmail: document.getElementById('regDgEmail').value.trim(),
-      dgNom: document.getElementById('regDgNom').value.trim(),
-      dgPassword: document.getElementById('regDgPassword').value,
-    };
+    const nomRestaurant = document.getElementById('regNomRestaurant').value.trim();
+    const ville = document.getElementById('regVille').value.trim();
+    const dgEmail = document.getElementById('regDgEmail').value.trim();
+    const dgNom = document.getElementById('regDgNom').value.trim();
+    const dgPassword = document.getElementById('regDgPassword').value;
 
-    if(!payload.nomRestaurant || !payload.dgEmail || !payload.dgPassword){
+    if(!nomRestaurant || !dgEmail || !dgPassword){
       showBanner('registerError', 'Nom du restaurant, email et mot de passe du DG sont requis.');
       return;
     }
@@ -1308,64 +1339,44 @@
     btn.disabled = true; btn.textContent = 'Création…';
 
     try {
-      const res = await fetch(apiBase() + '/auth/register-restaurant', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
+      const code = await generateUniqueCode(nomRestaurant);
+      const now = Date.now();
+
+      await agrSet('agr_tenants/' + code + '/info', {
+        nomRestaurant, ville, dgEmail, dgNom,
+        statut: 'essai',
+        dateCreation: now,
+        dateExpiration: now + 14 * 24 * 60 * 60 * 1000, // essai de 14 jours
       });
-      const data = await res.json();
+      await agrSet('agr_tenants/' + code + '/users/dg', {
+        role: 'dg', nom: dgNom || nomRestaurant, email: dgEmail, password: dgPassword,
+      });
 
-      if(!res.ok){
-        showBanner('registerError', data.error || 'La création a échoué.');
-        return;
-      }
-
-      showBanner('registerSuccess', 'Restaurant créé. Tenant ID : ' + data.tenantId + ' — utilisez-le pour vous connecter.');
-      document.getElementById('loginTenantId').value = data.tenantId;
-      document.getElementById('loginEmail').value = payload.dgEmail;
+      showBanner('registerSuccess', 'Restaurant créé. Identifiant : ' + code + ' — utilisez-le pour vous connecter.');
+      document.getElementById('loginTenantId').value = code;
+      document.getElementById('loginEmail').value = dgEmail;
       setTimeout(() => toggleAuthPanel('login'), 1800);
     } catch(err){
-      showBanner('registerError', 'Impossible de joindre le serveur (' + apiBase() + '). Le backend tourne-t-il ?');
+      showBanner('registerError', "Impossible d'écrire dans Firebase — vérifiez la configuration (firebaseConfig) et les règles de la base (database.rules.json).");
     } finally {
       btn.disabled = false; btn.textContent = 'Créer le restaurant';
     }
   }
 
   // ---------------------------------------------------------------
-  // Une fois connecté : vérifie la licence et affiche le dashboard
+  // Une fois connecté : affiche le dashboard (licence déjà vérifiée dans doLogin)
   // ---------------------------------------------------------------
   async function enterDashboard(){
     showBanner('dashboardError', null);
     document.getElementById('userAvatar').textContent = (roleLabels[currentRole] || currentRole || '?').slice(0,2).toUpperCase();
     document.getElementById('userName').textContent = document.getElementById('loginEmail').value || 'Utilisateur';
     document.getElementById('userRole').textContent = roleLabels[currentRole] || currentRole;
-    document.getElementById('tenantStatus').textContent = 'Tenant ' + currentTenantId.slice(0,8) + '… — vérification licence…';
-
-    try {
-      const res = await fetch(apiBase() + '/api/ping-tenant', {
-        headers: { 'Authorization': 'Bearer ' + authToken }
-      });
-      const data = await res.json();
-
-      if(res.status === 402){
-        document.getElementById('blockedText').textContent = data.message || 'Contactez le fournisseur.';
-        showView('blocked');
-        return;
-      }
-      if(!res.ok){
-        showBanner('dashboardError', 'Connecté, mais /api/ping-tenant a renvoyé une erreur : ' + (data.error || res.status));
-      } else {
-        document.getElementById('tenantStatus').textContent = 'Licence active — rôle : ' + data.role;
-      }
-      showView('dashboard');
-    } catch(err){
-      showBanner('dashboardError', 'Connecté, mais le serveur est devenu injoignable pour la vérification de licence.');
-      showView('dashboard');
-    }
+    document.getElementById('tenantStatus').textContent = 'Restaurant ' + currentTenantId + ' — licence active';
+    showView('dashboard');
   }
 
   function doLogout(){
-    authToken = null; currentRole = null; currentTenantId = null;
+    currentRole = null; currentTenantId = null;
     document.getElementById('loginPassword').value = '';
     showView('home');
   }
