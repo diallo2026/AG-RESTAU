@@ -1504,6 +1504,11 @@
               <input type="color" id="paramSidebarBg" value="#2FA0DB" onchange="choisirThemeSidebar(this.value)">
             </div>
           </div>
+
+          <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line);">
+            <label style="display:block; font-size:12px; color:var(--text-dim); margin-bottom:10px;">Thème du tableau de bord (fond des pages, panneaux, tableaux)</label>
+            <div id="contentThemeSwatches" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
+          </div>
         </div>
 
         <div class="panel" style="margin-top:16px;">
@@ -1668,6 +1673,44 @@
     if(!currentTenantId) return;
     try {
       await agrSet('agr_tenants/' + currentTenantId + '/info/sidebarBg', hex);
+    } catch(e){}
+  }
+
+  // ---------------------------------------------------------------
+  // Thème du tableau de bord (fond principal, panneaux, tableaux) —
+  // ne doit pas rester figé en noir sombre : plusieurs préréglages.
+  // ---------------------------------------------------------------
+  const CONTENT_THEMES = {
+    sombre:  { nom:'Sombre',  preview:'#12161c', ink:'#0F1319', surface:'#171D25', surface2:'#1E2630', line:'#2B3440', text:'#EDEAE2', textDim:'#9AA4B2' },
+    clair:   { nom:'Clair',   preview:'#F5F6F8', ink:'#F5F6F8', surface:'#FFFFFF', surface2:'#F0F1F4', line:'#DDE1E6', text:'#12161C', textDim:'#5B6472' },
+    ardoise: { nom:'Ardoise', preview:'#232E3D', ink:'#1B2430', surface:'#232E3D', surface2:'#2A3646', line:'#3A475A', text:'#E7EBF0', textDim:'#9FAAB8' },
+  };
+
+  function renderContentThemeSwatches(){
+    const el = document.getElementById('contentThemeSwatches');
+    if(!el || el.children.length) return;
+    el.innerHTML = Object.entries(CONTENT_THEMES).map(([key,t]) => `
+      <button onclick="choisirThemeContenu('${key}')" title="${t.nom}"
+        style="width:64px; height:34px; border-radius:8px; background:${t.preview}; border:2px solid var(--line); cursor:pointer; color:${key==='clair'?'#12161c':'#fff'}; font-size:10px;">${t.nom}</button>
+    `).join('');
+  }
+
+  function applyContentTheme(key){
+    const t = CONTENT_THEMES[key] || CONTENT_THEMES.sombre;
+    const root = document.documentElement.style;
+    root.setProperty('--ink', t.ink);
+    root.setProperty('--surface', t.surface);
+    root.setProperty('--surface-2', t.surface2);
+    root.setProperty('--line', t.line);
+    root.setProperty('--text', t.text);
+    root.setProperty('--text-dim', t.textDim);
+  }
+
+  async function choisirThemeContenu(key){
+    applyContentTheme(key);
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/info/contentTheme', key);
     } catch(e){}
   }
 
@@ -2508,6 +2551,7 @@
       updateDashboardSeal(info.logo || null);
       if(info.themeAccent || info.themeSecondary) applyTheme(info.themeAccent, info.themeSecondary);
       if(info.sidebarBg) applySidebarTheme(info.sidebarBg);
+      if(info.contentTheme) applyContentTheme(info.contentTheme);
       document.querySelector('.sidebar .brandmark .name').textContent = info.nomRestaurant || currentTenantId;
       document.querySelector('.sidebar .brandmark .sub').textContent = (info.ville || '') + ' · ' + (info.devise || 'GNF');
     } catch(e){}
@@ -2550,6 +2594,8 @@
       renderSidebarThemeSwatches();
       if(info.sidebarBg) applySidebarTheme(info.sidebarBg);
       else document.getElementById('paramSidebarBg').value = '#2FA0DB';
+      renderContentThemeSwatches();
+      if(info.contentTheme) applyContentTheme(info.contentTheme);
       document.getElementById('paramFraisService').value = info.fraisService || 0;
       loadZones();
     } catch(e){
