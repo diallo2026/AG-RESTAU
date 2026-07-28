@@ -525,17 +525,27 @@
   .app-shell{display:flex; min-height:100vh;}
 
   .sidebar{
-    width:248px; background:var(--surface);
+    width:248px; background:#2FA0DB;
     border-right:1px solid var(--line);
-    padding:22px 14px; flex-shrink:0;
+    padding:64px 14px 22px; flex-shrink:0;
     display:flex; flex-direction:column;
   }
   .sidebar .brandmark{display:flex; align-items:center; gap:12px; padding:0 8px 14px;}
-  .sidebar .brandmark span.name{font-family:'Fraunces',serif; font-size:17px;}
-  .sidebar .brandmark span.sub{display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em;}
+  .sidebar .brandmark span.name{font-family:'Fraunces',serif; font-size:17px; color:#fff;}
+  .sidebar .brandmark span.sub{display:block; font-size:10px; color:rgba(255,255,255,0.75); text-transform:uppercase; letter-spacing:0.1em;}
+
+  .sidebar .nav-group .grouplabel{color:rgba(255,255,255,0.65);}
+  .sidebar .navlink{color:#fff;}
+  .sidebar .navlink:hover{background:rgba(255,255,255,0.14); color:#fff;}
+  .sidebar .navlink.active{background:rgba(255,255,255,0.22); color:#fff;}
+  .sidebar .navlink.active .ic{color:#fff;}
+  .sidebar .user-mini .name{color:#fff;}
+  .sidebar .user-mini .role{color:rgba(255,255,255,0.75);}
+  .sidebar .logout-btn{background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.3); color:#fff;}
+  .sidebar .logout-btn:hover{border-color:#fff; color:#fff; background:rgba(255,255,255,0.22);}
 
   .conn-status{
-    position:fixed; top:14px; left:14px; z-index:300;
+    position:fixed; top:14px; right:14px; z-index:300;
     display:flex; align-items:center; gap:9px;
     padding:9px 16px;
     background:#0A0D11; border:1px solid var(--line); border-radius:8px;
@@ -3870,7 +3880,7 @@
     window._agrOnValue(agrRef('.info/connected'), (snap) => {
       const connected = snap.val() === true;
       dot.className = 'conn-dot ' + (connected ? 'ok' : 'err');
-      txt.textContent = connected ? 'Base en ligne' : 'Hors ligne';
+      txt.textContent = connected ? 'En ligne' : 'Hors ligne';
     });
   }
 
