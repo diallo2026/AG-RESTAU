@@ -778,18 +778,26 @@
   <nav class="storefront-nav">
     <div class="brandmark">
       <div class="seal">AGR</div>
-      <div><span class="name" style="font-family:'Fraunces',serif;font-size:15px;">Le Gourmet</span></div>
+      <div><span class="name" id="storeRestaurantName" style="font-family:'Fraunces',serif;font-size:15px;">Page publicitaire</span></div>
     </div>
     <div class="back" onclick="showView('home')">← Retour à AGR</div>
   </nav>
 
   <div class="storefront-hero">
     <div class="eyebrow">Page publicitaire du restaurant</div>
-    <h1>Le Gourmet — Kindia</h1>
-    <p>Cuisine guinéenne généreuse, préparée à la commande. Composez votre commande ci-dessous ; le paiement est enregistré directement dans la caisse du restaurant.</p>
+    <h1 id="storeHeroTitle">Trouvez un restaurant</h1>
+    <p id="storeHeroText">Entrez l'identifiant du restaurant pour voir son menu et passer commande.</p>
   </div>
 
-  <div class="storefront-body">
+  <div style="max-width:440px; margin:0 auto 30px; padding:0 24px;">
+    <div class="h2-access-row" style="border-color:rgba(201,162,39,0.45);">
+      <input type="text" id="storeCodeInput" placeholder="IDENTIFIANT DU RESTAURANT" onkeydown="if(event.key==='Enter')chargerBoutique()">
+      <button onclick="chargerBoutique()" style="background:linear-gradient(135deg,var(--gold),var(--gold-soft)); color:#181205;">Voir le menu</button>
+    </div>
+    <div class="h2-access-err" id="storeCodeErr" style="color:#E19488;"></div>
+  </div>
+
+  <div class="storefront-body" id="storeBody" style="display:none;">
     <div class="menu-grid" id="storeMenuGrid"></div>
 
     <div class="cart-panel">
@@ -848,6 +856,18 @@
       <div class="field">
         <label>Ville</label>
         <input type="text" id="regVille" placeholder="Kindia">
+      </div>
+      <div class="field">
+        <label>Adresse</label>
+        <input type="text" id="regAdresse" placeholder="Quartier, avenue...">
+      </div>
+      <div class="field">
+        <label>Téléphone du restaurant</label>
+        <input type="text" id="regTelephone" placeholder="+224 6xx xx xx xx">
+      </div>
+      <div class="field">
+        <label>Nombre de tables</label>
+        <input type="number" id="regNombreTables" placeholder="10" min="0">
       </div>
       <div class="field">
         <label>Email du DG</label>
@@ -942,36 +962,27 @@
       <!-- ===== Section : Tableau de bord (aperçu) ===== -->
       <div class="dash-section" id="section-overview">
         <div class="kpi-row">
-          <div class="kpi-card"><div class="lbl">CA du jour</div><div class="val mono">4 280 000</div><div class="delta up">▲ 6,4% vs hier</div></div>
-          <div class="kpi-card"><div class="lbl">CA du mois</div><div class="val mono">98 650 000</div><div class="delta up">▲ 3,1%</div></div>
-          <div class="kpi-card"><div class="lbl">Solde caisse</div><div class="val mono">2 140 500</div><div class="delta up">▲ stable</div></div>
-          <div class="kpi-card"><div class="lbl">Commandes</div><div class="val mono">84</div><div class="delta down">▼ 3 annulées</div></div>
-          <div class="kpi-card"><div class="lbl">Employés présents</div><div class="val mono">12 / 15</div><div class="delta down">▼ 3 absents</div></div>
+          <div class="kpi-card"><div class="lbl">CA du jour</div><div class="val mono" id="kpiCaJour">0 GNF</div></div>
+          <div class="kpi-card"><div class="lbl">CA du mois</div><div class="val mono" id="kpiCaMois">0 GNF</div></div>
+          <div class="kpi-card"><div class="lbl">Commandes</div><div class="val mono" id="kpiCommandes">0</div></div>
+          <div class="kpi-card"><div class="lbl">Plats vendus</div><div class="val mono" id="kpiPlatsVendus">0</div></div>
+          <div class="kpi-card"><div class="lbl">Effectif</div><div class="val mono" id="kpiEffectif">0</div></div>
         </div>
 
         <div class="grid-2">
           <div class="panel">
             <h3>Évolution des ventes</h3>
-            <div class="sub">7 derniers jours — GNF (milliers)</div>
-            <div class="chart-wrap">
-              <div class="bar" style="height:55%"><span class="tag">Lun</span></div>
-              <div class="bar" style="height:70%"><span class="tag">Mar</span></div>
-              <div class="bar" style="height:48%"><span class="tag">Mer</span></div>
-              <div class="bar" style="height:82%"><span class="tag">Jeu</span></div>
-              <div class="bar" style="height:64%"><span class="tag">Ven</span></div>
-              <div class="bar" style="height:95%"><span class="tag">Sam</span></div>
-              <div class="bar" style="height:88%"><span class="tag">Dim</span></div>
+            <div class="sub">7 derniers jours — GNF</div>
+            <div class="chart-wrap" id="salesChartWrap">
+              <div style="color:var(--text-dim); font-size:12.5px; padding:20px 0;">Aucune vente enregistrée pour l'instant.</div>
             </div>
           </div>
           <div class="panel">
-            <h3>Alertes stock</h3>
-            <div class="sub">Produits à surveiller</div>
-            <ul class="alert-list">
-              <li>Riz parfumé (25kg) <span class="tagpill low">Faible</span></li>
-              <li>Poulet fermier <span class="tagpill out">Rupture</span></li>
-              <li>Huile de palme <span class="tagpill low">Faible</span></li>
-              <li>Jus de bissap <span class="tagpill out">Rupture</span></li>
-            </ul>
+            <h3>Menu</h3>
+            <div class="sub" id="menuSummarySub">Aucun plat au menu pour l'instant.</div>
+            <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">
+              Ajoutez vos premiers plats dans l'onglet <strong>Menu & Catégories</strong> pour commencer à vendre.
+            </div>
           </div>
         </div>
       </div>
@@ -980,29 +991,15 @@
       <div class="dash-section" id="section-tables" style="display:none;">
         <div class="panel">
           <h3>Plan des tables</h3>
-          <div class="sub">16 tables — 6 libres, 8 occupées, 2 réservées</div>
-          <div class="tables-grid">
-            <div class="table-cell libre">T1</div>
-            <div class="table-cell occupee">T2</div>
-            <div class="table-cell occupee">T3</div>
-            <div class="table-cell libre">T4</div>
-            <div class="table-cell reservee">T5</div>
-            <div class="table-cell occupee">T6</div>
-            <div class="table-cell libre">T7</div>
-            <div class="table-cell occupee">T8</div>
-            <div class="table-cell occupee">T9</div>
-            <div class="table-cell libre">T10</div>
-            <div class="table-cell reservee">T11</div>
-            <div class="table-cell occupee">T12</div>
-            <div class="table-cell libre">T13</div>
-            <div class="table-cell occupee">T14</div>
-            <div class="table-cell libre">T15</div>
-            <div class="table-cell occupee">T16</div>
-          </div>
+          <div class="sub" id="tablesSub">Configurez le nombre de tables dans Paramètres.</div>
+          <div class="tables-grid" id="tablesGrid"></div>
           <div class="legend">
             <span><i class="libre"></i> Libre</span>
             <span><i class="occupee"></i> Occupée</span>
             <span><i class="reservee"></i> Réservée</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-dim); margin-top:12px;">
+            Le suivi en temps réel de l'occupation (ouverture/fermeture de table) arrive dans une prochaine phase — chaque table est affichée "libre" par défaut.
           </div>
         </div>
       </div>
@@ -1016,19 +1013,32 @@
             <thead>
               <tr><th>Commande</th><th>Origine</th><th>Plats vendus</th><th>Revenu</th></tr>
             </thead>
-            <tbody id="ordersTableBody"></tbody>
+            <tbody id="ordersTableBody"><tr><td colspan="4" style="color:var(--text-dim);">Aucune commande pour l'instant.</td></tr></tbody>
           </table>
         </div>
       </div>
 
-      <!-- ===== Sections à venir (modules futurs) ===== -->
+      <!-- ===== Section : Menu & Catégories (réel, éditable) ===== -->
       <div class="dash-section" id="section-menu" style="display:none;">
-        <div class="panel empty-panel">
-          <div class="empty-ic">🍽</div>
-          <h3>Menu & Catégories</h3>
-          <p>La gestion des catégories et des plats (photo, prix, ingrédients, disponibilité) arrive dans une prochaine phase.</p>
+        <div class="panel">
+          <h3>Ajouter un plat</h3>
+          <div class="banner error" id="menuError"></div>
+          <div class="field"><label>Nom du plat</label><input type="text" id="menuFormNom" placeholder="Riz gras au poisson"></div>
+          <div class="field"><label>Catégorie</label><input type="text" id="menuFormCategorie" placeholder="Plat principal"></div>
+          <div class="field"><label>Prix de vente (GNF)</label><input type="number" id="menuFormPrixVente" min="0"></div>
+          <div class="field"><label>Prix d'achat (GNF)</label><input type="number" id="menuFormPrixAchat" min="0"></div>
+          <button class="btn-primary" onclick="ajouterPlat()">+ Ajouter le plat</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Vos plats</h3>
+          <div class="sub" id="menuListSub">Aucun plat pour l'instant.</div>
+          <table class="commandes-table" id="menuTable">
+            <thead><tr><th>Plat</th><th>Catégorie</th><th>Prix vente</th><th>Marge</th><th>Disponible</th><th></th></tr></thead>
+            <tbody id="menuTableBody"></tbody>
+          </table>
         </div>
       </div>
+
       <div class="dash-section" id="section-stocks" style="display:none;">
         <div class="panel empty-panel">
           <div class="empty-ic">▣</div>
@@ -1050,13 +1060,39 @@
           <p>Journal, grand livre, bilan et exports PDF/Excel — module à venir.</p>
         </div>
       </div>
+
+      <!-- ===== Section : Ressources Humaines / Employés (réel, éditable) ===== -->
       <div class="dash-section" id="section-rh" style="display:none;">
-        <div class="panel empty-panel">
-          <div class="empty-ic">◐</div>
-          <h3>Ressources Humaines</h3>
-          <p>Dossiers employés, pointage biométrique et évaluation — module à venir.</p>
+        <div class="panel">
+          <h3>Ajouter un employé</h3>
+          <div class="sub">Le Fondateur et le DG peuvent créer des comptes pour leurs gérants et employés.</div>
+          <div class="banner error" id="rhError"></div>
+          <div class="field"><label>Nom</label><input type="text" id="rhFormNom" placeholder="Mamadou Bah"></div>
+          <div class="field"><label>Email (identifiant de connexion)</label><input type="email" id="rhFormEmail" placeholder="mamadou@legourmet.gn"></div>
+          <div class="field"><label>Mot de passe</label><input type="password" id="rhFormPassword"></div>
+          <div class="field">
+            <label>Rôle</label>
+            <select id="rhFormRole" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
+              <option value="gerant">Gérant</option>
+              <option value="caissier">Caissier</option>
+              <option value="serveur">Serveur</option>
+              <option value="rh">RH</option>
+              <option value="comptable">Comptable</option>
+              <option value="employe">Employé</option>
+            </select>
+          </div>
+          <button class="btn-primary" onclick="ajouterEmploye()">+ Ajouter l'employé</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Équipe</h3>
+          <div class="sub" id="rhListSub">Chargement…</div>
+          <table class="commandes-table" id="rhTable">
+            <thead><tr><th>Nom</th><th>Rôle</th><th>Email</th><th></th></tr></thead>
+            <tbody id="rhTableBody"></tbody>
+          </table>
         </div>
       </div>
+
       <div class="dash-section" id="section-audit" style="display:none;">
         <div class="panel empty-panel">
           <div class="empty-ic">≣</div>
@@ -1065,31 +1101,32 @@
         </div>
       </div>
 
-      <!-- ===== Section : Paramètres ===== -->
+      <!-- ===== Section : Paramètres (réel, éditable) ===== -->
       <div class="dash-section" id="section-parametres" style="display:none;">
         <div class="panel">
           <h3>Paramètres du restaurant</h3>
-          <div class="sub">Gère les informations générales de votre établissement</div>
+          <div class="sub">Modifiez toutes les informations générales de votre établissement</div>
           <div class="banner error" id="paramsError"></div>
           <div class="banner info" id="paramsSuccess"></div>
 
-          <div class="field">
-            <label>Nom du restaurant</label>
-            <input type="text" id="paramNom">
-          </div>
-          <div class="field">
-            <label>Ville</label>
-            <input type="text" id="paramVille">
-          </div>
-          <div class="field">
-            <label>Devise</label>
-            <input type="text" id="paramDevise" placeholder="GNF">
-          </div>
-          <div class="field">
-            <label>Langue</label>
-            <input type="text" id="paramLangue" placeholder="fr">
-          </div>
+          <div class="field"><label>Nom du restaurant</label><input type="text" id="paramNom"></div>
+          <div class="field"><label>Ville</label><input type="text" id="paramVille"></div>
+          <div class="field"><label>Adresse</label><input type="text" id="paramAdresse"></div>
+          <div class="field"><label>Téléphone</label><input type="text" id="paramTelephone"></div>
+          <div class="field"><label>Email de contact</label><input type="email" id="paramEmail"></div>
+          <div class="field"><label>Nombre de tables</label><input type="number" id="paramNombreTables" min="0"></div>
+          <div class="field"><label>Devise</label><input type="text" id="paramDevise" placeholder="GNF"></div>
+          <div class="field"><label>Langue</label><input type="text" id="paramLangue" placeholder="fr"></div>
           <button class="btn-primary" onclick="saveParametres()">Enregistrer les modifications</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Mon mot de passe</h3>
+          <div class="sub">Change le mot de passe du compte actuellement connecté (<span id="paramCurrentUserLabel"></span>)</div>
+          <div class="banner error" id="passwordError"></div>
+          <div class="banner info" id="passwordSuccess"></div>
+          <div class="field"><label>Nouveau mot de passe</label><input type="password" id="paramNewPassword"></div>
+          <button class="btn-outline" style="color:var(--text);" onclick="changeMyPassword()">Changer mon mot de passe</button>
         </div>
 
         <div class="panel" style="margin-top:16px;">
@@ -1143,35 +1180,68 @@
   }
 
   // ---------------------------------------------------------------
-  // Démo — page publicitaire / commande client (menu, panier, caisse)
+  // Page publicitaire — menu réel du restaurant choisi, panier, paiement
+  // écrit une vraie commande dans agr_tenants/{code}/commandes
   // ---------------------------------------------------------------
-  const menuItems = [
-    { id:'m1', cat:'Plat principal', name:'Riz gras au poisson', desc:'Riz parfumé, légumes locaux, poisson braisé.', prix:35000 },
-    { id:'m2', cat:'Plat principal', name:'Poulet yassa', desc:'Poulet mariné aux oignons, sauce citronnée.', prix:40000 },
-    { id:'m3', cat:'Grillades', name:'Brochettes de bœuf', desc:'Brochettes marinées, servies avec attiéké.', prix:30000 },
-    { id:'m4', cat:'Entrée', name:'Salade fraîcheur', desc:'Légumes de saison, vinaigrette maison.', prix:15000 },
-    { id:'m5', cat:'Boisson', name:'Jus de bissap', desc:'Infusion d\'hibiscus, fraîche et sucrée.', prix:8000 },
-    { id:'m6', cat:'Dessert', name:'Beignets sucrés', desc:'Servis chauds, sucre en poudre.', prix:10000 },
-  ];
-  let cart = {}; // { itemId: quantite }
+  let storeTenantCode = null;
+  let storeMenuItems = [];
+  let cart = {}; // { produitId: quantite }
 
-  // Commandes existantes (salle) + celles créées via la page publicitaire
-  let demoOrders = [
-    { label:'Commande #114', origine:'Salle', plats:6, revenu:186000 },
-    { label:'Commande #115', origine:'Salle', plats:3, revenu:95000 },
-    { label:'Commande #116', origine:'Page publicitaire', plats:4, revenu:98000 },
-  ];
+  async function chargerBoutique(){
+    const input = document.getElementById('storeCodeInput');
+    const err = document.getElementById('storeCodeErr');
+    const code = (input.value || '').trim().toUpperCase();
 
-  function renderMenu(){
+    if(!code){
+      err.textContent = "Entrez l'identifiant du restaurant";
+      err.style.display = 'block';
+      return;
+    }
+    err.textContent = 'Recherche en cours…';
+    err.style.color = '#60a5fa';
+    err.style.display = 'block';
+
+    try {
+      const info = await agrGet('agr_tenants/' + code + '/info');
+      if(!info){
+        err.textContent = 'Identifiant introuvable.';
+        err.style.color = '#ef4444';
+        return;
+      }
+
+      storeTenantCode = code;
+      cart = {};
+      err.style.display = 'none';
+      document.getElementById('storeRestaurantName').textContent = info.nomRestaurant || code;
+      document.getElementById('storeHeroTitle').textContent = (info.nomRestaurant || code) + (info.ville ? ' — ' + info.ville : '');
+      document.getElementById('storeHeroText').textContent = 'Composez votre commande ci-dessous ; le paiement est enregistré directement dans la caisse du restaurant.';
+      document.getElementById('storeBody').style.display = 'grid';
+
+      const produits = await agrGet('agr_tenants/' + code + '/produits') || {};
+      storeMenuItems = Object.entries(produits)
+        .map(([id, p]) => ({ id, ...p }))
+        .filter(p => p.disponible !== false);
+      renderStoreMenu();
+      renderCart();
+    } catch(e){
+      err.textContent = 'Impossible de joindre Firebase.';
+      err.style.color = '#ef4444';
+    }
+  }
+
+  function renderStoreMenu(){
     const grid = document.getElementById('storeMenuGrid');
     if(!grid) return;
-    grid.innerHTML = menuItems.map(item => `
+    if(storeMenuItems.length === 0){
+      grid.innerHTML = '<div style="color:var(--text-dim); font-size:13px; padding:20px;">Ce restaurant n\'a pas encore ajouté de plats à son menu.</div>';
+      return;
+    }
+    grid.innerHTML = storeMenuItems.map(item => `
       <div class="menu-item">
-        <div class="mcat">${item.cat}</div>
-        <div class="mname">${item.name}</div>
-        <div class="mdesc">${item.desc}</div>
+        <div class="mcat">${item.categorie || 'Plat'}</div>
+        <div class="mname">${item.nom}</div>
         <div class="mfoot">
-          <span class="mprice mono">${item.prix.toLocaleString('fr-FR')} GNF</span>
+          <span class="mprice mono">${Number(item.prixVente || 0).toLocaleString('fr-FR')} GNF</span>
           <button class="maddbtn" onclick="addToCart('${item.id}')">Ajouter</button>
         </div>
       </div>
@@ -1196,55 +1266,81 @@
 
     let total = 0;
     linesEl.innerHTML = entries.map(([id, qty]) => {
-      const item = menuItems.find(m => m.id === id);
-      const lineTotal = item.prix * qty;
+      const item = storeMenuItems.find(m => m.id === id);
+      if(!item) return '';
+      const lineTotal = (item.prixVente || 0) * qty;
       total += lineTotal;
-      return `<div class="cart-line"><span><span class="qty">${qty}×</span>${item.name}</span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span></div>`;
+      return `<div class="cart-line"><span><span class="qty">${qty}×</span>${item.nom}</span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span></div>`;
     }).join('');
     totalEl.textContent = total.toLocaleString('fr-FR') + ' GNF';
   }
 
-  function payOrder(){
+  async function payOrder(){
     const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
-    if(entries.length === 0) return;
+    if(entries.length === 0 || !storeTenantCode) return;
 
     let totalPlats = 0, totalRevenu = 0;
+    const platsCommande = {};
     entries.forEach(([id, qty]) => {
-      const item = menuItems.find(m => m.id === id);
+      const item = storeMenuItems.find(m => m.id === id);
+      if(!item) return;
       totalPlats += qty;
-      totalRevenu += item.prix * qty;
-    });
-
-    demoOrders.unshift({
-      label: 'Commande #' + (117 + demoOrders.length - 3),
-      origine: 'Page publicitaire',
-      plats: totalPlats,
-      revenu: totalRevenu,
+      totalRevenu += (item.prixVente || 0) * qty;
+      platsCommande[id] = { nom: item.nom, qty, prix: item.prixVente || 0 };
     });
 
     const banner = document.getElementById('paidBanner');
-    banner.style.display = 'block';
-    banner.textContent = 'Paiement de ' + totalRevenu.toLocaleString('fr-FR') + ' GNF enregistré dans la caisse du restaurant — commande envoyée en cuisine.';
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + storeTenantCode + '/commandes'));
+      await window._agrSet(newRef, {
+        origine: 'Page publicitaire',
+        plats: platsCommande,
+        platsVendus: totalPlats,
+        revenu: totalRevenu,
+        date: Date.now(),
+      });
 
-    cart = {};
-    renderCart();
-    renderOrdersTable();
+      banner.style.display = 'block';
+      banner.textContent = 'Paiement de ' + totalRevenu.toLocaleString('fr-FR') + ' GNF enregistré dans la caisse du restaurant — commande envoyée en cuisine.';
+      cart = {};
+      renderCart();
+    } catch(e){
+      banner.style.display = 'block';
+      banner.style.color = '#E19488';
+      banner.textContent = "Impossible d'enregistrer la commande — vérifiez la connexion à Firebase.";
+    }
   }
 
-  function renderOrdersTable(){
+  // ---------------------------------------------------------------
+  // Commandes récentes (tableau de bord) — lues depuis Firebase pour
+  // le restaurant actuellement connecté (currentTenantId)
+  // ---------------------------------------------------------------
+  async function renderOrdersTable(){
     const body = document.getElementById('ordersTableBody');
-    if(!body) return;
-    const totalRevenu = demoOrders.reduce((s,o) => s + o.revenu, 0);
-    body.innerHTML = demoOrders.map(o => `
-      <tr>
-        <td>${o.label}</td>
-        <td>${o.origine}</td>
-        <td>${o.plats}</td>
-        <td>${o.revenu.toLocaleString('fr-FR')} GNF</td>
-      </tr>
-    `).join('') + `
-      <tr class="commandes-total-row"><td colspan="3">Revenu total</td><td>${totalRevenu.toLocaleString('fr-FR')} GNF</td></tr>
-    `;
+    if(!body || !currentTenantId) return;
+    try {
+      const commandes = await agrGet('agr_tenants/' + currentTenantId + '/commandes') || {};
+      const list = Object.values(commandes).sort((a,b) => (b.date||0) - (a.date||0));
+
+      if(list.length === 0){
+        body.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">Aucune commande pour l\'instant.</td></tr>';
+        return;
+      }
+
+      const totalRevenu = list.reduce((s,o) => s + (o.revenu || 0), 0);
+      body.innerHTML = list.map((o,i) => `
+        <tr>
+          <td>Commande #${list.length - i}</td>
+          <td>${o.origine || 'Salle'}</td>
+          <td>${o.platsVendus || 0}</td>
+          <td>${(o.revenu || 0).toLocaleString('fr-FR')} GNF</td>
+        </tr>
+      `).join('') + `
+        <tr class="commandes-total-row"><td colspan="3">Revenu total</td><td>${totalRevenu.toLocaleString('fr-FR')} GNF</td></tr>
+      `;
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="4" style="color:#E19488;">Impossible de charger les commandes.</td></tr>';
+    }
   }
 
   const roleLabels = {
@@ -1288,6 +1384,11 @@
 
     if(name === 'parametres') loadParametres();
     if(name === 'licence') loadLicenceInfo();
+    if(name === 'menu') loadMenuManagement();
+    if(name === 'rh') loadEquipe();
+    if(name === 'tables') loadTablesSection();
+    if(name === 'commandes') renderOrdersTable();
+    if(name === 'overview') loadOverview();
   }
 
   // ---------------------------------------------------------------
@@ -1456,15 +1557,17 @@
       }
 
       const users = await agrGet('agr_tenants/' + tenantCode + '/users') || {};
-      const match = Object.values(users).find(u => u.email === email && u.password === password);
+      const matchEntry = Object.entries(users).find(([, u]) => u.email === email && u.password === password);
 
-      if(!match){
+      if(!matchEntry){
         showBanner('loginError', 'Identifiants invalides.');
         return;
       }
 
+      const [matchId, match] = matchEntry;
       currentRole = match.role;
       currentTenantId = tenantCode;
+      currentUserId = matchId;
       await enterDashboard();
     } catch(err){
       showBanner('loginError', 'Impossible de joindre Firebase — vérifiez la configuration (firebaseConfig) dans le fichier.');
@@ -1482,6 +1585,9 @@
 
     const nomRestaurant = document.getElementById('regNomRestaurant').value.trim();
     const ville = document.getElementById('regVille').value.trim();
+    const adresse = document.getElementById('regAdresse').value.trim();
+    const telephone = document.getElementById('regTelephone').value.trim();
+    const nombreTables = parseInt(document.getElementById('regNombreTables').value, 10) || 0;
     const dgEmail = document.getElementById('regDgEmail').value.trim();
     const dgNom = document.getElementById('regDgNom').value.trim();
     const dgPassword = document.getElementById('regDgPassword').value;
@@ -1498,8 +1604,12 @@
       const code = await generateUniqueCode(nomRestaurant);
       const now = Date.now();
 
+      // Un nouveau restaurant démarre strictement vide : aucun produit,
+      // aucune commande, aucun employé autre que le DG. Rien n'est
+      // pré-rempli avec des données de démonstration.
       await agrSet('agr_tenants/' + code + '/info', {
-        nomRestaurant, ville, dgEmail, dgNom,
+        nomRestaurant, ville, adresse, telephone,
+        email: dgEmail, nombreTables,
         statut: 'essai',
         dateCreation: now,
         dateExpiration: now + 14 * 24 * 60 * 60 * 1000, // essai de 14 jours
@@ -1533,7 +1643,7 @@
   }
 
   function doLogout(){
-    currentRole = null; currentTenantId = null;
+    currentRole = null; currentTenantId = null; currentUserId = null;
     document.getElementById('loginPassword').value = '';
     showView('home');
   }
@@ -1549,8 +1659,14 @@
       const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
       document.getElementById('paramNom').value = info.nomRestaurant || '';
       document.getElementById('paramVille').value = info.ville || '';
+      document.getElementById('paramAdresse').value = info.adresse || '';
+      document.getElementById('paramTelephone').value = info.telephone || '';
+      document.getElementById('paramEmail').value = info.email || '';
+      document.getElementById('paramNombreTables').value = info.nombreTables || 0;
       document.getElementById('paramDevise').value = info.devise || 'GNF';
       document.getElementById('paramLangue').value = info.langue || 'fr';
+      document.getElementById('paramCurrentUserLabel').textContent =
+        (document.getElementById('userName').textContent || '') + ' — ' + (roleLabels[currentRole] || currentRole);
     } catch(e){
       showBanner('paramsError', 'Impossible de charger les paramètres depuis Firebase.');
     }
@@ -1563,11 +1679,41 @@
     try {
       await agrSet('agr_tenants/' + currentTenantId + '/info/nomRestaurant', document.getElementById('paramNom').value.trim());
       await agrSet('agr_tenants/' + currentTenantId + '/info/ville', document.getElementById('paramVille').value.trim());
+      await agrSet('agr_tenants/' + currentTenantId + '/info/adresse', document.getElementById('paramAdresse').value.trim());
+      await agrSet('agr_tenants/' + currentTenantId + '/info/telephone', document.getElementById('paramTelephone').value.trim());
+      await agrSet('agr_tenants/' + currentTenantId + '/info/email', document.getElementById('paramEmail').value.trim());
+      await agrSet('agr_tenants/' + currentTenantId + '/info/nombreTables', parseInt(document.getElementById('paramNombreTables').value, 10) || 0);
       await agrSet('agr_tenants/' + currentTenantId + '/info/devise', document.getElementById('paramDevise').value.trim() || 'GNF');
       await agrSet('agr_tenants/' + currentTenantId + '/info/langue', document.getElementById('paramLangue').value.trim() || 'fr');
       showBanner('paramsSuccess', 'Modifications enregistrées.');
     } catch(e){
       showBanner('paramsError', "Impossible d'enregistrer — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Changer son propre mot de passe (compte actuellement connecté)
+  // ---------------------------------------------------------------
+  let currentUserId = null; // clé Firebase de l'utilisateur connecté (voir doLogin)
+
+  async function changeMyPassword(){
+    showBanner('passwordError', null);
+    showBanner('passwordSuccess', null);
+    const newPassword = document.getElementById('paramNewPassword').value;
+    if(!newPassword || newPassword.length < 4){
+      showBanner('passwordError', 'Le mot de passe doit contenir au moins 4 caractères.');
+      return;
+    }
+    if(!currentTenantId || !currentUserId){
+      showBanner('passwordError', 'Session invalide — reconnectez-vous.');
+      return;
+    }
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/users/' + currentUserId + '/password', newPassword);
+      document.getElementById('paramNewPassword').value = '';
+      showBanner('passwordSuccess', 'Mot de passe modifié.');
+    } catch(e){
+      showBanner('passwordError', "Impossible de modifier le mot de passe — vérifiez la connexion à Firebase.");
     }
   }
 
@@ -1585,6 +1731,199 @@
     } catch(e){
       note.textContent = 'Impossible de restaurer les informations depuis Firebase.';
     }
+  }
+
+  // ---------------------------------------------------------------
+  // Tableau de bord — KPIs réels calculés depuis les commandes du tenant
+  // ---------------------------------------------------------------
+  async function loadOverview(){
+    if(!currentTenantId) return;
+    try {
+      const [commandes, produits, users] = await Promise.all([
+        agrGet('agr_tenants/' + currentTenantId + '/commandes'),
+        agrGet('agr_tenants/' + currentTenantId + '/produits'),
+        agrGet('agr_tenants/' + currentTenantId + '/users'),
+      ]);
+      const list = Object.values(commandes || {});
+      const now = new Date();
+      const isSameDay = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
+      const isSameMonth = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+
+      let caJour = 0, caMois = 0, platsVendus = 0;
+      list.forEach(c => {
+        const d = new Date(c.date || 0);
+        if(isSameMonth(d)) caMois += (c.revenu || 0);
+        if(isSameDay(d)) caJour += (c.revenu || 0);
+        platsVendus += (c.platsVendus || 0);
+      });
+
+      document.getElementById('kpiCaJour').textContent = caJour.toLocaleString('fr-FR') + ' GNF';
+      document.getElementById('kpiCaMois').textContent = caMois.toLocaleString('fr-FR') + ' GNF';
+      document.getElementById('kpiCommandes').textContent = list.length;
+      document.getElementById('kpiPlatsVendus').textContent = platsVendus;
+      document.getElementById('kpiEffectif').textContent = Object.keys(users || {}).length;
+
+      const nbProduits = Object.keys(produits || {}).length;
+      document.getElementById('menuSummarySub').textContent =
+        nbProduits === 0 ? 'Aucun plat au menu pour l\'instant.' : nbProduits + ' plat(s) au menu.';
+
+      // Petit graphique 7 jours à partir des vraies commandes
+      const chartWrap = document.getElementById('salesChartWrap');
+      if(list.length === 0){
+        chartWrap.innerHTML = '<div style="color:var(--text-dim); font-size:12.5px; padding:20px 0;">Aucune vente enregistrée pour l\'instant.</div>';
+      } else {
+        const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+        const totals = [0,0,0,0,0,0,0];
+        list.forEach(c => {
+          const d = new Date(c.date || 0);
+          const diffDays = Math.floor((now - d) / (24*3600*1000));
+          if(diffDays >= 0 && diffDays < 7) totals[d.getDay()] += (c.revenu || 0);
+        });
+        const max = Math.max(...totals, 1);
+        chartWrap.innerHTML = totals.map((v,i) => `
+          <div class="bar" style="height:${Math.max(4, Math.round(v/max*100))}%"><span class="tag">${jours[i]}</span></div>
+        `).join('');
+      }
+    } catch(e){
+      // silencieux : l'aperçu reste à ses valeurs par défaut si Firebase est injoignable
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Tables — dérivées de info.nombreTables (statut "libre" par défaut)
+  // ---------------------------------------------------------------
+  async function loadTablesSection(){
+    if(!currentTenantId) return;
+    try {
+      const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
+      const n = info.nombreTables || 0;
+      const grid = document.getElementById('tablesGrid');
+      const sub = document.getElementById('tablesSub');
+      if(n === 0){
+        grid.innerHTML = '';
+        sub.textContent = 'Aucune table configurée — définissez le nombre de tables dans Paramètres.';
+        return;
+      }
+      sub.textContent = n + ' table(s) — configuration dans Paramètres.';
+      grid.innerHTML = Array.from({length:n}, (_,i) => `<div class="table-cell libre">T${i+1}</div>`).join('');
+    } catch(e){}
+  }
+
+  // ---------------------------------------------------------------
+  // Menu & Catégories — CRUD réel sur agr_tenants/{code}/produits
+  // ---------------------------------------------------------------
+  async function ajouterPlat(){
+    showBanner('menuError', null);
+    const nom = document.getElementById('menuFormNom').value.trim();
+    const categorie = document.getElementById('menuFormCategorie').value.trim();
+    const prixVente = parseInt(document.getElementById('menuFormPrixVente').value, 10) || 0;
+    const prixAchat = parseInt(document.getElementById('menuFormPrixAchat').value, 10) || 0;
+
+    if(!nom || !prixVente){
+      showBanner('menuError', 'Le nom du plat et le prix de vente sont requis.');
+      return;
+    }
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/produits'));
+      await window._agrSet(newRef, { nom, categorie, prixVente, prixAchat, disponible: true });
+      document.getElementById('menuFormNom').value = '';
+      document.getElementById('menuFormCategorie').value = '';
+      document.getElementById('menuFormPrixVente').value = '';
+      document.getElementById('menuFormPrixAchat').value = '';
+      loadMenuManagement();
+    } catch(e){
+      showBanner('menuError', "Impossible d'ajouter le plat — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function loadMenuManagement(){
+    const body = document.getElementById('menuTableBody');
+    const sub = document.getElementById('menuListSub');
+    if(!currentTenantId) return;
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const entries = Object.entries(produits);
+      if(entries.length === 0){
+        sub.textContent = 'Aucun plat pour l\'instant.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = entries.length + ' plat(s) au menu.';
+      body.innerHTML = entries.map(([id, p]) => `
+        <tr>
+          <td>${p.nom}</td>
+          <td>${p.categorie || '—'}</td>
+          <td>${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${Number((p.prixVente||0)-(p.prixAchat||0)).toLocaleString('fr-FR')} GNF</td>
+          <td>${p.disponible === false ? 'Non' : 'Oui'}</td>
+          <td><a onclick="supprimerPlat('${id}')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a></td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger le menu depuis Firebase.';
+    }
+  }
+
+  async function supprimerPlat(id){
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + id, null);
+      loadMenuManagement();
+    } catch(e){}
+  }
+
+  // ---------------------------------------------------------------
+  // Ressources Humaines — CRUD réel sur agr_tenants/{code}/users
+  // ---------------------------------------------------------------
+  async function ajouterEmploye(){
+    showBanner('rhError', null);
+    const nom = document.getElementById('rhFormNom').value.trim();
+    const email = document.getElementById('rhFormEmail').value.trim();
+    const password = document.getElementById('rhFormPassword').value;
+    const role = document.getElementById('rhFormRole').value;
+
+    if(!nom || !email || !password){
+      showBanner('rhError', 'Nom, email et mot de passe sont requis.');
+      return;
+    }
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/users'));
+      await window._agrSet(newRef, { role, nom, email, password });
+      document.getElementById('rhFormNom').value = '';
+      document.getElementById('rhFormEmail').value = '';
+      document.getElementById('rhFormPassword').value = '';
+      loadEquipe();
+    } catch(e){
+      showBanner('rhError', "Impossible d'ajouter l'employé — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function loadEquipe(){
+    const body = document.getElementById('rhTableBody');
+    const sub = document.getElementById('rhListSub');
+    if(!currentTenantId) return;
+    try {
+      const users = await agrGet('agr_tenants/' + currentTenantId + '/users') || {};
+      const entries = Object.entries(users);
+      sub.textContent = entries.length + ' membre(s) de l\'équipe.';
+      body.innerHTML = entries.map(([id, u]) => `
+        <tr>
+          <td>${u.nom || '—'}</td>
+          <td>${roleLabels[u.role] || u.role}</td>
+          <td>${u.email || '—'}</td>
+          <td>${id === 'dg' ? '<span style="color:var(--text-dim); font-size:11px;">Fondateur/DG</span>' : '<a onclick="supprimerEmploye(\'' + id + '\')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a>'}</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = "Impossible de charger l'équipe depuis Firebase.";
+    }
+  }
+
+  async function supprimerEmploye(id){
+    if(id === 'dg') return; // protège le compte fondateur/DG
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/users/' + id, null);
+      loadEquipe();
+    } catch(e){}
   }
 
   // ---------------------------------------------------------------
@@ -1621,8 +1960,6 @@
     });
   }
 
-  renderMenu();
-  renderOrdersTable();
   initConnectionStatus();
   showView('home');
 </script>
