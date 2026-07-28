@@ -6,6 +6,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0F1319">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
 <title>AGR — Application de Gestion de Restaurant</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -680,6 +683,12 @@
     .tables-grid{grid-template-columns:repeat(4,1fr);}
   }
 </style>
+<!-- Export PDF (A4) et Excel — utilisés uniquement par le module Comptabilité -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- Reconnaissance faciale (Gérant et profils autorisés) — modèles chargés à la demande -->
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
 <body>
 
@@ -806,6 +815,8 @@
       <div class="paid-banner" id="paidBanner"></div>
       <div id="cartLines"><div class="cart-empty">Votre panier est vide.</div></div>
       <div class="cart-total"><span>Total</span><span class="val mono" id="cartTotal">0 GNF</span></div>
+      <div class="field"><label>Votre nom</label><input type="text" id="storeClientNom" placeholder="Nom"></div>
+      <div class="field"><label>Votre téléphone</label><input type="text" id="storeClientTelephone" placeholder="+224 6xx xx xx xx"></div>
       <button class="btn-primary" id="payBtn" onclick="payOrder()">Payer et envoyer en cuisine</button>
     </div>
   </div>
@@ -931,7 +942,11 @@
         <div class="navlink" data-section="stocks" onclick="showSection('stocks')"><span class="ic">▣</span> Stocks</div>
         <div class="navlink" data-section="clients" onclick="showSection('clients')"><span class="ic">☺</span> Clients & Fidélité</div>
         <div class="navlink" data-section="comptabilite" onclick="showSection('comptabilite')"><span class="ic">⛁</span> Comptabilité</div>
+        <div class="navlink" data-section="depenses" onclick="showSection('depenses')"><span class="ic">💸</span> Dépenses</div>
+        <div class="navlink" data-section="banque" onclick="showSection('banque')"><span class="ic">🏦</span> Gestion bancaire</div>
         <div class="navlink" data-section="rh" onclick="showSection('rh')"><span class="ic">◐</span> Ressources Humaines</div>
+        <div class="navlink" data-section="pointage" onclick="showSection('pointage')"><span class="ic">🔒</span> Pointage biométrique</div>
+        <div class="navlink" data-section="evaluation" onclick="showSection('evaluation')"><span class="ic">🏆</span> Évaluation</div>
       </div>
       <div class="nav-group">
         <div class="grouplabel">Système</div>
@@ -1007,6 +1022,20 @@
       <!-- ===== Section : Commandes ===== -->
       <div class="dash-section" id="section-commandes" style="display:none;">
         <div class="panel">
+          <h3>Enregistrer une commande en salle</h3>
+          <div class="sub">Attribuée automatiquement à vous (<span id="commandeVendeurLabel"></span>) pour alimenter votre évaluation.</div>
+          <div class="banner error" id="commandeSalleError"></div>
+          <div class="field">
+            <label>Plat</label>
+            <select id="commandeSalleProduit" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;"></select>
+          </div>
+          <div class="field"><label>Quantité</label><input type="number" id="commandeSalleQuantite" min="1" value="1"></div>
+          <button class="btn-outline" style="color:var(--text);" onclick="ajouterLigneCommandeSalle()">+ Ajouter au ticket</button>
+          <div id="commandeSalleLignes" style="margin:14px 0; font-size:13px;"></div>
+          <button class="btn-primary" onclick="validerCommandeSalle()">Valider la commande en salle</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
           <h3>Commandes récentes</h3>
           <div class="sub">Plats vendus par commande et revenu généré — inclut les commandes passées depuis la page publicitaire</div>
           <table class="commandes-table" id="ordersTable">
@@ -1027,6 +1056,7 @@
           <div class="field"><label>Catégorie</label><input type="text" id="menuFormCategorie" placeholder="Plat principal"></div>
           <div class="field"><label>Prix de vente (GNF)</label><input type="number" id="menuFormPrixVente" min="0"></div>
           <div class="field"><label>Prix d'achat (GNF)</label><input type="number" id="menuFormPrixAchat" min="0"></div>
+          <div class="field"><label>Stock initial (optionnel)</label><input type="number" id="menuFormStockInitial" min="0" value="0"></div>
           <button class="btn-primary" onclick="ajouterPlat()">+ Ajouter le plat</button>
         </div>
         <div class="panel" style="margin-top:16px;">
@@ -1039,25 +1069,203 @@
         </div>
       </div>
 
+      <!-- ===== Section : Stocks & Pertes (réel) ===== -->
       <div class="dash-section" id="section-stocks" style="display:none;">
-        <div class="panel empty-panel">
-          <div class="empty-ic">▣</div>
-          <h3>Stocks</h3>
-          <p>Suivi des entrées, sorties, pertes et alertes de rupture — module à venir.</p>
+        <div class="panel">
+          <h3>Niveaux de stock</h3>
+          <div class="sub" id="stocksListSub">Chargement…</div>
+          <table class="commandes-table" id="stocksTable">
+            <thead><tr><th>Plat</th><th>Stock actuel</th><th>Seuil d'alerte</th><th>Statut</th><th>Ajuster</th></tr></thead>
+            <tbody id="stocksTableBody"></tbody>
+          </table>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Déclarer une perte</h3>
+          <div class="sub">Le Directeur définit librement les types de pertes (aliment brûlé, viande avariée, casse, erreur, vol...)</div>
+          <div class="banner error" id="perteError"></div>
+          <div class="field"><label>Plat concerné</label>
+            <select id="perteFormProduit" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;"></select>
+          </div>
+          <div class="field"><label>Type de perte</label><input type="text" id="perteFormType" placeholder="Aliment brûlé, casse, vol..."></div>
+          <div class="field"><label>Quantité perdue</label><input type="number" id="perteFormQuantite" min="1" value="1"></div>
+          <div class="field"><label>Coût (GNF)</label><input type="number" id="perteFormCout" min="0"></div>
+          <div class="field"><label>Commentaire</label><input type="text" id="perteFormCommentaire"></div>
+          <button class="btn-primary" onclick="declarerPerte()">Déclarer la perte</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Historique des pertes</h3>
+          <div class="sub" id="pertesListSub">Aucune perte enregistrée.</div>
+          <table class="commandes-table" id="pertesTable">
+            <thead><tr><th>Date</th><th>Plat</th><th>Type</th><th>Qté</th><th>Coût</th><th>Responsable</th></tr></thead>
+            <tbody id="pertesTableBody"></tbody>
+          </table>
         </div>
       </div>
+
+      <!-- ===== Section : Clients & Fidélité (réel) ===== -->
       <div class="dash-section" id="section-clients" style="display:none;">
-        <div class="panel empty-panel">
-          <div class="empty-ic">☺</div>
-          <h3>Clients & Fidélité</h3>
-          <p>Fiches clients automatiques et programme de fidélité — module à venir.</p>
+        <div class="panel">
+          <h3>Programme de fidélité</h3>
+          <div class="sub">Défini librement par le Directeur — 1 point de fidélité tous les 1 000 GNF dépensés</div>
+          <div class="banner info" id="loyaltySuccess"></div>
+          <div class="field"><label>Montant minimum pour devenir client fidèle (GNF)</label><input type="number" id="loyaltyMinMontant" min="0"></div>
+          <div class="field"><label>Avantage offert au client fidèle</label><input type="text" id="loyaltyAvantage" placeholder="Ex : 10% de réduction, boisson offerte..."></div>
+          <button class="btn-primary" onclick="saveLoyaltySettings()">Enregistrer le programme</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Fiches clients</h3>
+          <div class="sub" id="clientsListSub">Aucun client pour l'instant — une fiche est créée automatiquement à chaque commande en ligne.</div>
+          <table class="commandes-table" id="clientsTable">
+            <thead><tr><th>Nom</th><th>Téléphone</th><th>Total dépensé</th><th>Points</th><th>Statut</th></tr></thead>
+            <tbody id="clientsTableBody"></tbody>
+          </table>
         </div>
       </div>
+
       <div class="dash-section" id="section-comptabilite" style="display:none;">
-        <div class="panel empty-panel">
-          <div class="empty-ic">⛁</div>
-          <h3>Comptabilité</h3>
-          <p>Journal, grand livre, bilan et exports PDF/Excel — module à venir.</p>
+        <div class="panel">
+          <h3>Période</h3>
+          <div class="sub">S'applique au Journal, au Livre de caisse, au Grand livre, à la Balance et au Compte de résultat.</div>
+          <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+            <div class="field" style="margin:0;">
+              <label>Période</label>
+              <select id="comptaPeriode" onchange="loadComptabilite()" style="padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
+                <option value="jour">Journalier</option>
+                <option value="mois" selected>Mensuel</option>
+                <option value="annee">Annuel</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0;">
+              <label>Date de référence</label>
+              <input type="date" id="comptaDateRef" onchange="loadComptabilite()">
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div><h3>Journal</h3><div class="sub">Toutes les écritures (ventes et dépenses) de la période, dans l'ordre chronologique.</div></div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-outline" style="color:var(--text);" onclick="exporterPDF('journal')">Export PDF</button>
+              <button class="btn-outline" style="color:var(--text);" onclick="exporterExcel('journal')">Export Excel</button>
+            </div>
+          </div>
+          <table class="commandes-table" id="journalTable">
+            <thead><tr><th>Date</th><th>Libellé</th><th>Débit</th><th>Crédit</th></tr></thead>
+            <tbody id="journalTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Livre de caisse</h3>
+          <div class="sub">Solde de caisse cumulé au fil des entrées (ventes) et sorties (dépenses).</div>
+          <table class="commandes-table" id="caisseTable">
+            <thead><tr><th>Date</th><th>Libellé</th><th>Entrée</th><th>Sortie</th><th>Solde cumulé</th></tr></thead>
+            <tbody id="caisseTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Grand livre</h3>
+          <div class="sub">Écritures regroupées par compte (Ventes, catégories de dépenses).</div>
+          <table class="commandes-table" id="grandLivreTable">
+            <thead><tr><th>Compte</th><th>Débit</th><th>Crédit</th><th>Solde</th></tr></thead>
+            <tbody id="grandLivreTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Balance</h3>
+          <div class="sub">Total des débits et crédits — doit être équilibrée.</div>
+          <div id="balanceSummary" style="font-size:13.5px; line-height:2;"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div><h3>Compte de résultat</h3><div class="sub">Revenus − Charges = Résultat net, sur la période sélectionnée.</div></div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-outline" style="color:var(--text);" onclick="exporterPDF('resultat')">Export PDF</button>
+              <button class="btn-outline" style="color:var(--text);" onclick="exporterExcel('resultat')">Export Excel</button>
+            </div>
+          </div>
+          <div id="resultatSummary" style="font-size:13.5px; line-height:2;"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Bilan (simplifié)</h3>
+          <div class="sub">Actif = comptes bancaires + valeur du stock. Bilan simplifié — ne remplace pas un bilan comptable certifié.</div>
+          <div id="bilanSummary" style="font-size:13.5px; line-height:2;"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Impôts (estimation)</h3>
+          <div class="sub">Taux appliqué au résultat net de la période — à titre indicatif, ne remplace pas une déclaration fiscale.</div>
+          <div class="field" style="max-width:220px;"><label>Taux d'imposition (%)</label><input type="number" id="tauxImposition" min="0" max="100" value="0" onchange="saveTauxImposition()"></div>
+          <div id="impotsSummary" style="font-size:13.5px; line-height:2; margin-top:8px;"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Amortissements</h3>
+          <div class="sub">Immobilisations du restaurant (matériel, mobilier...) amorties linéairement sur leur durée de vie.</div>
+          <div class="banner error" id="amortError"></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="field" style="margin:0;"><label>Nom du bien</label><input type="text" id="amortNom" placeholder="Four professionnel"></div>
+            <div class="field" style="margin:0;"><label>Valeur d'achat (GNF)</label><input type="number" id="amortValeur" min="0"></div>
+            <div class="field" style="margin:0;"><label>Durée (mois)</label><input type="number" id="amortDuree" min="1" value="36"></div>
+            <button class="btn-primary" onclick="ajouterImmobilisation()">+ Ajouter</button>
+          </div>
+          <table class="commandes-table" id="amortTable" style="margin-top:14px;">
+            <thead><tr><th>Bien</th><th>Valeur</th><th>Durée</th><th>Amortissement mensuel</th></tr></thead>
+            <tbody id="amortTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Section : Dépenses (réel) ===== -->
+      <div class="dash-section" id="section-depenses" style="display:none;">
+        <div class="panel">
+          <h3>Ajouter une dépense</h3>
+          <div class="sub">Le Directeur crée librement ses catégories de dépenses.</div>
+          <div class="banner error" id="depenseError"></div>
+          <div class="field"><label>Catégorie</label><input type="text" id="depenseFormCategorie" placeholder="Loyer, électricité, fournitures..."></div>
+          <div class="field"><label>Montant (GNF)</label><input type="number" id="depenseFormMontant" min="0"></div>
+          <div class="field"><label>Commentaire / justificatif</label><input type="text" id="depenseFormCommentaire"></div>
+          <button class="btn-primary" onclick="ajouterDepense()">+ Ajouter la dépense</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Historique des dépenses</h3>
+          <div class="sub" id="depensesListSub">Aucune dépense enregistrée.</div>
+          <table class="commandes-table" id="depensesTable">
+            <thead><tr><th>Date</th><th>Catégorie</th><th>Montant</th><th>Auteur</th><th>Commentaire</th></tr></thead>
+            <tbody id="depensesTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Section : Gestion bancaire (réel) ===== -->
+      <div class="dash-section" id="section-banque" style="display:none;">
+        <div class="panel">
+          <h3>Ajouter un compte</h3>
+          <div class="field"><label>Type</label>
+            <select id="compteFormType" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
+              <option value="especes">Espèces</option>
+              <option value="orange_money">Orange Money</option>
+              <option value="virement">Virement</option>
+              <option value="cheque">Chèque</option>
+              <option value="banque">Compte bancaire</option>
+            </select>
+          </div>
+          <div class="field"><label>Nom du compte</label><input type="text" id="compteFormNom" placeholder="Caisse principale"></div>
+          <div class="field"><label>Solde initial (GNF)</label><input type="number" id="compteFormSolde" min="0" value="0"></div>
+          <button class="btn-primary" onclick="ajouterCompte()">+ Ajouter le compte</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Comptes du restaurant</h3>
+          <div class="sub" id="comptesListSub">Aucun compte pour l'instant.</div>
+          <table class="commandes-table" id="comptesTable">
+            <thead><tr><th>Compte</th><th>Type</th><th>Solde</th></tr></thead>
+            <tbody id="comptesTableBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -1087,17 +1295,54 @@
           <h3>Équipe</h3>
           <div class="sub" id="rhListSub">Chargement…</div>
           <table class="commandes-table" id="rhTable">
-            <thead><tr><th>Nom</th><th>Rôle</th><th>Email</th><th></th></tr></thead>
+            <thead><tr><th>Nom</th><th>Rôle</th><th>Email</th><th>Empreinte</th><th>Visage</th><th></th></tr></thead>
             <tbody id="rhTableBody"></tbody>
           </table>
         </div>
       </div>
 
+      <!-- ===== Section : Pointage biométrique (réel, WebAuthn) ===== -->
+      <div class="dash-section" id="section-pointage" style="display:none;">
+        <div class="panel">
+          <h3>Pointer maintenant</h3>
+          <div class="sub">Chaque employé pointe avec l'empreinte ou Face ID déjà enregistrés sur SON téléphone/ordinateur.</div>
+          <div class="banner error" id="pointageError"></div>
+          <div class="banner info" id="pointageSuccess"></div>
+          <div class="field">
+            <label>Qui pointe ?</label>
+            <select id="pointageFormEmploye" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;"></select>
+          </div>
+          <button class="btn-primary" onclick="pointerMaintenant()">🔒 Pointer avec l'empreinte / Face ID</button>
+          <div style="font-size:11.5px; color:var(--text-dim); margin-top:12px;">
+            Ce navigateur doit prendre en charge WebAuthn (Chrome, Safari, Edge récents) et l'appareil doit avoir un capteur d'empreinte/Face ID déjà configuré dans son système. Fonctionne uniquement en HTTPS (une fois déployé sur Firebase Hosting).
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Pointage par reconnaissance faciale</h3>
+          <div class="sub">Réservé au Gérant et aux profils autorisés — utilise la caméra de l'appareil pour reconnaître le visage déjà enregistré.</div>
+          <div class="banner error" id="faceError"></div>
+          <button class="btn-outline" style="color:var(--text);" onclick="pointerParVisage()">📷 Pointer par reconnaissance faciale</button>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <h3>Historique de présence</h3>
+          <div class="sub" id="pointageListSub">Aucun pointage pour l'instant.</div>
+          <table class="commandes-table" id="pointageTable">
+            <thead><tr><th>Employé</th><th>Type</th><th>Date et heure</th></tr></thead>
+            <tbody id="pointageTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Section : Journal d'audit (réel) ===== -->
       <div class="dash-section" id="section-audit" style="display:none;">
-        <div class="panel empty-panel">
-          <div class="empty-ic">≣</div>
+        <div class="panel">
           <h3>Journal d'audit</h3>
-          <p>Historique inaltérable des actions sensibles (remises, suppressions, ouvertures de caisse) — module à venir.</p>
+          <div class="sub">Historique inaltérable des actions sensibles (suppressions, ajouts d'employés, dépenses, pertes). Conservé au minimum 2 mois ; aucune suppression manuelle possible.</div>
+          <table class="commandes-table" id="auditTable">
+            <thead><tr><th>Date</th><th>Action</th><th>Détail</th><th>Auteur</th></tr></thead>
+            <tbody id="auditTableBody"><tr><td colspan="4" style="color:var(--text-dim);">Aucune action enregistrée pour l'instant.</td></tr></tbody>
+          </table>
         </div>
       </div>
 
@@ -1117,6 +1362,7 @@
           <div class="field"><label>Nombre de tables</label><input type="number" id="paramNombreTables" min="0"></div>
           <div class="field"><label>Devise</label><input type="text" id="paramDevise" placeholder="GNF"></div>
           <div class="field"><label>Langue</label><input type="text" id="paramLangue" placeholder="fr"></div>
+          <div class="field"><label>Heure d'arrivée attendue (pour calculer les retards)</label><input type="time" id="paramHeureDebut" value="08:00"></div>
           <button class="btn-primary" onclick="saveParametres()">Enregistrer les modifications</button>
         </div>
 
@@ -1137,6 +1383,21 @@
         </div>
       </div>
 
+      <!-- ===== Section : Évaluation des employés (réel + saisie Directeur) ===== -->
+      <div class="dash-section" id="section-evaluation" style="display:none;">
+        <div class="panel">
+          <h3>Classement des meilleurs employés</h3>
+          <div class="sub">Ventes et retards calculés automatiquement (commandes en salle + pointage biométrique) — erreurs, satisfaction et prime saisies par le Directeur.</div>
+          <table class="commandes-table" id="evalTable">
+            <thead><tr><th>Rang</th><th>Employé</th><th>Ventes</th><th>Revenu généré</th><th>Retards (min)</th><th>Erreurs</th><th>Clients satisfaits</th><th>Objectif atteint</th><th>Prime proposée</th><th></th></tr></thead>
+            <tbody id="evalTableBody"></tbody>
+          </table>
+          <div style="font-size:11.5px; color:var(--text-dim); margin-top:12px;">
+            Les retards sont calculés par rapport à l'heure d'arrivée attendue définie dans Paramètres.
+          </div>
+        </div>
+      </div>
+
       <!-- ===== Section : Licence ===== -->
       <div class="dash-section" id="section-licence" style="display:none;">
         <div class="panel">
@@ -1145,6 +1406,20 @@
           <div id="licenceInfo" style="font-size:13.5px; line-height:2;">Chargement…</div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Reconnaissance faciale — overlay caméra ============ -->
+<div id="faceOverlay" style="display:none; position:fixed; inset:0; background:rgba(6,13,36,0.92); z-index:200; align-items:center; justify-content:center; flex-direction:column;">
+  <div style="background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:24px; max-width:420px; width:90%; text-align:center;">
+    <h3 id="faceOverlayTitle" style="font-family:'Fraunces',serif; margin:0 0 6px;">Reconnaissance faciale</h3>
+    <div id="faceOverlayStatus" style="font-size:12.5px; color:var(--text-dim); margin-bottom:14px;">Initialisation…</div>
+    <video id="faceVideo" autoplay muted playsinline style="width:100%; border-radius:8px; background:#000; transform:scaleX(-1);"></video>
+    <canvas id="faceCanvas" width="320" height="240" style="display:none;"></canvas>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="btn-outline" style="flex:1; color:var(--text);" onclick="closeFaceOverlay()">Annuler</button>
+      <button class="btn-primary" id="faceCaptureBtn" style="flex:1;" onclick="captureFace()">Capturer</button>
     </div>
   </div>
 </div>
@@ -1275,6 +1550,42 @@
     totalEl.textContent = total.toLocaleString('fr-FR') + ' GNF';
   }
 
+  // ---------------------------------------------------------------
+  // Clients & Fidélité — création/mise à jour automatique de la fiche
+  // client à chaque commande en ligne (agr_tenants/{code}/clients)
+  // ---------------------------------------------------------------
+  function clientKeyFromPhone(tel){
+    return tel.replace(/[^0-9A-Za-z]/g, '') || ('client' + Date.now());
+  }
+
+  async function enregistrerClient(tenantCode, nom, telephone, montant){
+    const key = clientKeyFromPhone(telephone);
+    const path = 'agr_tenants/' + tenantCode + '/clients/' + key;
+    const existing = await agrGet(path);
+    const now = Date.now();
+    const points = Math.floor(montant / 1000); // 1 point par 1000 GNF dépensé
+
+    if(existing){
+      await agrSet(path, {
+        nom: nom || existing.nom || '',
+        telephone,
+        totalDepense: (existing.totalDepense || 0) + montant,
+        pointsFidelite: (existing.pointsFidelite || 0) + points,
+        premiereVisite: existing.premiereVisite || now,
+        derniereVisite: now,
+      });
+    } else {
+      await agrSet(path, {
+        nom: nom || '',
+        telephone,
+        totalDepense: montant,
+        pointsFidelite: points,
+        premiereVisite: now,
+        derniereVisite: now,
+      });
+    }
+  }
+
   async function payOrder(){
     const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
     if(entries.length === 0 || !storeTenantCode) return;
@@ -1289,6 +1600,9 @@
       platsCommande[id] = { nom: item.nom, qty, prix: item.prixVente || 0 };
     });
 
+    const clientNom = document.getElementById('storeClientNom').value.trim();
+    const clientTelephone = document.getElementById('storeClientTelephone').value.trim();
+
     const banner = document.getElementById('paidBanner');
     try {
       const newRef = window._agrPush(agrRef('agr_tenants/' + storeTenantCode + '/commandes'));
@@ -1298,7 +1612,12 @@
         platsVendus: totalPlats,
         revenu: totalRevenu,
         date: Date.now(),
+        clientTelephone: clientTelephone || null,
       });
+
+      if(clientTelephone){
+        await enregistrerClient(storeTenantCode, clientNom, clientTelephone, totalRevenu);
+      }
 
       banner.style.display = 'block';
       banner.textContent = 'Paiement de ' + totalRevenu.toLocaleString('fr-FR') + ' GNF enregistré dans la caisse du restaurant — commande envoyée en cuisine.';
@@ -1369,7 +1688,8 @@
   const sectionTitles = {
     overview: 'Tableau de bord', commandes: 'Commandes', tables: 'Tables',
     menu: 'Menu & Catégories', stocks: 'Stocks', clients: 'Clients & Fidélité',
-    comptabilite: 'Comptabilité', rh: 'Ressources Humaines',
+    comptabilite: 'Comptabilité', depenses: 'Dépenses', banque: 'Gestion bancaire',
+    rh: 'Ressources Humaines', pointage: 'Pointage biométrique', evaluation: 'Évaluation',
     audit: "Journal d'audit", parametres: 'Paramètres', licence: 'Licence',
   };
 
@@ -1387,8 +1707,16 @@
     if(name === 'menu') loadMenuManagement();
     if(name === 'rh') loadEquipe();
     if(name === 'tables') loadTablesSection();
-    if(name === 'commandes') renderOrdersTable();
+    if(name === 'commandes'){ renderOrdersTable(); loadCommandeSalleForm(); }
     if(name === 'overview') loadOverview();
+    if(name === 'stocks'){ loadStocks(); loadPertes(); }
+    if(name === 'clients'){ loadLoyaltySettings(); loadClients(); }
+    if(name === 'depenses') loadDepenses();
+    if(name === 'banque') loadComptes();
+    if(name === 'audit') loadAudit();
+    if(name === 'pointage') loadPointage();
+    if(name === 'evaluation') loadEvaluation();
+    if(name === 'comptabilite') loadComptabilite();
   }
 
   // ---------------------------------------------------------------
@@ -1665,6 +1993,7 @@
       document.getElementById('paramNombreTables').value = info.nombreTables || 0;
       document.getElementById('paramDevise').value = info.devise || 'GNF';
       document.getElementById('paramLangue').value = info.langue || 'fr';
+      document.getElementById('paramHeureDebut').value = info.heureDebutTravail || '08:00';
       document.getElementById('paramCurrentUserLabel').textContent =
         (document.getElementById('userName').textContent || '') + ' — ' + (roleLabels[currentRole] || currentRole);
     } catch(e){
@@ -1685,6 +2014,7 @@
       await agrSet('agr_tenants/' + currentTenantId + '/info/nombreTables', parseInt(document.getElementById('paramNombreTables').value, 10) || 0);
       await agrSet('agr_tenants/' + currentTenantId + '/info/devise', document.getElementById('paramDevise').value.trim() || 'GNF');
       await agrSet('agr_tenants/' + currentTenantId + '/info/langue', document.getElementById('paramLangue').value.trim() || 'fr');
+      await agrSet('agr_tenants/' + currentTenantId + '/info/heureDebutTravail', document.getElementById('paramHeureDebut').value || '08:00');
       showBanner('paramsSuccess', 'Modifications enregistrées.');
     } catch(e){
       showBanner('paramsError', "Impossible d'enregistrer — vérifiez la connexion à Firebase.");
@@ -1818,6 +2148,7 @@
     const categorie = document.getElementById('menuFormCategorie').value.trim();
     const prixVente = parseInt(document.getElementById('menuFormPrixVente').value, 10) || 0;
     const prixAchat = parseInt(document.getElementById('menuFormPrixAchat').value, 10) || 0;
+    const stock = parseInt(document.getElementById('menuFormStockInitial').value, 10) || 0;
 
     if(!nom || !prixVente){
       showBanner('menuError', 'Le nom du plat et le prix de vente sont requis.');
@@ -1825,11 +2156,13 @@
     }
     try {
       const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/produits'));
-      await window._agrSet(newRef, { nom, categorie, prixVente, prixAchat, disponible: true });
+      await window._agrSet(newRef, { nom, categorie, prixVente, prixAchat, stock, seuilAlerte: 0, disponible: true });
+      await recordAudit('Plat ajouté', nom);
       document.getElementById('menuFormNom').value = '';
       document.getElementById('menuFormCategorie').value = '';
       document.getElementById('menuFormPrixVente').value = '';
       document.getElementById('menuFormPrixAchat').value = '';
+      document.getElementById('menuFormStockInitial').value = '0';
       loadMenuManagement();
     } catch(e){
       showBanner('menuError', "Impossible d'ajouter le plat — vérifiez la connexion à Firebase.");
@@ -1866,7 +2199,9 @@
 
   async function supprimerPlat(id){
     try {
+      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + id);
       await agrSet('agr_tenants/' + currentTenantId + '/produits/' + id, null);
+      await recordAudit('Plat supprimé', (p && p.nom) || id);
       loadMenuManagement();
     } catch(e){}
   }
@@ -1888,6 +2223,7 @@
     try {
       const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/users'));
       await window._agrSet(newRef, { role, nom, email, password });
+      await recordAudit('Employé ajouté', nom + ' (' + role + ')');
       document.getElementById('rhFormNom').value = '';
       document.getElementById('rhFormEmail').value = '';
       document.getElementById('rhFormPassword').value = '';
@@ -1905,14 +2241,28 @@
       const users = await agrGet('agr_tenants/' + currentTenantId + '/users') || {};
       const entries = Object.entries(users);
       sub.textContent = entries.length + ' membre(s) de l\'équipe.';
-      body.innerHTML = entries.map(([id, u]) => `
+      body.innerHTML = entries.map(([id, u]) => {
+        const autorise = id === 'dg' || u.role === 'gerant';
+        let visageCell;
+        if(!autorise){
+          visageCell = '<span style="color:var(--text-dim); font-size:11px;">Non applicable</span>';
+        } else if(u.faceDescriptor){
+          visageCell = '<span style="color:var(--teal-soft); font-size:11.5px;">✓ Enregistré</span>';
+        } else {
+          visageCell = '<a onclick="openFaceCapture(\'' + id + '\', \'' + (u.nom||'').replace(/'/g,"") + '\', \'register\')" style="color:var(--gold-soft); cursor:pointer; font-size:12px;">Enregistrer le visage</a>';
+        }
+        return `
         <tr>
           <td>${u.nom || '—'}</td>
           <td>${roleLabels[u.role] || u.role}</td>
           <td>${u.email || '—'}</td>
+          <td>${u.credentialId
+            ? '<span style="color:var(--teal-soft); font-size:11.5px;">✓ Enregistrée</span>'
+            : '<a onclick="registerFingerprint(\'' + id + '\', \'' + (u.nom||'').replace(/'/g,"") + '\')" style="color:var(--gold-soft); cursor:pointer; font-size:12px;">Enregistrer sur cet appareil</a>'}</td>
+          <td>${visageCell}</td>
           <td>${id === 'dg' ? '<span style="color:var(--text-dim); font-size:11px;">Fondateur/DG</span>' : '<a onclick="supprimerEmploye(\'' + id + '\')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a>'}</td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
     } catch(e){
       sub.textContent = "Impossible de charger l'équipe depuis Firebase.";
     }
@@ -1922,8 +2272,961 @@
     if(id === 'dg') return; // protège le compte fondateur/DG
     try {
       await agrSet('agr_tenants/' + currentTenantId + '/users/' + id, null);
+      await recordAudit('Suppression employé', id);
       loadEquipe();
     } catch(e){}
+  }
+
+  // ---------------------------------------------------------------
+  // Journal d'audit — écriture seule, jamais de suppression manuelle.
+  // Enregistre les actions sensibles (suppressions, ajouts d'employés,
+  // dépenses, pertes...) avec l'auteur et la date.
+  // ---------------------------------------------------------------
+  async function recordAudit(action, detail){
+    if(!currentTenantId) return;
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/audit'));
+      await window._agrSet(newRef, {
+        action, detail: detail || '',
+        auteur: document.getElementById('userName').textContent || currentUserId || '—',
+        date: Date.now(),
+      });
+    } catch(e){}
+  }
+
+  async function loadAudit(){
+    const body = document.getElementById('auditTableBody');
+    if(!currentTenantId) return;
+    try {
+      const logs = await agrGet('agr_tenants/' + currentTenantId + '/audit') || {};
+      const list = Object.values(logs).sort((a,b) => (b.date||0) - (a.date||0));
+      if(list.length === 0){
+        body.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">Aucune action enregistrée pour l\'instant.</td></tr>';
+        return;
+      }
+      body.innerHTML = list.map(l => `
+        <tr>
+          <td>${new Date(l.date).toLocaleString('fr-FR')}</td>
+          <td>${l.action}</td>
+          <td>${l.detail || '—'}</td>
+          <td>${l.auteur}</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="4" style="color:#E19488;">Impossible de charger le journal.</td></tr>';
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Stocks — niveau de stock par plat + alertes de rupture/stock faible
+  // ---------------------------------------------------------------
+  async function loadStocks(){
+    const body = document.getElementById('stocksTableBody');
+    const sub = document.getElementById('stocksListSub');
+    const perteSelect = document.getElementById('perteFormProduit');
+    if(!currentTenantId) return;
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const entries = Object.entries(produits);
+      if(entries.length === 0){
+        sub.textContent = 'Ajoutez des plats dans Menu & Catégories pour suivre leur stock.';
+        body.innerHTML = '';
+        perteSelect.innerHTML = '<option value="">Aucun plat</option>';
+        return;
+      }
+      sub.textContent = entries.length + ' plat(s) suivis.';
+      perteSelect.innerHTML = entries.map(([id,p]) => `<option value="${id}">${p.nom}</option>`).join('');
+      body.innerHTML = entries.map(([id, p]) => {
+        const stock = p.stock ?? 0;
+        const seuil = p.seuilAlerte ?? 0;
+        let statut = '<span class="tagpill" style="background:rgba(78,151,132,0.14); color:var(--teal-soft);">OK</span>';
+        if(stock <= 0) statut = '<span class="tagpill out">Rupture</span>';
+        else if(stock <= seuil) statut = '<span class="tagpill low">Faible</span>';
+        return `
+        <tr>
+          <td>${p.nom}</td>
+          <td>${stock}</td>
+          <td><input type="number" value="${seuil}" style="width:60px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; color:var(--text); padding:4px;" onchange="updateSeuil('${id}', this.value)"></td>
+          <td>${statut}</td>
+          <td>
+            <a onclick="ajusterStock('${id}', 1)" style="cursor:pointer; color:var(--teal-soft); margin-right:8px;">+1</a>
+            <a onclick="ajusterStock('${id}', -1)" style="cursor:pointer; color:#E19488;">-1</a>
+          </td>
+        </tr>`;
+      }).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les stocks depuis Firebase.';
+    }
+  }
+
+  async function ajusterStock(produitId, delta){
+    try {
+      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + produitId) || {};
+      const nouveauStock = Math.max(0, (p.stock || 0) + delta);
+      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + produitId + '/stock', nouveauStock);
+      loadStocks();
+    } catch(e){}
+  }
+
+  async function updateSeuil(produitId, valeur){
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + produitId + '/seuilAlerte', parseInt(valeur, 10) || 0);
+    } catch(e){}
+  }
+
+  async function declarerPerte(){
+    showBanner('perteError', null);
+    const produitId = document.getElementById('perteFormProduit').value;
+    const type = document.getElementById('perteFormType').value.trim();
+    const quantite = parseInt(document.getElementById('perteFormQuantite').value, 10) || 1;
+    const cout = parseInt(document.getElementById('perteFormCout').value, 10) || 0;
+    const commentaire = document.getElementById('perteFormCommentaire').value.trim();
+
+    if(!produitId || !type){
+      showBanner('perteError', 'Sélectionnez un plat et indiquez le type de perte.');
+      return;
+    }
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const nomPlat = (produits[produitId] || {}).nom || '—';
+
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/pertes'));
+      await window._agrSet(newRef, {
+        produitNom: nomPlat, type, quantite, cout, commentaire,
+        responsable: document.getElementById('userName').textContent || '—',
+        date: Date.now(),
+      });
+
+      await ajusterStock(produitId, -Math.abs(quantite));
+      await recordAudit('Perte déclarée', nomPlat + ' — ' + type);
+
+      document.getElementById('perteFormType').value = '';
+      document.getElementById('perteFormCout').value = '';
+      document.getElementById('perteFormCommentaire').value = '';
+      loadPertes();
+    } catch(e){
+      showBanner('perteError', "Impossible d'enregistrer la perte — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function loadPertes(){
+    const body = document.getElementById('pertesTableBody');
+    const sub = document.getElementById('pertesListSub');
+    if(!currentTenantId) return;
+    try {
+      const pertes = await agrGet('agr_tenants/' + currentTenantId + '/pertes') || {};
+      const list = Object.values(pertes).sort((a,b) => (b.date||0)-(a.date||0));
+      if(list.length === 0){
+        sub.textContent = 'Aucune perte enregistrée.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = list.length + ' perte(s) enregistrée(s).';
+      body.innerHTML = list.map(p => `
+        <tr>
+          <td>${new Date(p.date).toLocaleDateString('fr-FR')}</td>
+          <td>${p.produitNom}</td>
+          <td>${p.type}</td>
+          <td>${p.quantite}</td>
+          <td>${(p.cout||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${p.responsable}</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les pertes.';
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Clients & Fidélité
+  // ---------------------------------------------------------------
+  async function saveLoyaltySettings(){
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/fidelite', {
+        minMontant: parseInt(document.getElementById('loyaltyMinMontant').value, 10) || 0,
+        avantage: document.getElementById('loyaltyAvantage').value.trim(),
+      });
+      showBanner('loyaltySuccess', 'Programme de fidélité enregistré.');
+    } catch(e){}
+  }
+
+  async function loadLoyaltySettings(){
+    if(!currentTenantId) return;
+    try {
+      const f = await agrGet('agr_tenants/' + currentTenantId + '/fidelite') || {};
+      document.getElementById('loyaltyMinMontant').value = f.minMontant || '';
+      document.getElementById('loyaltyAvantage').value = f.avantage || '';
+    } catch(e){}
+  }
+
+  async function loadClients(){
+    const body = document.getElementById('clientsTableBody');
+    const sub = document.getElementById('clientsListSub');
+    if(!currentTenantId) return;
+    try {
+      const [clients, fidelite] = await Promise.all([
+        agrGet('agr_tenants/' + currentTenantId + '/clients'),
+        agrGet('agr_tenants/' + currentTenantId + '/fidelite'),
+      ]);
+      const list = Object.values(clients || {}).sort((a,b) => (b.totalDepense||0)-(a.totalDepense||0));
+      const minMontant = (fidelite || {}).minMontant || 0;
+
+      if(list.length === 0){
+        sub.textContent = 'Aucun client pour l\'instant — une fiche est créée automatiquement à chaque commande en ligne.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = list.length + ' client(s).';
+      body.innerHTML = list.map(c => {
+        const fidele = minMontant > 0 && (c.totalDepense||0) >= minMontant;
+        return `
+        <tr>
+          <td>${c.nom || '—'}</td>
+          <td>${c.telephone}</td>
+          <td>${(c.totalDepense||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${c.pointsFidelite||0}</td>
+          <td>${fidele ? '<span class="tagpill" style="background:rgba(201,162,39,0.14); color:var(--gold-soft);">Fidèle</span>' : '—'}</td>
+        </tr>`;
+      }).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les clients.';
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Dépenses
+  // ---------------------------------------------------------------
+  async function ajouterDepense(){
+    showBanner('depenseError', null);
+    const categorie = document.getElementById('depenseFormCategorie').value.trim();
+    const montant = parseInt(document.getElementById('depenseFormMontant').value, 10) || 0;
+    const commentaire = document.getElementById('depenseFormCommentaire').value.trim();
+
+    if(!categorie || !montant){
+      showBanner('depenseError', 'Catégorie et montant sont requis.');
+      return;
+    }
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/depenses'));
+      await window._agrSet(newRef, {
+        categorie, montant, commentaire,
+        auteur: document.getElementById('userName').textContent || '—',
+        date: Date.now(),
+      });
+      await recordAudit('Dépense ajoutée', categorie + ' — ' + montant.toLocaleString('fr-FR') + ' GNF');
+      document.getElementById('depenseFormCategorie').value = '';
+      document.getElementById('depenseFormMontant').value = '';
+      document.getElementById('depenseFormCommentaire').value = '';
+      loadDepenses();
+    } catch(e){
+      showBanner('depenseError', "Impossible d'enregistrer — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function loadDepenses(){
+    const body = document.getElementById('depensesTableBody');
+    const sub = document.getElementById('depensesListSub');
+    if(!currentTenantId) return;
+    try {
+      const depenses = await agrGet('agr_tenants/' + currentTenantId + '/depenses') || {};
+      const list = Object.values(depenses).sort((a,b) => (b.date||0)-(a.date||0));
+      if(list.length === 0){
+        sub.textContent = 'Aucune dépense enregistrée.';
+        body.innerHTML = '';
+        return;
+      }
+      const total = list.reduce((s,d) => s + (d.montant||0), 0);
+      sub.textContent = list.length + ' dépense(s) — total ' + total.toLocaleString('fr-FR') + ' GNF.';
+      body.innerHTML = list.map(d => `
+        <tr>
+          <td>${new Date(d.date).toLocaleDateString('fr-FR')}</td>
+          <td>${d.categorie}</td>
+          <td>${(d.montant||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${d.auteur}</td>
+          <td>${d.commentaire || '—'}</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les dépenses.';
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Gestion bancaire
+  // ---------------------------------------------------------------
+  async function ajouterCompte(){
+    const type = document.getElementById('compteFormType').value;
+    const nom = document.getElementById('compteFormNom').value.trim();
+    const solde = parseInt(document.getElementById('compteFormSolde').value, 10) || 0;
+    if(!nom) return;
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/comptesBancaires'));
+      await window._agrSet(newRef, { type, nom, solde });
+      document.getElementById('compteFormNom').value = '';
+      document.getElementById('compteFormSolde').value = '0';
+      loadComptes();
+    } catch(e){}
+  }
+
+  async function loadComptes(){
+    const body = document.getElementById('comptesTableBody');
+    const sub = document.getElementById('comptesListSub');
+    if(!currentTenantId) return;
+    const typeLabels = { especes:'Espèces', orange_money:'Orange Money', virement:'Virement', cheque:'Chèque', banque:'Compte bancaire' };
+    try {
+      const comptes = await agrGet('agr_tenants/' + currentTenantId + '/comptesBancaires') || {};
+      const list = Object.values(comptes);
+      if(list.length === 0){
+        sub.textContent = 'Aucun compte pour l\'instant.';
+        body.innerHTML = '';
+        return;
+      }
+      const total = list.reduce((s,c) => s + (c.solde||0), 0);
+      sub.textContent = list.length + ' compte(s) — solde total ' + total.toLocaleString('fr-FR') + ' GNF.';
+      body.innerHTML = list.map(c => `
+        <tr>
+          <td>${c.nom}</td>
+          <td>${typeLabels[c.type] || c.type}</td>
+          <td>${(c.solde||0).toLocaleString('fr-FR')} GNF</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les comptes.';
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Pointage biométrique — WebAuthn (empreinte/Face ID DÉJÀ configurés
+  // sur l'appareil de l'employé). Aucune image d'empreinte n'est jamais
+  // lue ni stockée : seul un identifiant de clé cryptographique liée à
+  // cet appareil est conservé, exactement comme "Se connecter avec
+  // Touch ID" sur un site web. Nécessite HTTPS (Firebase Hosting).
+  // ---------------------------------------------------------------
+  function bufToBase64(buf){
+    return btoa(String.fromCharCode(...new Uint8Array(buf)));
+  }
+  function base64ToBuf(b64){
+    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  }
+
+  async function registerFingerprint(userId, nom){
+    if(!window.PublicKeyCredential){
+      alert("Cet appareil/navigateur ne prend pas en charge l'empreinte biométrique (WebAuthn).");
+      return;
+    }
+    try {
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          rp: { name: 'AGR' },
+          user: {
+            id: new TextEncoder().encode(userId),
+            name: nom || userId,
+            displayName: nom || userId,
+          },
+          pubKeyCredParams: [{ alg: -7, type: 'public-key' }, { alg: -257, type: 'public-key' }],
+          authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+          timeout: 60000,
+          attestation: 'none',
+        },
+      });
+
+      await agrSet('agr_tenants/' + currentTenantId + '/users/' + userId + '/credentialId', bufToBase64(credential.rawId));
+      await recordAudit('Empreinte enregistrée', nom || userId);
+      loadEquipe();
+    } catch(e){
+      alert("Impossible d'enregistrer l'empreinte : " + (e.message || 'action annulée.'));
+    }
+  }
+
+  async function loadPointage(){
+    if(!currentTenantId) return;
+    const select = document.getElementById('pointageFormEmploye');
+    try {
+      const users = await agrGet('agr_tenants/' + currentTenantId + '/users') || {};
+      select.innerHTML = Object.entries(users)
+        .filter(([, u]) => u.credentialId)
+        .map(([id, u]) => `<option value="${id}">${u.nom || id}</option>`).join('') ||
+        '<option value="">Aucun employé n\'a encore enregistré son empreinte</option>';
+    } catch(e){}
+
+    const body = document.getElementById('pointageTableBody');
+    const sub = document.getElementById('pointageListSub');
+    try {
+      const attendance = await agrGet('agr_tenants/' + currentTenantId + '/pointage') || {};
+      const list = Object.values(attendance).sort((a,b) => (b.date||0)-(a.date||0));
+      if(list.length === 0){
+        sub.textContent = 'Aucun pointage pour l\'instant.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = list.length + ' pointage(s) enregistré(s).';
+      body.innerHTML = list.map(p => `
+        <tr><td>${p.nom}</td><td>${p.type === 'entree' ? 'Entrée' : 'Sortie'}</td><td>${new Date(p.date).toLocaleString('fr-FR')}</td></tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger l\'historique.';
+    }
+  }
+
+  async function pointerMaintenant(){
+    showBanner('pointageError', null);
+    showBanner('pointageSuccess', null);
+    const userId = document.getElementById('pointageFormEmploye').value;
+    if(!userId){
+      showBanner('pointageError', 'Sélectionnez un employé ayant déjà enregistré son empreinte.');
+      return;
+    }
+    try {
+      const user = await agrGet('agr_tenants/' + currentTenantId + '/users/' + userId);
+      if(!user || !user.credentialId){
+        showBanner('pointageError', 'Empreinte non enregistrée pour cet employé.');
+        return;
+      }
+
+      await navigator.credentials.get({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          allowCredentials: [{ id: base64ToBuf(user.credentialId), type: 'public-key' }],
+          userVerification: 'required',
+          timeout: 60000,
+        },
+      });
+      // Succès = l'empreinte/Face ID de CET appareil correspond à la clé enregistrée pour cet employé.
+
+      // Déduit entrée ou sortie selon le dernier pointage du jour
+      const today = new Date(); today.setHours(0,0,0,0);
+      const all = await agrGet('agr_tenants/' + currentTenantId + '/pointage') || {};
+      const todaysForUser = Object.values(all).filter(p => p.userId === userId && p.date >= today.getTime());
+      const type = (todaysForUser.length % 2 === 0) ? 'entree' : 'sortie';
+
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/pointage'));
+      await window._agrSet(newRef, { userId, nom: user.nom, type, date: Date.now() });
+
+      showBanner('pointageSuccess', (user.nom || userId) + ' — ' + (type === 'entree' ? 'entrée' : 'sortie') + ' enregistrée par empreinte/Face ID.');
+      loadPointage();
+    } catch(e){
+      showBanner('pointageError', "Vérification biométrique refusée ou annulée.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Commande en salle — attribuée au vendeur connecté (alimente l'évaluation)
+  // ---------------------------------------------------------------
+  let commandeSalleLignes = []; // [{produitId, nom, prix, qty}]
+
+  async function loadCommandeSalleForm(){
+    document.getElementById('commandeVendeurLabel').textContent = document.getElementById('userName').textContent || currentUserId || '—';
+    const select = document.getElementById('commandeSalleProduit');
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const entries = Object.entries(produits);
+      select.innerHTML = entries.length
+        ? entries.map(([id,p]) => `<option value="${id}">${p.nom} — ${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</option>`).join('')
+        : '<option value="">Ajoutez des plats dans Menu & Catégories</option>';
+    } catch(e){}
+    commandeSalleLignes = [];
+    renderCommandeSalleLignes();
+  }
+
+  function renderCommandeSalleLignes(){
+    const el = document.getElementById('commandeSalleLignes');
+    if(commandeSalleLignes.length === 0){
+      el.innerHTML = '<span style="color:var(--text-dim);">Ticket vide.</span>';
+      return;
+    }
+    el.innerHTML = commandeSalleLignes.map((l,i) =>
+      `<div>${l.qty}× ${l.nom} — ${(l.prix*l.qty).toLocaleString('fr-FR')} GNF <a onclick="retirerLigneCommandeSalle(${i})" style="color:#E19488; cursor:pointer; font-size:11px;">retirer</a></div>`
+    ).join('');
+  }
+
+  async function ajouterLigneCommandeSalle(){
+    const produitId = document.getElementById('commandeSalleProduit').value;
+    const qty = parseInt(document.getElementById('commandeSalleQuantite').value, 10) || 1;
+    if(!produitId) return;
+    try {
+      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + produitId);
+      if(!p) return;
+      commandeSalleLignes.push({ produitId, nom: p.nom, prix: p.prixVente || 0, qty });
+      renderCommandeSalleLignes();
+    } catch(e){}
+  }
+
+  function retirerLigneCommandeSalle(i){
+    commandeSalleLignes.splice(i, 1);
+    renderCommandeSalleLignes();
+  }
+
+  async function validerCommandeSalle(){
+    showBanner('commandeSalleError', null);
+    if(commandeSalleLignes.length === 0){
+      showBanner('commandeSalleError', 'Ajoutez au moins un plat au ticket.');
+      return;
+    }
+    let totalPlats = 0, totalRevenu = 0;
+    const plats = {};
+    commandeSalleLignes.forEach(l => {
+      totalPlats += l.qty;
+      totalRevenu += l.prix * l.qty;
+      plats[l.produitId] = { nom: l.nom, qty: l.qty, prix: l.prix };
+    });
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/commandes'));
+      await window._agrSet(newRef, {
+        origine: 'Salle', plats, platsVendus: totalPlats, revenu: totalRevenu,
+        date: Date.now(), vendeurId: currentUserId, vendeurNom: document.getElementById('userName').textContent,
+      });
+      commandeSalleLignes = [];
+      renderCommandeSalleLignes();
+      renderOrdersTable();
+    } catch(e){
+      showBanner('commandeSalleError', "Impossible d'enregistrer — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Évaluation des employés — ventes/retards réels + saisie qualitative
+  // ---------------------------------------------------------------
+  async function loadEvaluation(){
+    const body = document.getElementById('evalTableBody');
+    if(!currentTenantId) return;
+    try {
+      const [users, commandes, pointage, info, evaluations] = await Promise.all([
+        agrGet('agr_tenants/' + currentTenantId + '/users'),
+        agrGet('agr_tenants/' + currentTenantId + '/commandes'),
+        agrGet('agr_tenants/' + currentTenantId + '/pointage'),
+        agrGet('agr_tenants/' + currentTenantId + '/info'),
+        agrGet('agr_tenants/' + currentTenantId + '/evaluations'),
+      ]);
+
+      const userEntries = Object.entries(users || {});
+      const commandeList = Object.values(commandes || {});
+      const pointageList = Object.values(pointage || {});
+      const [hh, mm] = ((info || {}).heureDebutTravail || '08:00').split(':').map(Number);
+      const evalData = evaluations || {};
+
+      const rows = userEntries.map(([id, u]) => {
+        const ventes = commandeList.filter(c => c.vendeurId === id);
+        const revenu = ventes.reduce((s,c) => s + (c.revenu||0), 0);
+
+        const entreesUser = pointageList.filter(p => p.userId === id && p.type === 'entree');
+        let totalRetardMin = 0;
+        entreesUser.forEach(p => {
+          const d = new Date(p.date);
+          const attendu = new Date(d); attendu.setHours(hh||8, mm||0, 0, 0);
+          const diffMin = Math.round((d - attendu) / 60000);
+          if(diffMin > 0) totalRetardMin += diffMin;
+        });
+
+        const ev = evalData[id] || {};
+        return {
+          id, nom: u.nom || id,
+          ventesCount: ventes.length, revenu,
+          retardMin: totalRetardMin,
+          erreurs: ev.erreurs || 0,
+          clientsSatisfaits: ev.clientsSatisfaits || 0,
+          objectifAtteint: ev.objectifAtteint || false,
+          prime: ev.prime || 0,
+        };
+      }).sort((a,b) => b.revenu - a.revenu);
+
+      if(rows.length === 0){
+        body.innerHTML = '<tr><td colspan="10" style="color:var(--text-dim);">Aucun employé pour l\'instant.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = rows.map((r,i) => `
+        <tr>
+          <td>${i===0 ? '🏆 1' : (i+1)}</td>
+          <td>${r.nom}</td>
+          <td>${r.ventesCount}</td>
+          <td>${r.revenu.toLocaleString('fr-FR')} GNF</td>
+          <td>${r.retardMin} min</td>
+          <td><input type="number" value="${r.erreurs}" style="width:50px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; color:var(--text); padding:4px;" onchange="updateEvalField('${r.id}','erreurs',this.value)"></td>
+          <td><input type="number" value="${r.clientsSatisfaits}" style="width:50px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; color:var(--text); padding:4px;" onchange="updateEvalField('${r.id}','clientsSatisfaits',this.value)"></td>
+          <td><input type="checkbox" ${r.objectifAtteint ? 'checked' : ''} onchange="updateEvalField('${r.id}','objectifAtteint',this.checked)"></td>
+          <td><input type="number" value="${r.prime}" style="width:80px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; color:var(--text); padding:4px;" onchange="updateEvalField('${r.id}','prime',this.value)"></td>
+          <td></td>
+        </tr>
+      `).join('');
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="10" style="color:#E19488;">Impossible de charger l\'évaluation.</td></tr>';
+    }
+  }
+
+  async function updateEvalField(userId, field, value){
+    try {
+      let v = value;
+      if(field === 'erreurs' || field === 'clientsSatisfaits' || field === 'prime') v = parseInt(value, 10) || 0;
+      await agrSet('agr_tenants/' + currentTenantId + '/evaluations/' + userId + '/' + field, v);
+    } catch(e){}
+  }
+
+  // =================================================================
+  // COMPTABILITÉ — journal en partie double, généré à partir des
+  // ventes (commandes) et des dépenses réellement enregistrées.
+  // =================================================================
+  let comptaJournalCache = [];   // pour les exports
+  let comptaResultatCache = null;
+
+  function getPeriodeRange(){
+    const periode = document.getElementById('comptaPeriode').value;
+    const refStr = document.getElementById('comptaDateRef').value;
+    const ref = refStr ? new Date(refStr) : new Date();
+    let start, end, label;
+
+    if(periode === 'jour'){
+      start = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+      end = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() + 1);
+      label = start.toLocaleDateString('fr-FR');
+    } else if(periode === 'annee'){
+      start = new Date(ref.getFullYear(), 0, 1);
+      end = new Date(ref.getFullYear() + 1, 0, 1);
+      label = 'Année ' + ref.getFullYear();
+    } else {
+      start = new Date(ref.getFullYear(), ref.getMonth(), 1);
+      end = new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
+      label = start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    }
+    return { periode, start, end, label };
+  }
+
+  async function loadComptabilite(){
+    if(!currentTenantId) return;
+    if(!document.getElementById('comptaDateRef').value){
+      document.getElementById('comptaDateRef').value = new Date().toISOString().slice(0,10);
+    }
+    const { periode, start, end, label } = getPeriodeRange();
+
+    try {
+      const [commandes, depenses, comptes, produits, immobilisations, info] = await Promise.all([
+        agrGet('agr_tenants/' + currentTenantId + '/commandes'),
+        agrGet('agr_tenants/' + currentTenantId + '/depenses'),
+        agrGet('agr_tenants/' + currentTenantId + '/comptesBancaires'),
+        agrGet('agr_tenants/' + currentTenantId + '/produits'),
+        agrGet('agr_tenants/' + currentTenantId + '/immobilisations'),
+        agrGet('agr_tenants/' + currentTenantId + '/info'),
+      ]);
+
+      const ventes = Object.values(commandes || {}).filter(c => c.date >= start.getTime() && c.date < end.getTime());
+      const charges = Object.values(depenses || {}).filter(d => d.date >= start.getTime() && d.date < end.getTime());
+
+      // ---- Journal (partie double) ----
+      const journal = [];
+      ventes.forEach(v => {
+        journal.push({ date: v.date, libelle: 'Vente — ' + (v.origine||'Salle'), compte: 'Caisse', debit: v.revenu||0, credit: 0 });
+        journal.push({ date: v.date, libelle: 'Vente — ' + (v.origine||'Salle'), compte: 'Ventes', debit: 0, credit: v.revenu||0 });
+      });
+      charges.forEach(d => {
+        journal.push({ date: d.date, libelle: 'Dépense — ' + d.categorie, compte: 'Charges — ' + d.categorie, debit: d.montant||0, credit: 0 });
+        journal.push({ date: d.date, libelle: 'Dépense — ' + d.categorie, compte: 'Caisse', debit: 0, credit: d.montant||0 });
+      });
+      journal.sort((a,b) => a.date - b.date);
+      comptaJournalCache = journal.map(j => ({ ...j, dateLabel: new Date(j.date).toLocaleDateString('fr-FR'), label }));
+
+      document.getElementById('journalTableBody').innerHTML = journal.length
+        ? journal.map(j => `<tr><td>${new Date(j.date).toLocaleDateString('fr-FR')}</td><td>${j.libelle} (${j.compte})</td><td>${j.debit ? j.debit.toLocaleString('fr-FR')+' GNF' : '—'}</td><td>${j.credit ? j.credit.toLocaleString('fr-FR')+' GNF' : '—'}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text-dim);">Aucune écriture sur cette période.</td></tr>';
+
+      // ---- Livre de caisse ----
+      let solde = 0;
+      const caisseRows = journal.filter(j => j.compte === 'Caisse').map(j => {
+        solde += (j.debit||0) - (j.credit||0);
+        return { ...j, solde };
+      });
+      document.getElementById('caisseTableBody').innerHTML = caisseRows.length
+        ? caisseRows.map(j => `<tr><td>${new Date(j.date).toLocaleDateString('fr-FR')}</td><td>${j.libelle}</td><td>${j.debit ? j.debit.toLocaleString('fr-FR') : '—'}</td><td>${j.credit ? j.credit.toLocaleString('fr-FR') : '—'}</td><td>${j.solde.toLocaleString('fr-FR')} GNF</td></tr>`).join('')
+        : '<tr><td colspan="5" style="color:var(--text-dim);">Aucun mouvement de caisse sur cette période.</td></tr>';
+
+      // ---- Grand livre (regroupé par compte) ----
+      const comptesMap = {};
+      journal.forEach(j => {
+        if(!comptesMap[j.compte]) comptesMap[j.compte] = { debit: 0, credit: 0 };
+        comptesMap[j.compte].debit += j.debit||0;
+        comptesMap[j.compte].credit += j.credit||0;
+      });
+      const grandLivreRows = Object.entries(comptesMap);
+      document.getElementById('grandLivreTableBody').innerHTML = grandLivreRows.length
+        ? grandLivreRows.map(([compte, v]) => `<tr><td>${compte}</td><td>${v.debit.toLocaleString('fr-FR')} GNF</td><td>${v.credit.toLocaleString('fr-FR')} GNF</td><td>${(v.debit - v.credit).toLocaleString('fr-FR')} GNF</td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text-dim);">Aucune écriture.</td></tr>';
+
+      // ---- Balance ----
+      const totalDebit = journal.reduce((s,j) => s + (j.debit||0), 0);
+      const totalCredit = journal.reduce((s,j) => s + (j.credit||0), 0);
+      document.getElementById('balanceSummary').innerHTML =
+        `<div>Total débit : <strong>${totalDebit.toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>Total crédit : <strong>${totalCredit.toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>${totalDebit === totalCredit ? '✓ Balance équilibrée' : '⚠ Écart de ' + Math.abs(totalDebit-totalCredit).toLocaleString('fr-FR') + ' GNF'}</div>`;
+
+      // ---- Amortissements ----
+      const immosList = Object.entries(immobilisations || {});
+      const amortMensuelTotal = immosList.reduce((s,[,a]) => s + (a.valeur / (a.duree||1)), 0);
+      document.getElementById('amortTableBody').innerHTML = immosList.length
+        ? immosList.map(([id,a]) => `<tr><td>${a.nom}</td><td>${a.valeur.toLocaleString('fr-FR')} GNF</td><td>${a.duree} mois</td><td>${Math.round(a.valeur/(a.duree||1)).toLocaleString('fr-FR')} GNF</td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text-dim);">Aucune immobilisation enregistrée.</td></tr>';
+
+      let amortPeriode = amortMensuelTotal;
+      if(periode === 'jour') amortPeriode = amortMensuelTotal / 30;
+      if(periode === 'annee') amortPeriode = amortMensuelTotal * 12;
+
+      // ---- Compte de résultat ----
+      const revenus = ventes.reduce((s,v) => s + (v.revenu||0), 0);
+      const chargesDepenses = charges.reduce((s,d) => s + (d.montant||0), 0);
+      const chargesTotal = chargesDepenses + amortPeriode;
+      const resultatNet = revenus - chargesTotal;
+      comptaResultatCache = { label, revenus, chargesDepenses, amortPeriode, chargesTotal, resultatNet };
+
+      document.getElementById('resultatSummary').innerHTML =
+        `<div>Période : <strong>${label}</strong></div>` +
+        `<div>Revenus (ventes) : <strong>${revenus.toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>Charges (dépenses) : <strong>${chargesDepenses.toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>Amortissements : <strong>${Math.round(amortPeriode).toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>Résultat net : <strong style="color:${resultatNet>=0?'var(--teal-soft)':'#E19488'}">${resultatNet.toLocaleString('fr-FR')} GNF</strong></div>`;
+
+      // ---- Impôts ----
+      const taux = parseFloat(document.getElementById('tauxImposition').value) || (info && info.tauxImposition) || 0;
+      if(!document.getElementById('tauxImposition').value) document.getElementById('tauxImposition').value = (info && info.tauxImposition) || 0;
+      const impot = resultatNet > 0 ? resultatNet * (taux/100) : 0;
+      document.getElementById('impotsSummary').innerHTML =
+        `<div>Résultat net imposable : <strong>${Math.max(0,resultatNet).toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>Impôt estimé (${taux}%) : <strong>${Math.round(impot).toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div>Résultat après impôt : <strong>${Math.round(resultatNet - impot).toLocaleString('fr-FR')} GNF</strong></div>`;
+
+      // ---- Bilan simplifié ----
+      const soldeComptes = Object.values(comptes || {}).reduce((s,c) => s + (c.solde||0), 0);
+      const valeurStock = Object.values(produits || {}).reduce((s,p) => s + ((p.stock||0) * (p.prixAchat||0)), 0);
+      const actifTotal = soldeComptes + valeurStock;
+      document.getElementById('bilanSummary').innerHTML =
+        `<div><strong>Actif</strong></div>` +
+        `<div style="padding-left:14px;">Comptes bancaires/caisse : ${soldeComptes.toLocaleString('fr-FR')} GNF</div>` +
+        `<div style="padding-left:14px;">Valeur du stock : ${valeurStock.toLocaleString('fr-FR')} GNF</div>` +
+        `<div style="padding-left:14px;"><strong>Total actif : ${actifTotal.toLocaleString('fr-FR')} GNF</strong></div>` +
+        `<div style="margin-top:8px;"><strong>Passif (capitaux propres, simplifié)</strong></div>` +
+        `<div style="padding-left:14px;">Équivaut au total actif (aucune dette suivie pour l'instant) : ${actifTotal.toLocaleString('fr-FR')} GNF</div>`;
+
+    } catch(e){
+      showBanner('paramsError', null); // no-op safe guard
+    }
+  }
+
+  async function saveTauxImposition(){
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/info/tauxImposition', parseFloat(document.getElementById('tauxImposition').value) || 0);
+      loadComptabilite();
+    } catch(e){}
+  }
+
+  async function ajouterImmobilisation(){
+    showBanner('amortError', null);
+    const nom = document.getElementById('amortNom').value.trim();
+    const valeur = parseInt(document.getElementById('amortValeur').value, 10) || 0;
+    const duree = parseInt(document.getElementById('amortDuree').value, 10) || 36;
+    if(!nom || !valeur){
+      showBanner('amortError', 'Nom du bien et valeur sont requis.');
+      return;
+    }
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/immobilisations'));
+      await window._agrSet(newRef, { nom, valeur, duree });
+      await recordAudit('Immobilisation ajoutée', nom);
+      document.getElementById('amortNom').value = '';
+      document.getElementById('amortValeur').value = '';
+      document.getElementById('amortDuree').value = '36';
+      loadComptabilite();
+    } catch(e){
+      showBanner('amortError', "Impossible d'ajouter — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  // ---- Exports PDF (A4) et Excel ----
+  function exporterPDF(type){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    doc.setFontSize(14);
+
+    if(type === 'journal'){
+      doc.text('Journal comptable — ' + (comptaJournalCache[0]?.label || ''), 14, 16);
+      doc.autoTable({
+        startY: 22,
+        head: [['Date', 'Libellé', 'Compte', 'Débit', 'Crédit']],
+        body: comptaJournalCache.map(j => [j.dateLabel, j.libelle, j.compte, j.debit ? j.debit.toLocaleString('fr-FR') : '', j.credit ? j.credit.toLocaleString('fr-FR') : '']),
+      });
+      doc.save('journal-' + currentTenantId + '.pdf');
+    } else if(type === 'resultat' && comptaResultatCache){
+      const r = comptaResultatCache;
+      doc.text('Compte de résultat — ' + r.label, 14, 16);
+      doc.autoTable({
+        startY: 22,
+        head: [['Poste', 'Montant (GNF)']],
+        body: [
+          ['Revenus (ventes)', r.revenus.toLocaleString('fr-FR')],
+          ['Charges (dépenses)', r.chargesDepenses.toLocaleString('fr-FR')],
+          ['Amortissements', Math.round(r.amortPeriode).toLocaleString('fr-FR')],
+          ['Résultat net', r.resultatNet.toLocaleString('fr-FR')],
+        ],
+      });
+      doc.save('compte-resultat-' + currentTenantId + '.pdf');
+    }
+  }
+
+  function exporterExcel(type){
+    if(type === 'journal'){
+      const rows = comptaJournalCache.map(j => ({
+        Date: j.dateLabel, Libellé: j.libelle, Compte: j.compte, Débit: j.debit, Crédit: j.credit,
+      }));
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Journal');
+      XLSX.writeFile(wb, 'journal-' + currentTenantId + '.xlsx');
+    } else if(type === 'resultat' && comptaResultatCache){
+      const r = comptaResultatCache;
+      const rows = [
+        { Poste: 'Revenus (ventes)', Montant: r.revenus },
+        { Poste: 'Charges (dépenses)', Montant: r.chargesDepenses },
+        { Poste: 'Amortissements', Montant: Math.round(r.amortPeriode) },
+        { Poste: 'Résultat net', Montant: r.resultatNet },
+      ];
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Résultat');
+      XLSX.writeFile(wb, 'compte-resultat-' + currentTenantId + '.xlsx');
+    }
+  }
+
+  // =================================================================
+  // RECONNAISSANCE FACIALE — Gérant et profils autorisés (face-api.js,
+  // modèles chargés à la demande, tout se passe dans le navigateur —
+  // aucune photo n'est envoyée à un serveur externe).
+  // =================================================================
+  let faceModelsLoaded = false;
+  let faceStream = null;
+  let faceMode = null;   // 'register' | 'verify'
+  let faceUserId = null;
+  let faceUserNom = null;
+
+  async function ensureFaceModels(){
+    if(faceModelsLoaded) return true;
+    const status = document.getElementById('faceOverlayStatus');
+    if(status) status.textContent = 'Chargement des modèles de reconnaissance faciale…';
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+    try {
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+      faceModelsLoaded = true;
+      return true;
+    } catch(e){
+      if(status) status.textContent = "Impossible de charger les modèles (connexion internet requise la première fois).";
+      return false;
+    }
+  }
+
+  async function openFaceCapture(userId, nom, mode){
+    faceMode = mode; faceUserId = userId; faceUserNom = nom;
+    document.getElementById('faceOverlayTitle').textContent = mode === 'register' ? 'Enregistrer le visage — ' + nom : 'Pointage par reconnaissance faciale';
+    document.getElementById('faceOverlayStatus').textContent = 'Initialisation…';
+    document.getElementById('faceOverlay').style.display = 'flex';
+
+    try {
+      faceStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+      document.getElementById('faceVideo').srcObject = faceStream;
+    } catch(e){
+      document.getElementById('faceOverlayStatus').textContent = "Impossible d'accéder à la caméra (autorisation refusée ou aucune caméra détectée).";
+      return;
+    }
+
+    const ok = await ensureFaceModels();
+    document.getElementById('faceOverlayStatus').textContent = ok
+      ? 'Cadrez votre visage, puis cliquez sur "Capturer".'
+      : document.getElementById('faceOverlayStatus').textContent;
+  }
+
+  function closeFaceOverlay(){
+    if(faceStream){
+      faceStream.getTracks().forEach(t => t.stop());
+      faceStream = null;
+    }
+    document.getElementById('faceOverlay').style.display = 'none';
+  }
+
+  async function captureFace(){
+    const status = document.getElementById('faceOverlayStatus');
+    if(!faceModelsLoaded){
+      status.textContent = 'Modèles pas encore chargés — patientez.';
+      return;
+    }
+    status.textContent = 'Analyse du visage…';
+
+    const video = document.getElementById('faceVideo');
+    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks(true)
+      .withFaceDescriptor();
+
+    if(!detection){
+      status.textContent = "Aucun visage détecté — rapprochez-vous et réessayez.";
+      return;
+    }
+
+    const descriptor = Array.from(detection.descriptor); // Float32Array -> array JSON-compatible
+
+    if(faceMode === 'register'){
+      try {
+        await agrSet('agr_tenants/' + currentTenantId + '/users/' + faceUserId + '/faceDescriptor', descriptor);
+        await recordAudit('Visage enregistré', faceUserNom);
+        status.textContent = 'Visage enregistré avec succès.';
+        setTimeout(() => { closeFaceOverlay(); loadEquipe(); }, 900);
+      } catch(e){
+        status.textContent = "Impossible d'enregistrer — vérifiez la connexion à Firebase.";
+      }
+    } else {
+      // Mode vérification : comparer au visage le plus proche parmi les profils autorisés
+      try {
+        const users = await agrGet('agr_tenants/' + currentTenantId + '/users') || {};
+        const candidats = Object.entries(users).filter(([id,u]) => (id==='dg' || u.role==='gerant') && u.faceDescriptor);
+
+        if(candidats.length === 0){
+          status.textContent = 'Aucun profil autorisé n\'a encore enregistré son visage.';
+          return;
+        }
+
+        let meilleur = null, meilleureDistance = Infinity;
+        candidats.forEach(([id, u]) => {
+          const dist = faceapi.euclideanDistance(descriptor, u.faceDescriptor);
+          if(dist < meilleureDistance){ meilleureDistance = dist; meilleur = { id, nom: u.nom }; }
+        });
+
+        const SEUIL = 0.5; // plus petit = plus strict
+        if(meilleureDistance > SEUIL){
+          status.textContent = 'Visage non reconnu — réessayez ou utilisez le pointage par empreinte.';
+          return;
+        }
+
+        // Déduit entrée/sortie comme pour le pointage biométrique par empreinte
+        const today = new Date(); today.setHours(0,0,0,0);
+        const all = await agrGet('agr_tenants/' + currentTenantId + '/pointage') || {};
+        const todaysForUser = Object.values(all).filter(p => p.userId === meilleur.id && p.date >= today.getTime());
+        const type = (todaysForUser.length % 2 === 0) ? 'entree' : 'sortie';
+
+        const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/pointage'));
+        await window._agrSet(newRef, { userId: meilleur.id, nom: meilleur.nom, type, date: Date.now(), methode: 'facial' });
+
+        status.textContent = meilleur.nom + ' reconnu — ' + (type==='entree'?'entrée':'sortie') + ' enregistrée.';
+        setTimeout(() => { closeFaceOverlay(); loadPointage(); }, 1200);
+      } catch(e){
+        status.textContent = "Erreur lors de la vérification — réessayez.";
+      }
+    }
+  }
+
+  async function pointerParVisage(){
+    showBanner('faceError', null);
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      showBanner('faceError', "Ce navigateur ne prend pas en charge l'accès à la caméra.");
+      return;
+    }
+    openFaceCapture(null, null, 'verify');
   }
 
   // ---------------------------------------------------------------
@@ -1961,6 +3264,9 @@
   }
 
   initConnectionStatus();
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
   showView('home');
 </script>
 
