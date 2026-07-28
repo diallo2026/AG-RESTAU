@@ -525,7 +525,7 @@
   .app-shell{display:flex; min-height:100vh;}
 
   .sidebar{
-    width:248px; background:#2FA0DB;
+    width:248px; background:var(--sidebar-bg, #2FA0DB);
     border-right:1px solid var(--line);
     padding:64px 14px 22px; flex-shrink:0;
     display:flex; flex-direction:column;
@@ -536,9 +536,9 @@
 
   .sidebar .nav-group .grouplabel{color:rgba(255,255,255,0.65);}
   .sidebar .navlink{color:#fff;}
-  .sidebar .navlink:hover{background:rgba(255,255,255,0.14); color:#fff;}
-  .sidebar .navlink.active{background:rgba(255,255,255,0.22); color:#fff;}
-  .sidebar .navlink.active .ic{color:#fff;}
+  .sidebar .navlink:hover{background:rgba(255,255,255,0.16); color:#fff;}
+  .sidebar .navlink.active{background:#ffffff; color:#12161c; font-weight:700;}
+  .sidebar .navlink.active .ic{color:#12161c;}
   .sidebar .user-mini .name{color:#fff;}
   .sidebar .user-mini .role{color:rgba(255,255,255,0.75);}
   .sidebar .logout-btn{background:rgba(255,255,255,0.14); border-color:rgba(255,255,255,0.3); color:#fff;}
@@ -1057,7 +1057,10 @@
     <div class="main">
       <div class="topbar">
         <h1 id="sectionTitle">Tableau de bord</h1>
-        <div class="datepick" id="tenantStatus">Lundi 27 juillet 2026</div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <button class="btn-outline no-print" style="color:var(--text);" onclick="exporterOngletPDF()">📄 Exporter ce rapport en PDF A4</button>
+          <div class="datepick" id="tenantStatus">Lundi 27 juillet 2026</div>
+        </div>
       </div>
 
       <div class="banner error" id="dashboardError"></div>
@@ -1492,6 +1495,15 @@
             <div class="field" style="margin:0;"><label>Couleur principale</label><input type="color" id="paramThemeAccent" value="#C9A227" onchange="appliquerEtSauverTheme()"></div>
             <div class="field" style="margin:0;"><label>Couleur secondaire</label><input type="color" id="paramThemeSecondary" value="#2F6F5E" onchange="appliquerEtSauverTheme()"></div>
           </div>
+
+          <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line);">
+            <label style="display:block; font-size:12px; color:var(--text-dim); margin-bottom:10px;">Thème de la barre latérale (menus & navigation)</label>
+            <div id="sidebarThemeSwatches" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;"></div>
+            <div class="field" style="max-width:200px; margin:0;">
+              <label>Couleur personnalisée</label>
+              <input type="color" id="paramSidebarBg" value="#2FA0DB" onchange="choisirThemeSidebar(this.value)">
+            </div>
+          </div>
         </div>
 
         <div class="panel" style="margin-top:16px;">
@@ -1624,6 +1636,41 @@
     }
   }
 
+  // ---------------------------------------------------------------
+  // Thèmes de la barre latérale — plusieurs préréglages + couleur libre
+  // ---------------------------------------------------------------
+  const SIDEBAR_THEMES = [
+    { nom:'Bleu ciel', hex:'#2FA0DB' },
+    { nom:'Doré', hex:'#C9A227' },
+    { nom:'Émeraude', hex:'#1E8A6B' },
+    { nom:'Violet', hex:'#7C5CBF' },
+    { nom:'Bordeaux', hex:'#8C3A4B' },
+    { nom:'Charbon', hex:'#1F2630' },
+  ];
+
+  function renderSidebarThemeSwatches(){
+    const el = document.getElementById('sidebarThemeSwatches');
+    if(!el || el.children.length) return;
+    el.innerHTML = SIDEBAR_THEMES.map(t => `
+      <button onclick="choisirThemeSidebar('${t.hex}')" title="${t.nom}"
+        style="width:34px; height:34px; border-radius:8px; background:${t.hex}; border:2px solid var(--line); cursor:pointer;"></button>
+    `).join('');
+  }
+
+  function applySidebarTheme(hex){
+    document.documentElement.style.setProperty('--sidebar-bg', hex);
+    const input = document.getElementById('paramSidebarBg');
+    if(input) input.value = hex;
+  }
+
+  async function choisirThemeSidebar(hex){
+    applySidebarTheme(hex);
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/info/sidebarBg', hex);
+    } catch(e){}
+  }
+
   function lightenColor(hex, percent){
     const num = parseInt(hex.replace('#',''), 16);
     let r = (num >> 16) + Math.round(255 * percent / 100);
@@ -1704,13 +1751,15 @@
   }
 
   // ---------------------------------------------------------------
-  // Impression — fonctionne à l'identique dans TOUS les onglets : imprime
-  // uniquement la section actuellement affichée, avec un en-tête (nom du
-  // restaurant + onglet + date) injecté juste avant impression.
+  // Export PDF A4 — fonctionne à l'identique dans TOUS les onglets.
+  // Génère un vrai fichier PDF (jsPDF + autoTable) à partir du contenu
+  // de la section actuellement affichée : tableaux, cartes KPI, et
+  // résumés texte (Résultat, Bilan, Impôts, Licence...).
   // ---------------------------------------------------------------
-  async function imprimerOnglet(){
-    const existing = document.getElementById('printHeaderTemp');
-    if(existing) existing.remove();
+  async function exporterOngletPDF(){
+    const section = document.querySelector('.dash-section:not([style*="display:none"]):not([style*="display: none"])') ||
+                     Array.from(document.querySelectorAll('.dash-section')).find(s => getComputedStyle(s).display !== 'none');
+    if(!section){ return; }
 
     let nomRestaurant = currentTenantId || 'AGR';
     try {
@@ -1719,30 +1768,51 @@
     } catch(e){}
 
     const titre = document.getElementById('sectionTitle').textContent;
-    const header = document.createElement('div');
-    header.id = 'printHeaderTemp';
-    header.style.display = 'none';
-    header.innerHTML = `
-      <div style="display:block; margin-bottom:18px; border-bottom:2px solid #000; padding-bottom:10px;">
-        <div style="font-size:20px; font-weight:700;">${nomRestaurant}</div>
-        <div style="font-size:13px;">${titre} — imprimé le ${new Date().toLocaleString('fr-FR')}</div>
-      </div>`;
-    header.setAttribute('style', 'display:none;');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
 
-    const main = document.querySelector('.main');
-    main.insertBefore(header, main.firstChild);
+    doc.setFontSize(16);
+    doc.text(nomRestaurant, 14, 16);
+    doc.setFontSize(11);
+    doc.text(titre + ' — exporté le ' + new Date().toLocaleString('fr-FR'), 14, 23);
+    let y = 30;
 
-    const style = document.createElement('style');
-    style.id = 'printHeaderStyle';
-    style.textContent = '@media print{ #printHeaderTemp{ display:block !important; } }';
-    document.head.appendChild(style);
+    // 1) Cartes KPI éventuelles (ex. Tableau de bord)
+    const kpiCards = section.querySelectorAll('.kpi-card');
+    if(kpiCards.length){
+      const rows = Array.from(kpiCards).map(card => [
+        card.querySelector('.lbl')?.textContent || '',
+        card.querySelector('.val')?.textContent || '',
+      ]);
+      doc.autoTable({ startY: y, head: [['Indicateur','Valeur']], body: rows });
+      y = doc.lastAutoTable.finalY + 8;
+    }
 
-    window.print();
+    // 2) Résumés texte (divs id se terminant par "Summary", ou licenceInfo)
+    const summaryBlocks = section.querySelectorAll('[id$="Summary"], #licenceInfo');
+    summaryBlocks.forEach(block => {
+      const lignes = Array.from(block.children).length
+        ? Array.from(block.children).map(c => c.textContent.trim()).filter(Boolean)
+        : [block.textContent.trim()];
+      if(lignes.length === 0) return;
+      doc.autoTable({ startY: y, body: lignes.map(l => [l]), theme: 'plain', styles:{ fontSize:10 } });
+      y = doc.lastAutoTable.finalY + 6;
+    });
 
-    setTimeout(() => {
-      const h = document.getElementById('printHeaderTemp'); if(h) h.remove();
-      const s = document.getElementById('printHeaderStyle'); if(s) s.remove();
-    }, 500);
+    // 3) Tous les tableaux visibles de la section (Commandes, Menu, RH, Stocks, Journal...)
+    const tables = section.querySelectorAll('table.commandes-table');
+    tables.forEach(table => {
+      if(y > 260){ doc.addPage(); y = 16; }
+      doc.autoTable({ html: table, startY: y });
+      y = doc.lastAutoTable.finalY + 8;
+    });
+
+    if(kpiCards.length === 0 && summaryBlocks.length === 0 && tables.length === 0){
+      doc.text('Aucune donnée à exporter pour cet onglet.', 14, y);
+    }
+
+    const nomFichier = titre.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + currentTenantId + '-' + new Date().toISOString().slice(0,10) + '.pdf';
+    doc.save(nomFichier);
   }
 
   function updateDashboardSeal(logoBase64){
@@ -2437,6 +2507,7 @@
       const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
       updateDashboardSeal(info.logo || null);
       if(info.themeAccent || info.themeSecondary) applyTheme(info.themeAccent, info.themeSecondary);
+      if(info.sidebarBg) applySidebarTheme(info.sidebarBg);
       document.querySelector('.sidebar .brandmark .name').textContent = info.nomRestaurant || currentTenantId;
       document.querySelector('.sidebar .brandmark .sub').textContent = (info.ville || '') + ' · ' + (info.devise || 'GNF');
     } catch(e){}
@@ -2476,6 +2547,9 @@
       }
       document.getElementById('paramThemeAccent').value = info.themeAccent || '#C9A227';
       document.getElementById('paramThemeSecondary').value = info.themeSecondary || '#2F6F5E';
+      renderSidebarThemeSwatches();
+      if(info.sidebarBg) applySidebarTheme(info.sidebarBg);
+      else document.getElementById('paramSidebarBg').value = '#2FA0DB';
       document.getElementById('paramFraisService').value = info.fraisService || 0;
       loadZones();
     } catch(e){
@@ -2609,15 +2683,17 @@
         agrGet('agr_tenants/' + currentTenantId + '/produits'),
         agrGet('agr_tenants/' + currentTenantId + '/users'),
       ]);
-      const list = Object.values(commandes || {});
       const now = new Date();
       const isSameDay = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
       const isSameMonth = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
 
+      // Le tableau de bord ne charge que le mois en cours
+      const list = Object.values(commandes || {}).filter(c => isSameMonth(new Date(c.date || 0)));
+
       let caJour = 0, caMois = 0, platsVendus = 0;
       list.forEach(c => {
         const d = new Date(c.date || 0);
-        if(isSameMonth(d)) caMois += (c.revenu || 0);
+        caMois += (c.revenu || 0);
         if(isSameDay(d)) caJour += (c.revenu || 0);
         platsVendus += (c.platsVendus || 0);
       });
@@ -2632,21 +2708,20 @@
       document.getElementById('menuSummarySub').textContent =
         nbProduits === 0 ? 'Aucun plat au menu pour l\'instant.' : nbProduits + ' plat(s) au menu.';
 
-      // Petit graphique 7 jours à partir des vraies commandes
+      // Graphique des ventes du mois en cours, jour par jour
       const chartWrap = document.getElementById('salesChartWrap');
       if(list.length === 0){
-        chartWrap.innerHTML = '<div style="color:var(--text-dim); font-size:12.5px; padding:20px 0;">Aucune vente enregistrée pour l\'instant.</div>';
+        chartWrap.innerHTML = '<div style="color:var(--text-dim); font-size:12.5px; padding:20px 0;">Aucune vente enregistrée ce mois-ci.</div>';
       } else {
-        const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-        const totals = [0,0,0,0,0,0,0];
+        const nbJours = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+        const totals = new Array(nbJours).fill(0);
         list.forEach(c => {
           const d = new Date(c.date || 0);
-          const diffDays = Math.floor((now - d) / (24*3600*1000));
-          if(diffDays >= 0 && diffDays < 7) totals[d.getDay()] += (c.revenu || 0);
+          totals[d.getDate()-1] += (c.revenu || 0);
         });
         const max = Math.max(...totals, 1);
         chartWrap.innerHTML = totals.map((v,i) => `
-          <div class="bar" style="height:${Math.max(4, Math.round(v/max*100))}%"><span class="tag">${jours[i]}</span></div>
+          <div class="bar" style="height:${Math.max(4, Math.round(v/max*100))}%"><span class="tag">${i+1}</span></div>
         `).join('');
       }
     } catch(e){
