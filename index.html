@@ -535,14 +535,16 @@
   .sidebar .brandmark span.sub{display:block; font-size:10px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em;}
 
   .conn-status{
-    display:flex; align-items:center; gap:7px;
-    margin:0 8px 18px; padding:7px 10px;
-    background:var(--surface-2); border:1px solid var(--line); border-radius:7px;
-    font-size:11px; color:var(--text-dim);
+    position:fixed; top:14px; left:14px; z-index:300;
+    display:flex; align-items:center; gap:9px;
+    padding:9px 16px;
+    background:#0A0D11; border:1px solid var(--line); border-radius:8px;
+    font-size:14px; font-weight:700; color:var(--text);
+    box-shadow:0 8px 24px -8px rgba(0,0,0,0.5);
   }
-  .conn-dot{width:7px; height:7px; border-radius:50%; background:var(--text-dim); flex-shrink:0;}
-  .conn-dot.ok{background:var(--teal-soft); box-shadow:0 0 0 3px rgba(78,151,132,0.18);}
-  .conn-dot.err{background:#E19488; box-shadow:0 0 0 3px rgba(225,148,136,0.18);}
+  .conn-dot{width:9px; height:9px; border-radius:50%; background:var(--text-dim); flex-shrink:0;}
+  .conn-dot.ok{background:var(--teal-soft); box-shadow:0 0 0 4px rgba(78,151,132,0.22);}
+  .conn-dot.err{background:#E19488; box-shadow:0 0 0 4px rgba(225,148,136,0.22);}
 
   .nav-group{margin-top:4px;}
   .nav-group .grouplabel{font-size:10px; text-transform:uppercase; letter-spacing:0.11em; color:var(--text-dim); padding:14px 10px 7px; font-weight:600;}
@@ -682,6 +684,28 @@
     .login-side{display:none;}
     .tables-grid{grid-template-columns:repeat(4,1fr);}
   }
+
+  /* ================= IMPRESSION — rapports journaliers/mensuels/annuels =================
+     S'applique quel que soit l'onglet ouvert : seule la section visible s'imprime,
+     avec les couleurs de la charte (KPI, tableaux, statuts) conservées sur le papier. */
+  @media print{
+    *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
+    body{ background:#fff !important; }
+    .conn-status, .sidebar, .no-print, .banner, .logo-slot, .storefront-nav, .home-nav { display:none !important; }
+    #view-home, #view-login, #view-storefront, #view-blocked{ display:none !important; }
+    .app-shell{ display:block !important; }
+    .main{ padding:0 !important; }
+    .topbar{ margin-bottom:14px; border-bottom:2px solid #000; padding-bottom:10px; }
+    .topbar h1{ color:#000 !important; }
+    .panel{ border:1px solid #999 !important; background:#fff !important; break-inside:avoid; box-shadow:none !important; }
+    .panel h3{ color:#000 !important; }
+    .commandes-table th{ color:#000 !important; border-bottom:1px solid #000 !important; }
+    .commandes-table td{ color:#111 !important; border-bottom:1px solid #ccc !important; }
+    .kpi-card{ border:1px solid #999 !important; background:#f5f5f5 !important; }
+    .kpi-card .val{ color:#000 !important; }
+    input, select, button.btn-primary, button.btn-outline{ display:none !important; }
+    .field label{ color:#000 !important; }
+  }
 </style>
 <!-- Export PDF (A4) et Excel — utilisés uniquement par le module Comptabilité -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -691,6 +715,12 @@
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
 <body>
+
+<div class="conn-status" id="connStatus">
+  <span class="conn-dot" id="connStatusDot"></span>
+  <span id="connStatusText">Connexion…</span>
+</div>
+
 
 <!-- ============ HOME / LANDING (style aligné sur l'app de référence) ============ -->
 <div id="view-home">
@@ -807,17 +837,65 @@
   </div>
 
   <div class="storefront-body" id="storeBody" style="display:none;">
-    <div class="menu-grid" id="storeMenuGrid"></div>
+    <div>
+      <div class="menu-grid" id="storeMenuGrid"></div>
+
+      <div class="panel" style="margin-top:20px;">
+        <h3>Avis clients</h3>
+        <div class="sub" id="avisSummary">Aucun avis pour l'instant.</div>
+        <div id="avisListe" style="margin-bottom:16px;"></div>
+        <div class="field"><label>Votre note</label>
+          <select id="avisNote" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
+            <option value="5">★★★★★ Excellent</option>
+            <option value="4">★★★★ Très bien</option>
+            <option value="3">★★★ Correct</option>
+            <option value="2">★★ Décevant</option>
+            <option value="1">★ Mauvais</option>
+          </select>
+        </div>
+        <div class="field"><label>Votre commentaire</label><input type="text" id="avisCommentaire" placeholder="Qualité du service, des plats..."></div>
+        <button class="btn-outline" style="color:var(--text);" onclick="envoyerAvis()">Envoyer mon avis</button>
+      </div>
+    </div>
 
     <div class="cart-panel">
       <h3>Votre commande</h3>
       <div class="sub">Paiement direct vers la caisse du restaurant</div>
       <div class="paid-banner" id="paidBanner"></div>
-      <div id="cartLines"><div class="cart-empty">Votre panier est vide.</div></div>
-      <div class="cart-total"><span>Total</span><span class="val mono" id="cartTotal">0 GNF</span></div>
-      <div class="field"><label>Votre nom</label><input type="text" id="storeClientNom" placeholder="Nom"></div>
-      <div class="field"><label>Votre téléphone</label><input type="text" id="storeClientTelephone" placeholder="+224 6xx xx xx xx"></div>
-      <button class="btn-primary" id="payBtn" onclick="payOrder()">Payer et envoyer en cuisine</button>
+
+      <div id="cartOrderForm">
+        <div id="cartLines"><div class="cart-empty">Votre panier est vide.</div></div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>Mode</label>
+          <select id="storeMode" onchange="toggleLivraisonFields()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
+            <option value="sur_place">Sur place</option>
+            <option value="livraison">Livraison</option>
+          </select>
+        </div>
+        <div id="storeZoneWrap" style="display:none;">
+          <div class="field"><label>Zone de livraison (adresse limitée aux zones desservies)</label>
+            <select id="storeZone" onchange="recalculerTotal()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+          </div>
+        </div>
+
+        <div id="feesBreakdown" style="font-size:12px; color:var(--text-dim); margin:10px 0;"></div>
+        <div class="cart-total"><span>Total</span><span class="val mono" id="cartTotal">0 GNF</span></div>
+
+        <div class="field"><label>Votre nom</label><input type="text" id="storeClientNom" placeholder="Nom"></div>
+        <div class="field"><label>Votre téléphone</label><input type="text" id="storeClientTelephone" placeholder="+224 6xx xx xx xx"></div>
+        <button class="btn-primary" id="payBtn" onclick="payOrder()">Payer et envoyer en cuisine</button>
+      </div>
+
+      <div id="cartTrackerWrap" style="display:none;">
+        <h3 style="margin-top:0;">Suivi de votre commande</h3>
+        <div id="trackerStages" style="margin-bottom:14px;"></div>
+        <div style="text-align:center;">
+          <div style="font-family:'Fraunces',serif; font-size:28px; color:var(--gold-soft);" id="trackerChrono">--:--</div>
+          <div style="font-size:11.5px; color:var(--text-dim);">Temps estimé restant</div>
+        </div>
+        <button class="btn-outline" style="color:var(--text); width:100%; margin-top:16px;" onclick="nouvelleCommande()">Passer une nouvelle commande</button>
+      </div>
     </div>
   </div>
 </div>
@@ -860,6 +938,10 @@
       <div class="banner error" id="registerError"></div>
       <div class="banner info" id="registerSuccess"></div>
 
+      <div class="field">
+        <label>Logo du restaurant (optionnel)</label>
+        <input type="file" id="regLogo" accept="image/*">
+      </div>
       <div class="field">
         <label>Nom du restaurant</label>
         <input type="text" id="regNomRestaurant" placeholder="Le Gourmet">
@@ -919,15 +1001,11 @@
   <div class="app-shell">
     <div class="sidebar stitch">
       <div class="brandmark">
-        <div class="seal">AGR</div>
+        <div class="seal" id="dashSeal">AGR</div>
         <div>
           <span class="name">Le Gourmet</span>
           <span class="sub">Kindia · GNF</span>
         </div>
-      </div>
-      <div class="conn-status" id="connStatus">
-        <span class="conn-dot" id="connStatusDot"></span>
-        <span id="connStatusText">Connexion…</span>
       </div>
 
       <div class="nav-group">
@@ -1129,15 +1207,23 @@
           <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
             <div class="field" style="margin:0;">
               <label>Période</label>
-              <select id="comptaPeriode" onchange="loadComptabilite()" style="padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
+              <select id="comptaPeriode" onchange="toggleComptaPeriodeInputs(); loadComptabilite()" style="padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
                 <option value="jour">Journalier</option>
                 <option value="mois" selected>Mensuel</option>
                 <option value="annee">Annuel</option>
               </select>
             </div>
-            <div class="field" style="margin:0;">
+            <div class="field" style="margin:0;" id="comptaJourWrap">
               <label>Date de référence</label>
               <input type="date" id="comptaDateRef" onchange="loadComptabilite()">
+            </div>
+            <div class="field" style="margin:0;" id="comptaMoisWrap">
+              <label>Mois</label>
+              <select id="comptaMois" onchange="loadComptabilite()" style="padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+            </div>
+            <div class="field" style="margin:0;" id="comptaAnneeWrap">
+              <label>Année</label>
+              <select id="comptaAnnee" onchange="loadComptabilite()" style="padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
             </div>
           </div>
         </div>
@@ -1320,10 +1406,24 @@
 
         <div class="panel" style="margin-top:16px;">
           <h3>Pointage par reconnaissance faciale</h3>
-          <div class="sub">Réservé au Gérant et aux profils autorisés — utilise la caméra de l'appareil pour reconnaître le visage déjà enregistré.</div>
+          <div class="sub">Ouvre pour tout le personnel ayant enregistré son visage — utilise la caméra de l'appareil pour le reconnaître.</div>
           <div class="banner error" id="faceError"></div>
           <button class="btn-outline" style="color:var(--text);" onclick="pointerParVisage()">📷 Pointer par reconnaissance faciale</button>
         </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Registre de présence mensuel</h3>
+          <div class="sub">Jours de présence et d'absence par employé, calculés à partir des pointages réels (empreinte ou visage).</div>
+          <div style="display:flex; gap:10px; margin-bottom:14px;">
+            <select id="presenceMois" onchange="loadRegistrePresence()" style="padding:9px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;"></select>
+            <select id="presenceAnnee" onchange="loadRegistrePresence()" style="padding:9px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;"></select>
+          </div>
+          <table class="commandes-table" id="presenceTable">
+            <thead><tr><th>Employé</th><th>Jours présents</th><th>Jours absents</th><th>Assiduité</th></tr></thead>
+            <tbody id="presenceTableBody"></tbody>
+          </table>
+        </div>
+
         <div class="panel" style="margin-top:16px;">
           <h3>Historique de présence</h3>
           <div class="sub" id="pointageListSub">Aucun pointage pour l'instant.</div>
@@ -1364,6 +1464,41 @@
           <div class="field"><label>Langue</label><input type="text" id="paramLangue" placeholder="fr"></div>
           <div class="field"><label>Heure d'arrivée attendue (pour calculer les retards)</label><input type="time" id="paramHeureDebut" value="08:00"></div>
           <button class="btn-primary" onclick="saveParametres()">Enregistrer les modifications</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Logo & thème</h3>
+          <div class="sub">Le thème (couleurs de l'application) peut être extrait automatiquement de votre logo, ou choisi librement.</div>
+          <div class="banner error" id="logoError"></div>
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px;">
+            <img id="paramLogoPreview" src="" style="width:56px; height:56px; border-radius:10px; object-fit:cover; border:1px solid var(--line); display:none;">
+            <div id="paramLogoPlaceholder" style="width:56px; height:56px; border-radius:10px; border:1.5px dashed var(--line); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--text-dim);">LOGO</div>
+            <input type="file" id="paramLogoFile" accept="image/*" style="flex:1;">
+          </div>
+          <button class="btn-outline" style="color:var(--text);" onclick="saveLogo()">Enregistrer le logo</button>
+          <button class="btn-outline" style="color:var(--text); margin-left:8px;" onclick="extraireThemeDuLogo()">🎨 Extraire le thème du logo</button>
+
+          <div style="display:flex; gap:20px; margin-top:16px;">
+            <div class="field" style="margin:0;"><label>Couleur principale</label><input type="color" id="paramThemeAccent" value="#C9A227" onchange="appliquerEtSauverTheme()"></div>
+            <div class="field" style="margin:0;"><label>Couleur secondaire</label><input type="color" id="paramThemeSecondary" value="#2F6F5E" onchange="appliquerEtSauverTheme()"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Livraison & zones desservies</h3>
+          <div class="sub">Le client ne pourra choisir une adresse de livraison QUE parmi les zones que vous définissez ici.</div>
+          <div class="banner error" id="zoneError"></div>
+          <div class="field"><label>Frais de commande (GNF, appliqué à chaque commande en ligne)</label><input type="number" id="paramFraisService" min="0" value="0" onchange="saveFraisService()"></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-top:10px;">
+            <div class="field" style="margin:0;"><label>Nom de la zone</label><input type="text" id="zoneFormNom" placeholder="Kaloum, Almamya..."></div>
+            <div class="field" style="margin:0;"><label>Frais de livraison (GNF)</label><input type="number" id="zoneFormFrais" min="0"></div>
+            <div class="field" style="margin:0;"><label>Délai estimé (min)</label><input type="number" id="zoneFormDelai" min="1" value="30"></div>
+            <button class="btn-primary" onclick="ajouterZone()">+ Ajouter la zone</button>
+          </div>
+          <table class="commandes-table" id="zonesTable" style="margin-top:14px;">
+            <thead><tr><th>Zone</th><th>Frais de livraison</th><th>Délai estimé</th><th></th></tr></thead>
+            <tbody id="zonesTableBody"></tbody>
+          </table>
         </div>
 
         <div class="panel" style="margin-top:16px;">
@@ -1441,6 +1576,175 @@
   }
   function agrSet(path, value){ return window._agrSet(agrRef(path), value); }
 
+  // ---------------------------------------------------------------
+  // Logo & thème — redimensionne l'image côté navigateur avant stockage
+  // (évite d'alourdir la base avec des photos en pleine résolution)
+  // ---------------------------------------------------------------
+  function fileToResizedBase64(file, maxSize){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function applyTheme(accent, secondary){
+    const root = document.documentElement.style;
+    if(accent){
+      root.setProperty('--gold', accent);
+      root.setProperty('--gold-soft', lightenColor(accent, 25));
+    }
+    if(secondary){
+      root.setProperty('--teal', secondary);
+      root.setProperty('--teal-soft', lightenColor(secondary, 25));
+    }
+  }
+
+  function lightenColor(hex, percent){
+    const num = parseInt(hex.replace('#',''), 16);
+    let r = (num >> 16) + Math.round(255 * percent / 100);
+    let g = ((num >> 8) & 0x00FF) + Math.round(255 * percent / 100);
+    let b = (num & 0x0000FF) + Math.round(255 * percent / 100);
+    r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
+    return '#' + (0x1000000 + r*0x10000 + g*0x100 + b).toString(16).slice(1);
+  }
+
+  function rgbToHex(r,g,b){
+    return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function extraireThemeDuLogo(){
+    const img = document.getElementById('paramLogoPreview');
+    if(!img.src || img.style.display === 'none'){
+      showBanner('logoError', "Ajoutez d'abord un logo pour en extraire les couleurs.");
+      return;
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 60; canvas.height = 60;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, 60, 60);
+      const data = ctx.getImageData(0, 0, 60, 60).data;
+
+      let r=0,g=0,b=0,n=0;
+      let r2=0,g2=0,b2=0,n2=0;
+      for(let i=0; i<data.length; i+=4){
+        const [pr,pg,pb] = [data[i],data[i+1],data[i+2]];
+        const max = Math.max(pr,pg,pb), min = Math.min(pr,pg,pb);
+        const sat = max - min;
+        if(sat > 30){
+          if(n === 0 || Math.abs(pr-r/Math.max(n,1)) > 40 || n2 < n){ r2+=pr; g2+=pg; b2+=pb; n2++; }
+          r+=pr; g+=pg; b+=pb; n++;
+        }
+      }
+      const accentHex = n ? rgbToHex(Math.round(r/n), Math.round(g/n), Math.round(b/n)) : '#C9A227';
+      const secondaryHex = n2 ? rgbToHex(Math.round(r2/n2*0.7), Math.round(g2/n2*1.1), Math.round(b2/n2*0.9)) : '#2F6F5E';
+
+      document.getElementById('paramThemeAccent').value = accentHex;
+      document.getElementById('paramThemeSecondary').value = secondaryHex;
+      await appliquerEtSauverTheme();
+    } catch(e){
+      showBanner('logoError', "Impossible d'analyser cette image (probablement bloquée par le navigateur).");
+    }
+  }
+
+  async function appliquerEtSauverTheme(){
+    const accent = document.getElementById('paramThemeAccent').value;
+    const secondary = document.getElementById('paramThemeSecondary').value;
+    applyTheme(accent, secondary);
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/info/themeAccent', accent);
+      await agrSet('agr_tenants/' + currentTenantId + '/info/themeSecondary', secondary);
+    } catch(e){}
+  }
+
+  async function saveLogo(){
+    showBanner('logoError', null);
+    const fileInput = document.getElementById('paramLogoFile');
+    if(!fileInput.files[0]){
+      showBanner('logoError', 'Choisissez un fichier image.');
+      return;
+    }
+    try {
+      const base64 = await fileToResizedBase64(fileInput.files[0], 300);
+      await agrSet('agr_tenants/' + currentTenantId + '/info/logo', base64);
+      document.getElementById('paramLogoPreview').src = base64;
+      document.getElementById('paramLogoPreview').style.display = 'block';
+      document.getElementById('paramLogoPlaceholder').style.display = 'none';
+      updateDashboardSeal(base64);
+      await recordAudit('Logo modifié', '');
+    } catch(e){
+      showBanner('logoError', "Impossible d'enregistrer le logo — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Impression — fonctionne à l'identique dans TOUS les onglets : imprime
+  // uniquement la section actuellement affichée, avec un en-tête (nom du
+  // restaurant + onglet + date) injecté juste avant impression.
+  // ---------------------------------------------------------------
+  async function imprimerOnglet(){
+    const existing = document.getElementById('printHeaderTemp');
+    if(existing) existing.remove();
+
+    let nomRestaurant = currentTenantId || 'AGR';
+    try {
+      const info = await agrGet('agr_tenants/' + currentTenantId + '/info');
+      if(info && info.nomRestaurant) nomRestaurant = info.nomRestaurant;
+    } catch(e){}
+
+    const titre = document.getElementById('sectionTitle').textContent;
+    const header = document.createElement('div');
+    header.id = 'printHeaderTemp';
+    header.style.display = 'none';
+    header.innerHTML = `
+      <div style="display:block; margin-bottom:18px; border-bottom:2px solid #000; padding-bottom:10px;">
+        <div style="font-size:20px; font-weight:700;">${nomRestaurant}</div>
+        <div style="font-size:13px;">${titre} — imprimé le ${new Date().toLocaleString('fr-FR')}</div>
+      </div>`;
+    header.setAttribute('style', 'display:none;');
+
+    const main = document.querySelector('.main');
+    main.insertBefore(header, main.firstChild);
+
+    const style = document.createElement('style');
+    style.id = 'printHeaderStyle';
+    style.textContent = '@media print{ #printHeaderTemp{ display:block !important; } }';
+    document.head.appendChild(style);
+
+    window.print();
+
+    setTimeout(() => {
+      const h = document.getElementById('printHeaderTemp'); if(h) h.remove();
+      const s = document.getElementById('printHeaderStyle'); if(s) s.remove();
+    }, 500);
+  }
+
+  function updateDashboardSeal(logoBase64){
+    const seal = document.getElementById('dashSeal');
+    if(!seal) return;
+    if(logoBase64){
+      seal.innerHTML = '<img src="' + logoBase64 + '" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">';
+    } else {
+      seal.textContent = 'AGR';
+    }
+  }
+
   function slugifyCode(name){
     return (name || 'RESTO').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'').slice(0,10) || 'RESTO';
   }
@@ -1461,6 +1765,10 @@
   let storeTenantCode = null;
   let storeMenuItems = [];
   let cart = {}; // { produitId: quantite }
+
+  let storeZones = [];
+  let storeFraisService = 0;
+  let trackerInterval = null;
 
   async function chargerBoutique(){
     const input = document.getElementById('storeCodeInput');
@@ -1497,11 +1805,33 @@
         .map(([id, p]) => ({ id, ...p }))
         .filter(p => p.disponible !== false);
       renderStoreMenu();
+
+      storeFraisService = info.fraisService || 0;
+      const zones = await agrGet('agr_tenants/' + code + '/zonesLivraison') || {};
+      storeZones = Object.entries(zones).map(([id,z]) => ({ id, ...z }));
+      const modeSelect = document.getElementById('storeMode');
+      const livraisonOpt = modeSelect.querySelector('option[value="livraison"]');
+      livraisonOpt.disabled = storeZones.length === 0;
+      livraisonOpt.textContent = storeZones.length === 0 ? 'Livraison (aucune zone desservie)' : 'Livraison';
+      document.getElementById('storeZone').innerHTML = storeZones.map(z =>
+        `<option value="${z.id}">${z.nom} — ${(z.fraisLivraison||0).toLocaleString('fr-FR')} GNF, ~${z.delaiMinutes} min</option>`
+      ).join('');
+
+      document.getElementById('cartOrderForm').style.display = 'block';
+      document.getElementById('cartTrackerWrap').style.display = 'none';
+      toggleLivraisonFields();
       renderCart();
+      loadAvis();
     } catch(e){
       err.textContent = 'Impossible de joindre Firebase.';
       err.style.color = '#ef4444';
     }
+  }
+
+  function toggleLivraisonFields(){
+    const mode = document.getElementById('storeMode').value;
+    document.getElementById('storeZoneWrap').style.display = mode === 'livraison' ? 'block' : 'none';
+    recalculerTotal();
   }
 
   function renderStoreMenu(){
@@ -1530,24 +1860,46 @@
 
   function renderCart(){
     const linesEl = document.getElementById('cartLines');
-    const totalEl = document.getElementById('cartTotal');
     const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
 
     if(entries.length === 0){
       linesEl.innerHTML = '<div class="cart-empty">Votre panier est vide.</div>';
-      totalEl.textContent = '0 GNF';
-      return;
+    } else {
+      linesEl.innerHTML = entries.map(([id, qty]) => {
+        const item = storeMenuItems.find(m => m.id === id);
+        if(!item) return '';
+        const lineTotal = (item.prixVente || 0) * qty;
+        return `<div class="cart-line"><span><span class="qty">${qty}×</span>${item.nom}</span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span></div>`;
+      }).join('');
     }
+    recalculerTotal();
+  }
 
-    let total = 0;
-    linesEl.innerHTML = entries.map(([id, qty]) => {
+  function sousTotalPanier(){
+    return Object.entries(cart).filter(([,qty]) => qty > 0).reduce((s,[id,qty]) => {
       const item = storeMenuItems.find(m => m.id === id);
-      if(!item) return '';
-      const lineTotal = (item.prixVente || 0) * qty;
-      total += lineTotal;
-      return `<div class="cart-line"><span><span class="qty">${qty}×</span>${item.nom}</span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span></div>`;
-    }).join('');
-    totalEl.textContent = total.toLocaleString('fr-FR') + ' GNF';
+      return s + (item ? (item.prixVente||0) * qty : 0);
+    }, 0);
+  }
+
+  function recalculerTotal(){
+    const sousTotal = sousTotalPanier();
+    const mode = document.getElementById('storeMode').value;
+    let fraisLivraison = 0, delaiMinutes = 0, zoneNom = '';
+    if(mode === 'livraison'){
+      const zoneId = document.getElementById('storeZone').value;
+      const zone = storeZones.find(z => z.id === zoneId);
+      if(zone){ fraisLivraison = zone.fraisLivraison||0; delaiMinutes = zone.delaiMinutes||0; zoneNom = zone.nom; }
+    }
+    const total = sousTotal + storeFraisService + fraisLivraison;
+
+    document.getElementById('feesBreakdown').innerHTML =
+      `<div>Sous-total plats : ${sousTotal.toLocaleString('fr-FR')} GNF</div>` +
+      (storeFraisService ? `<div>Frais de commande : ${storeFraisService.toLocaleString('fr-FR')} GNF</div>` : '') +
+      (mode === 'livraison' && zoneNom ? `<div>Livraison (${zoneNom}) : ${fraisLivraison.toLocaleString('fr-FR')} GNF — ~${delaiMinutes} min</div>` : '');
+    document.getElementById('cartTotal').textContent = total.toLocaleString('fr-FR') + ' GNF';
+
+    return { sousTotal, fraisLivraison, delaiMinutes, total, mode, zoneNom };
   }
 
   // ---------------------------------------------------------------
@@ -1590,16 +1942,17 @@
     const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
     if(entries.length === 0 || !storeTenantCode) return;
 
-    let totalPlats = 0, totalRevenu = 0;
+    let totalPlats = 0, sousTotal = 0;
     const platsCommande = {};
     entries.forEach(([id, qty]) => {
       const item = storeMenuItems.find(m => m.id === id);
       if(!item) return;
       totalPlats += qty;
-      totalRevenu += (item.prixVente || 0) * qty;
+      sousTotal += (item.prixVente || 0) * qty;
       platsCommande[id] = { nom: item.nom, qty, prix: item.prixVente || 0 };
     });
 
+    const { fraisLivraison, delaiMinutes, total, mode, zoneNom } = recalculerTotal();
     const clientNom = document.getElementById('storeClientNom').value.trim();
     const clientTelephone = document.getElementById('storeClientTelephone').value.trim();
 
@@ -1610,23 +1963,118 @@
         origine: 'Page publicitaire',
         plats: platsCommande,
         platsVendus: totalPlats,
-        revenu: totalRevenu,
+        revenu: total,
+        mode, zone: zoneNom || null,
+        fraisService: storeFraisService, fraisLivraison,
         date: Date.now(),
+        clientNom: clientNom || null,
         clientTelephone: clientTelephone || null,
       });
 
       if(clientTelephone){
-        await enregistrerClient(storeTenantCode, clientNom, clientTelephone, totalRevenu);
+        await enregistrerClient(storeTenantCode, clientNom, clientTelephone, total);
       }
 
       banner.style.display = 'block';
-      banner.textContent = 'Paiement de ' + totalRevenu.toLocaleString('fr-FR') + ' GNF enregistré dans la caisse du restaurant — commande envoyée en cuisine.';
+      banner.textContent = 'Paiement de ' + total.toLocaleString('fr-FR') + ' GNF enregistré dans la caisse du restaurant.';
       cart = {};
-      renderCart();
+
+      document.getElementById('cartOrderForm').style.display = 'none';
+      document.getElementById('cartTrackerWrap').style.display = 'block';
+      demarrerChrono(mode === 'livraison' ? delaiMinutes : 20); // 20 min par défaut pour une commande sur place
     } catch(e){
       banner.style.display = 'block';
       banner.style.color = '#E19488';
       banner.textContent = "Impossible d'enregistrer la commande — vérifiez la connexion à Firebase.";
+    }
+  }
+
+  function demarrerChrono(delaiMinutes){
+    if(trackerInterval) clearInterval(trackerInterval);
+    const fin = Date.now() + delaiMinutes * 60 * 1000;
+    const debut = Date.now();
+    const duree = delaiMinutes * 60 * 1000;
+
+    function tick(){
+      const restant = fin - Date.now();
+      const chronoEl = document.getElementById('trackerChrono');
+      const stagesEl = document.getElementById('trackerStages');
+      const progression = Math.min(1, Math.max(0, (Date.now() - debut) / duree));
+
+      if(restant <= 0){
+        chronoEl.textContent = '✓ Prête';
+        stagesEl.innerHTML = etapeHTML(3);
+        clearInterval(trackerInterval);
+        return;
+      }
+      const min = Math.floor(restant / 60000);
+      const sec = Math.floor((restant % 60000) / 1000);
+      chronoEl.textContent = String(min).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+
+      let etape = 0;
+      if(progression >= 0.66) etape = 2;
+      else if(progression >= 0.25) etape = 1;
+      stagesEl.innerHTML = etapeHTML(etape);
+    }
+
+    function etapeHTML(actuelle){
+      const etapes = ['Reçue', 'En préparation', 'En livraison / Prête', 'Livrée'];
+      return '<div style="display:flex; justify-content:space-between; font-size:11px;">' +
+        etapes.map((e,i) => `<span style="color:${i<=actuelle ? 'var(--gold-soft)' : 'var(--text-dim)'}; font-weight:${i===actuelle?'700':'400'};">${e}</span>`).join('') +
+        '</div>';
+    }
+
+    tick();
+    trackerInterval = setInterval(tick, 1000);
+  }
+
+  function nouvelleCommande(){
+    if(trackerInterval) clearInterval(trackerInterval);
+    document.getElementById('cartOrderForm').style.display = 'block';
+    document.getElementById('cartTrackerWrap').style.display = 'none';
+    document.getElementById('paidBanner').style.display = 'none';
+    cart = {};
+    renderCart();
+  }
+
+  // ---------------------------------------------------------------
+  // Avis clients — publiés directement sur la page publicitaire du restaurant
+  // ---------------------------------------------------------------
+  async function envoyerAvis(){
+    if(!storeTenantCode) return;
+    const note = parseInt(document.getElementById('avisNote').value, 10);
+    const commentaire = document.getElementById('avisCommentaire').value.trim();
+    const clientNom = document.getElementById('storeClientNom').value.trim();
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + storeTenantCode + '/avis'));
+      await window._agrSet(newRef, { note, commentaire, clientNom: clientNom || 'Client', date: Date.now() });
+      document.getElementById('avisCommentaire').value = '';
+      loadAvis();
+    } catch(e){}
+  }
+
+  async function loadAvis(){
+    if(!storeTenantCode) return;
+    const summary = document.getElementById('avisSummary');
+    const liste = document.getElementById('avisListe');
+    try {
+      const avis = await agrGet('agr_tenants/' + storeTenantCode + '/avis') || {};
+      const list = Object.values(avis).sort((a,b) => (b.date||0)-(a.date||0));
+      if(list.length === 0){
+        summary.textContent = 'Aucun avis pour l\'instant — soyez le premier à donner votre avis.';
+        liste.innerHTML = '';
+        return;
+      }
+      const moyenne = (list.reduce((s,a) => s + (a.note||0), 0) / list.length).toFixed(1);
+      summary.innerHTML = '★ ' + moyenne + '/5 — ' + list.length + ' avis';
+      liste.innerHTML = list.slice(0,5).map(a =>
+        `<div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;">
+          <strong>${'★'.repeat(a.note)}${'☆'.repeat(5-a.note)}</strong> — ${a.clientNom}<br>
+          <span style="color:var(--text-dim);">${a.commentaire || ''}</span>
+        </div>`
+      ).join('');
+    } catch(e){
+      summary.textContent = 'Impossible de charger les avis.';
     }
   }
 
@@ -1932,12 +2380,18 @@
       const code = await generateUniqueCode(nomRestaurant);
       const now = Date.now();
 
+      let logo = null;
+      const logoFile = document.getElementById('regLogo').files[0];
+      if(logoFile){
+        try { logo = await fileToResizedBase64(logoFile, 300); } catch(e){ logo = null; }
+      }
+
       // Un nouveau restaurant démarre strictement vide : aucun produit,
       // aucune commande, aucun employé autre que le DG. Rien n'est
       // pré-rempli avec des données de démonstration.
       await agrSet('agr_tenants/' + code + '/info', {
         nomRestaurant, ville, adresse, telephone,
-        email: dgEmail, nombreTables,
+        email: dgEmail, nombreTables, logo,
         statut: 'essai',
         dateCreation: now,
         dateExpiration: now + 14 * 24 * 60 * 60 * 1000, // essai de 14 jours
@@ -1968,6 +2422,14 @@
     document.getElementById('tenantStatus').textContent = 'Restaurant ' + currentTenantId + ' — licence active';
     showView('dashboard');
     showSection('overview');
+
+    try {
+      const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
+      updateDashboardSeal(info.logo || null);
+      if(info.themeAccent || info.themeSecondary) applyTheme(info.themeAccent, info.themeSecondary);
+      document.querySelector('.sidebar .brandmark .name').textContent = info.nomRestaurant || currentTenantId;
+      document.querySelector('.sidebar .brandmark .sub').textContent = (info.ville || '') + ' · ' + (info.devise || 'GNF');
+    } catch(e){}
   }
 
   function doLogout(){
@@ -1996,8 +2458,71 @@
       document.getElementById('paramHeureDebut').value = info.heureDebutTravail || '08:00';
       document.getElementById('paramCurrentUserLabel').textContent =
         (document.getElementById('userName').textContent || '') + ' — ' + (roleLabels[currentRole] || currentRole);
+
+      if(info.logo){
+        document.getElementById('paramLogoPreview').src = info.logo;
+        document.getElementById('paramLogoPreview').style.display = 'block';
+        document.getElementById('paramLogoPlaceholder').style.display = 'none';
+      }
+      document.getElementById('paramThemeAccent').value = info.themeAccent || '#C9A227';
+      document.getElementById('paramThemeSecondary').value = info.themeSecondary || '#2F6F5E';
+      document.getElementById('paramFraisService').value = info.fraisService || 0;
+      loadZones();
     } catch(e){
       showBanner('paramsError', 'Impossible de charger les paramètres depuis Firebase.');
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Zones de livraison — le client de la page publicitaire ne pourra
+  // choisir qu'une zone parmi celles définies ici par le Directeur.
+  // ---------------------------------------------------------------
+  async function saveFraisService(){
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/info/fraisService', parseInt(document.getElementById('paramFraisService').value, 10) || 0);
+    } catch(e){}
+  }
+
+  async function ajouterZone(){
+    showBanner('zoneError', null);
+    const nom = document.getElementById('zoneFormNom').value.trim();
+    const frais = parseInt(document.getElementById('zoneFormFrais').value, 10) || 0;
+    const delai = parseInt(document.getElementById('zoneFormDelai').value, 10) || 30;
+    if(!nom){
+      showBanner('zoneError', 'Le nom de la zone est requis.');
+      return;
+    }
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/zonesLivraison'));
+      await window._agrSet(newRef, { nom, fraisLivraison: frais, delaiMinutes: delai });
+      document.getElementById('zoneFormNom').value = '';
+      document.getElementById('zoneFormFrais').value = '';
+      document.getElementById('zoneFormDelai').value = '30';
+      loadZones();
+    } catch(e){
+      showBanner('zoneError', "Impossible d'ajouter la zone — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function supprimerZone(id){
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/zonesLivraison/' + id, null);
+      loadZones();
+    } catch(e){}
+  }
+
+  async function loadZones(){
+    const body = document.getElementById('zonesTableBody');
+    if(!currentTenantId || !body) return;
+    try {
+      const zones = await agrGet('agr_tenants/' + currentTenantId + '/zonesLivraison') || {};
+      const entries = Object.entries(zones);
+      body.innerHTML = entries.length
+        ? entries.map(([id,z]) => `<tr><td>${z.nom}</td><td>${(z.fraisLivraison||0).toLocaleString('fr-FR')} GNF</td><td>${z.delaiMinutes} min</td><td><a onclick="supprimerZone('${id}')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a></td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text-dim);">Aucune zone définie — la livraison ne sera pas proposée sur la page publicitaire.</td></tr>';
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="4" style="color:#E19488;">Impossible de charger les zones.</td></tr>';
     }
   }
 
@@ -2222,11 +2747,20 @@
     }
     try {
       const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/users'));
+      const newId = newRef.key;
       await window._agrSet(newRef, { role, nom, email, password });
       await recordAudit('Employé ajouté', nom + ' (' + role + ')');
       document.getElementById('rhFormNom').value = '';
       document.getElementById('rhFormEmail').value = '';
       document.getElementById('rhFormPassword').value = '';
+
+      const err = document.getElementById('rhError');
+      err.className = 'banner info';
+      err.style.display = 'block';
+      err.innerHTML = nom + ' ajouté(e). Terminez sa création tout de suite, pendant qu\'il/elle est devant l\'appareil : ' +
+        '<a onclick="registerFingerprint(\'' + newId + '\', \'' + nom.replace(/'/g,"") + '\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">enregistrer l\'empreinte</a> · ' +
+        '<a onclick="openFaceCapture(\'' + newId + '\', \'' + nom.replace(/'/g,"") + '\', \'register\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">enregistrer le visage</a>';
+
       loadEquipe();
     } catch(e){
       showBanner('rhError', "Impossible d'ajouter l'employé — vérifiez la connexion à Firebase.");
@@ -2242,7 +2776,7 @@
       const entries = Object.entries(users);
       sub.textContent = entries.length + ' membre(s) de l\'équipe.';
       body.innerHTML = entries.map(([id, u]) => {
-        const autorise = id === 'dg' || u.role === 'gerant';
+        const autorise = true; // reconnaissance faciale désormais proposée à tout le personnel
         let visageCell;
         if(!autorise){
           visageCell = '<span style="color:var(--text-dim); font-size:11px;">Non applicable</span>';
@@ -2651,6 +3185,9 @@
         '<option value="">Aucun employé n\'a encore enregistré son empreinte</option>';
     } catch(e){}
 
+    populateMonthYearSelectors('presenceMois', 'presenceAnnee');
+    loadRegistrePresence();
+
     const body = document.getElementById('pointageTableBody');
     const sub = document.getElementById('pointageListSub');
     try {
@@ -2667,6 +3204,68 @@
       `).join('');
     } catch(e){
       sub.textContent = 'Impossible de charger l\'historique.';
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Sélecteurs Mois/Année partagés (Pointage + Comptabilité) — jusqu'en 2040
+  // ---------------------------------------------------------------
+  const MOIS_NOMS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+
+  function populateMonthYearSelectors(moisId, anneeId, minYear, maxYear){
+    const now = new Date();
+    const moisSelect = document.getElementById(moisId);
+    const anneeSelect = document.getElementById(anneeId);
+    if(!moisSelect || !anneeSelect) return;
+
+    if(moisSelect.options.length === 0){
+      moisSelect.innerHTML = MOIS_NOMS.map((m,i) => `<option value="${i}">${m}</option>`).join('');
+      moisSelect.value = now.getMonth();
+    }
+    if(anneeSelect.options.length === 0){
+      const min = minYear || 2023, max = maxYear || 2040;
+      let opts = '';
+      for(let y = min; y <= max; y++) opts += `<option value="${y}">${y}</option>`;
+      anneeSelect.innerHTML = opts;
+      anneeSelect.value = now.getFullYear();
+    }
+  }
+
+  async function loadRegistrePresence(){
+    if(!currentTenantId) return;
+    const body = document.getElementById('presenceTableBody');
+    const mois = parseInt(document.getElementById('presenceMois').value, 10);
+    const annee = parseInt(document.getElementById('presenceAnnee').value, 10);
+    const now = new Date();
+
+    try {
+      const [users, pointage] = await Promise.all([
+        agrGet('agr_tenants/' + currentTenantId + '/users'),
+        agrGet('agr_tenants/' + currentTenantId + '/pointage'),
+      ]);
+      const list = Object.values(pointage || {});
+      const isMoisCourant = (mois === now.getMonth() && annee === now.getFullYear());
+      const joursDansLeMois = new Date(annee, mois + 1, 0).getDate();
+      const joursEcoules = isMoisCourant ? now.getDate() : joursDansLeMois;
+
+      const rows = Object.entries(users || {}).map(([id, u]) => {
+        const joursPresents = new Set();
+        list.forEach(p => {
+          if(p.userId !== id || p.type !== 'entree') return;
+          const d = new Date(p.date);
+          if(d.getMonth() === mois && d.getFullYear() === annee) joursPresents.add(d.getDate());
+        });
+        const presents = joursPresents.size;
+        const absents = Math.max(0, joursEcoules - presents);
+        const assiduite = joursEcoules > 0 ? Math.round((presents / joursEcoules) * 100) : 0;
+        return { nom: u.nom || id, presents, absents, assiduite };
+      });
+
+      body.innerHTML = rows.length
+        ? rows.map(r => `<tr><td>${r.nom}</td><td>${r.presents}</td><td>${r.absents}</td><td>${r.assiduite}%</td></tr>`).join('')
+        : '<tr><td colspan="4" style="color:var(--text-dim);">Aucun employé pour l\'instant.</td></tr>';
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="4" style="color:#E19488;">Impossible de calculer le registre.</td></tr>';
     }
   }
 
@@ -2870,24 +3469,34 @@
   let comptaJournalCache = [];   // pour les exports
   let comptaResultatCache = null;
 
+  function toggleComptaPeriodeInputs(){
+    const periode = document.getElementById('comptaPeriode').value;
+    document.getElementById('comptaJourWrap').style.display = periode === 'jour' ? 'block' : 'none';
+    document.getElementById('comptaMoisWrap').style.display = periode === 'mois' ? 'block' : 'none';
+    document.getElementById('comptaAnneeWrap').style.display = (periode === 'mois' || periode === 'annee') ? 'block' : 'none';
+  }
+
   function getPeriodeRange(){
     const periode = document.getElementById('comptaPeriode').value;
-    const refStr = document.getElementById('comptaDateRef').value;
-    const ref = refStr ? new Date(refStr) : new Date();
     let start, end, label;
 
     if(periode === 'jour'){
+      const refStr = document.getElementById('comptaDateRef').value;
+      const ref = refStr ? new Date(refStr) : new Date();
       start = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
       end = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate() + 1);
       label = start.toLocaleDateString('fr-FR');
     } else if(periode === 'annee'){
-      start = new Date(ref.getFullYear(), 0, 1);
-      end = new Date(ref.getFullYear() + 1, 0, 1);
-      label = 'Année ' + ref.getFullYear();
+      const annee = parseInt(document.getElementById('comptaAnnee').value, 10) || new Date().getFullYear();
+      start = new Date(annee, 0, 1);
+      end = new Date(annee + 1, 0, 1);
+      label = 'Année ' + annee;
     } else {
-      start = new Date(ref.getFullYear(), ref.getMonth(), 1);
-      end = new Date(ref.getFullYear(), ref.getMonth() + 1, 1);
-      label = start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+      const mois = parseInt(document.getElementById('comptaMois').value, 10) || 0;
+      const annee = parseInt(document.getElementById('comptaAnnee').value, 10) || new Date().getFullYear();
+      start = new Date(annee, mois, 1);
+      end = new Date(annee, mois + 1, 1);
+      label = MOIS_NOMS[mois] + ' ' + annee;
     }
     return { periode, start, end, label };
   }
@@ -2897,6 +3506,8 @@
     if(!document.getElementById('comptaDateRef').value){
       document.getElementById('comptaDateRef').value = new Date().toISOString().slice(0,10);
     }
+    populateMonthYearSelectors('comptaMois', 'comptaAnnee');
+    toggleComptaPeriodeInputs();
     const { periode, start, end, label } = getPeriodeRange();
 
     try {
@@ -3184,7 +3795,7 @@
       // Mode vérification : comparer au visage le plus proche parmi les profils autorisés
       try {
         const users = await agrGet('agr_tenants/' + currentTenantId + '/users') || {};
-        const candidats = Object.entries(users).filter(([id,u]) => (id==='dg' || u.role==='gerant') && u.faceDescriptor);
+        const candidats = Object.entries(users).filter(([id,u]) => u.faceDescriptor);
 
         if(candidats.length === 0){
           status.textContent = 'Aucun profil autorisé n\'a encore enregistré son visage.';
