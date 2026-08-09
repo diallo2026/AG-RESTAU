@@ -695,6 +695,57 @@
     .tables-grid{grid-template-columns:repeat(4,1fr);}
   }
 
+  /* ================= GRAPHIQUES SVG (aucune bibliothèque externe) ================= */
+  .chartbox{width:100%; min-height:40px;}
+  .chartbox svg{width:100%; height:auto; display:block;}
+  .chart-legend{display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--text-dim); margin-top:10px;}
+  .chart-legend span{display:inline-flex; align-items:center;}
+  .chart-legend i{display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px;}
+  .chart-empty{color:var(--text-dim); font-size:12.5px; padding:26px 0; text-align:center;}
+  .grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+
+  /* ================= PAGE WEB DU RESTAURANT ================= */
+  .web-link{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; font-family:'IBM Plex Mono',monospace; font-size:12px;
+    word-break:break-all; margin-bottom:12px;
+  }
+  .web-link .url{flex:1; min-width:180px; color:var(--gold-soft);}
+  .web-gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px; margin-top:12px;}
+  .web-thumb{
+    position:relative; border:1px solid var(--line); border-radius:8px;
+    overflow:hidden; background:var(--surface-2); aspect-ratio:4/3;
+  }
+  .web-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .web-thumb button{
+    position:absolute; top:5px; right:5px; width:24px; height:24px; line-height:1;
+    border:none; border-radius:6px; background:rgba(180,72,58,0.9); color:#fff;
+    font-size:14px; cursor:pointer;
+  }
+  .etat-badge{
+    display:inline-block; padding:2px 9px; border-radius:999px;
+    font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .etat-badge.nouvelle{background:rgba(180,72,58,0.16); color:#E7A79B;}
+  .etat-badge.traitee{background:rgba(47,111,94,0.18); color:var(--teal-soft);}
+
+  /* Galerie et bandeau WhatsApp côté page publique */
+  .store-gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; margin:0 auto 26px; max-width:1100px; padding:0 24px;}
+  .store-gallery img{width:100%; height:170px; object-fit:cover; border-radius:10px; border:1px solid var(--line);}
+  .wa-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    padding:13px; margin-top:10px; border:none; border-radius:8px;
+    background:#25D366; color:#08130F; font-size:14px; font-weight:700;
+    cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .wa-btn[disabled]{opacity:0.55; cursor:not-allowed;}
+  .store-infos{max-width:1100px; margin:0 auto 22px; padding:0 24px; color:var(--text-dim); font-size:13.5px; line-height:1.7;}
+
+  @media (max-width: 980px){
+    .grid-3{grid-template-columns:1fr;}
+  }
+
   /* ================= RESPONSIVE — menu hamburger (téléphone & tablette Android) =================
      Détection automatique de l'appareil par media query : au-dessus de 1024 px la barre
      latérale reste toujours visible (ordinateur / tablette en paysage) ; en dessous elle
@@ -1014,6 +1065,9 @@
     <div class="h2-access-err" id="storeCodeErr" style="color:#E19488;"></div>
   </div>
 
+  <div class="store-infos" id="storeInfos" style="display:none;"></div>
+  <div class="store-gallery" id="storeGallery"></div>
+
   <div class="storefront-body" id="storeBody" style="display:none;">
     <div>
       <div class="menu-grid" id="storeMenuGrid"></div>
@@ -1062,7 +1116,10 @@
 
         <div class="field"><label>Votre nom</label><input type="text" id="storeClientNom" placeholder="Nom"></div>
         <div class="field"><label>Votre téléphone</label><input type="text" id="storeClientTelephone" placeholder="+224 6xx xx xx xx"></div>
-        <button class="btn-primary" id="payBtn" onclick="payOrder()">Payer et envoyer en cuisine</button>
+        <div class="field"><label>Précisions pour le restaurant (facultatif)</label><input type="text" id="storeClientNote" placeholder="Adresse exacte, sans piment, heure souhaitée…"></div>
+        <div id="storePaiementNote" style="font-size:12px; color:var(--text-dim); margin-bottom:10px;"></div>
+        <button class="wa-btn" id="waBtn" onclick="envoyerCommandeWhatsapp()">Commander sur WhatsApp</button>
+        <button class="btn-outline" id="payBtn" style="color:var(--text); width:100%; margin-top:8px;" onclick="payOrder()">Enregistrer sans WhatsApp</button>
       </div>
 
       <div id="cartTrackerWrap" style="display:none;">
@@ -1192,11 +1249,14 @@
         <div class="grouplabel">Aperçu</div>
         <div class="navlink active" data-section="overview" onclick="showSection('overview')"><span class="ic">◆</span> Tableau de bord</div>
         <div class="navlink" data-section="commandes" onclick="showSection('commandes')"><span class="ic">▤</span> Commandes</div>
+        <div class="navlink" data-section="service" onclick="showSection('service')"><span class="ic">🍽</span> Service en salle</div>
+        <div class="navlink" data-section="encaissement" onclick="showSection('encaissement')"><span class="ic">💵</span> Encaissement</div>
         <div class="navlink" data-section="tables" onclick="showSection('tables')"><span class="ic">▦</span> Tables</div>
       </div>
       <div class="nav-group">
         <div class="grouplabel">Gestion</div>
-        <div class="navlink" data-section="menu" onclick="showSection('menu')"><span class="ic">🍽</span> Menu & Catégories</div>
+        <div class="navlink" data-section="menu" onclick="showSection('menu')"><span class="ic">📋</span> Menu & Catégories</div>
+        <div class="navlink" data-section="pageweb" onclick="showSection('pageweb')"><span class="ic">🌐</span> Page web du restaurant</div>
         <div class="navlink" data-section="stocks" onclick="showSection('stocks')"><span class="ic">▣</span> Stocks</div>
         <div class="navlink" data-section="clients" onclick="showSection('clients')"><span class="ic">☺</span> Clients & Fidélité</div>
         <div class="navlink" data-section="comptabilite" onclick="showSection('comptabilite')"><span class="ic">⛁</span> Comptabilité</div>
@@ -1241,28 +1301,209 @@
       <!-- ===== Section : Tableau de bord (aperçu) ===== -->
       <div class="dash-section" id="section-overview">
         <div class="kpi-row">
-          <div class="kpi-card"><div class="lbl">CA du jour</div><div class="val mono" id="kpiCaJour">0 GNF</div></div>
-          <div class="kpi-card"><div class="lbl">CA du mois</div><div class="val mono" id="kpiCaMois">0 GNF</div></div>
-          <div class="kpi-card"><div class="lbl">Commandes</div><div class="val mono" id="kpiCommandes">0</div></div>
+          <div class="kpi-card"><div class="lbl">CA du jour</div><div class="val mono" id="kpiCaJour">0 GNF</div><div class="delta" id="kpiCaJourDelta"></div></div>
+          <div class="kpi-card"><div class="lbl">CA du mois</div><div class="val mono" id="kpiCaMois">0 GNF</div><div class="delta" id="kpiCaMoisDelta"></div></div>
+          <div class="kpi-card"><div class="lbl">Commandes du mois</div><div class="val mono" id="kpiCommandes">0</div></div>
           <div class="kpi-card"><div class="lbl">Plats vendus</div><div class="val mono" id="kpiPlatsVendus">0</div></div>
           <div class="kpi-card"><div class="lbl">Effectif</div><div class="val mono" id="kpiEffectif">0</div></div>
         </div>
 
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="lbl">Plats servis (jour)</div><div class="val mono" id="kpiPlatsServis">0</div><div class="delta" id="kpiPlatsServisSub">Saisie des serveurs</div></div>
+          <div class="kpi-card"><div class="lbl">Plats payés (jour)</div><div class="val mono" id="kpiPlatsPayes">0</div><div class="delta" id="kpiPlatsPayesSub">Saisie des caissiers</div></div>
+          <div class="kpi-card"><div class="lbl">Encaissé en caisse (jour)</div><div class="val mono" id="kpiEncaisse">0 GNF</div></div>
+          <div class="kpi-card"><div class="lbl">Commandes en ligne (jour)</div><div class="val mono" id="kpiEnligneJour">0</div></div>
+          <div class="kpi-card"><div class="lbl">Non gérées</div><div class="val mono" id="kpiEnligneNonGerees">0</div><div class="delta" id="kpiEnligneGerees"></div></div>
+        </div>
+
         <div class="grid-2">
           <div class="panel">
-            <h3>Évolution des ventes</h3>
-            <div class="sub">7 derniers jours — GNF</div>
-            <div class="chart-wrap" id="salesChartWrap">
-              <div style="color:var(--text-dim); font-size:12.5px; padding:20px 0;">Aucune vente enregistrée pour l'instant.</div>
-            </div>
+            <h3>Évolution du chiffre d'affaires</h3>
+            <div class="sub">14 derniers jours — GNF</div>
+            <div class="chartbox" id="chartCa"></div>
           </div>
           <div class="panel">
-            <h3>Menu</h3>
-            <div class="sub" id="menuSummarySub">Aucun plat au menu pour l'instant.</div>
-            <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">
-              Ajoutez vos premiers plats dans l'onglet <strong>Menu & Catégories</strong> pour commencer à vendre.
+            <h3>Commandes en ligne par jour</h3>
+            <div class="sub">7 derniers jours — gérées / non gérées</div>
+            <div class="chartbox" id="chartEnligne"></div>
+            <div class="chart-legend">
+              <span><i style="background:var(--teal-soft);"></i>Gérées</span>
+              <span><i style="background:var(--brick);"></i>Non gérées</span>
             </div>
           </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="panel">
+            <h3>Top 5 des plats vendus</h3>
+            <div class="sub">Mois en cours</div>
+            <div class="chartbox" id="chartTopPlats"></div>
+          </div>
+          <div class="panel">
+            <h3>Répartition par catégorie</h3>
+            <div class="sub">Chiffre d'affaires du mois</div>
+            <div class="chartbox" id="chartCategories"></div>
+            <div class="chart-legend" id="legendCategories"></div>
+          </div>
+          <div class="panel">
+            <h3>Service et encaissement</h3>
+            <div class="sub">7 derniers jours — plats servis / payés</div>
+            <div class="chartbox" id="chartServicePaye"></div>
+            <div class="chart-legend">
+              <span><i style="background:var(--gold-soft);"></i>Servis</span>
+              <span><i style="background:var(--teal-soft);"></i>Payés</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Synthèse pour la direction</h3>
+          <div class="sub" id="menuSummarySub">Aucun plat au menu pour l'instant.</div>
+          <div id="overviewAlertes" style="font-size:13px; line-height:1.8;"></div>
+        </div>
+      </div>
+
+      <!-- ===== Section : Service en salle (serveurs) ===== -->
+      <div class="dash-section" id="section-service" style="display:none;">
+        <div class="panel">
+          <h3>Déclarer les plats servis</h3>
+          <div class="sub">Le serveur indique, table par table, le nombre de plats réellement servis.</div>
+          <div class="banner error" id="serviceError"></div>
+          <div class="banner info" id="serviceSuccess"></div>
+          <div class="grid-2">
+            <div class="field"><label>Table</label>
+              <select id="serviceTable" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+            </div>
+            <div class="field"><label>Plat servi</label>
+              <select id="servicePlat" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Nombre de plats servis</label><input type="number" id="serviceQuantite" min="1" value="1"></div>
+            <div class="field"><label>Observation (facultatif)</label><input type="text" id="serviceNote" placeholder="Ex : plat renvoyé, client pressé…"></div>
+          </div>
+          <button class="btn-primary" onclick="enregistrerService()">Enregistrer le service</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Services enregistrés aujourd'hui</h3>
+          <div class="sub" id="serviceSub">Aucun plat servi déclaré aujourd'hui.</div>
+          <table class="commandes-table" id="serviceTableList">
+            <thead><tr><th>Heure</th><th>Table</th><th>Plat</th><th>Quantité</th><th>Serveur</th><th>Observation</th></tr></thead>
+            <tbody id="serviceTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Section : Encaissement (caissiers) ===== -->
+      <div class="dash-section" id="section-encaissement" style="display:none;">
+        <div class="panel">
+          <h3>Encaisser des plats</h3>
+          <div class="sub">Le caissier indique combien de plats ont été payés et à quel prix chaque plat a été payé.</div>
+          <div class="banner error" id="encaissementError"></div>
+          <div class="banner info" id="encaissementSuccess"></div>
+          <div class="grid-2">
+            <div class="field"><label>Plat payé</label>
+              <select id="encPlat" onchange="encPrixParDefaut()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+            </div>
+            <div class="field"><label>Table / référence (facultatif)</label><input type="text" id="encTable" placeholder="Table 4, à emporter…"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Nombre de plats payés</label><input type="number" id="encQuantite" min="1" value="1" oninput="encRecalcul()"></div>
+            <div class="field"><label>Prix payé pour un plat (GNF)</label><input type="number" id="encPrixUnitaire" min="0" oninput="encRecalcul()"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Mode de paiement</label>
+              <select id="encMode" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
+                <option value="especes">Espèces</option>
+                <option value="orange_money">Orange Money</option>
+                <option value="mobile_money">Mobile Money / MoMo</option>
+                <option value="carte">Carte bancaire</option>
+                <option value="virement">Virement</option>
+              </select>
+            </div>
+            <div class="field"><label>Montant total encaissé</label>
+              <div class="mono" id="encMontantTotal" style="padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; font-size:15px; color:var(--gold-soft);">0 GNF</div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="enregistrerEncaissement()">Enregistrer l'encaissement</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Encaissements du jour</h3>
+          <div class="sub" id="encSub">Aucun encaissement enregistré aujourd'hui.</div>
+          <table class="commandes-table" id="encTableList">
+            <thead><tr><th>Heure</th><th>Plat</th><th>Qté payée</th><th>Prix unitaire</th><th>Montant</th><th>Mode</th><th>Caissier</th></tr></thead>
+            <tbody id="encTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== Section : Page web du restaurant ===== -->
+      <div class="dash-section" id="section-pageweb" style="display:none;">
+        <div class="panel">
+          <h3>Adresse de votre page web</h3>
+          <div class="sub">Partagez ce lien sur WhatsApp, Facebook ou vos affiches : il ouvre directement la page de votre restaurant.</div>
+          <div class="web-link">
+            <span class="url" id="webPublicUrl">—</span>
+            <button class="btn-outline" style="color:var(--text);" onclick="copierLienWeb()">Copier</button>
+            <button class="btn-outline" style="color:var(--text);" onclick="ouvrirPageWeb()">Ouvrir</button>
+          </div>
+          <div id="webCopieNote" style="font-size:12px; color:var(--teal-soft);"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Contenu de la page</h3>
+          <div class="banner error" id="webError"></div>
+          <div class="banner info" id="webSuccess"></div>
+          <div class="field">
+            <label>État de la page</label>
+            <select id="webActif" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
+              <option value="oui">En ligne — visible par les clients</option>
+              <option value="non">Hors ligne — page masquée</option>
+            </select>
+          </div>
+          <div class="field"><label>Slogan / accroche</label><input type="text" id="webSlogan" placeholder="La meilleure cuisine guinéenne de Kindia"></div>
+          <div class="field"><label>Présentation du restaurant</label>
+            <textarea id="webDescription" rows="4" placeholder="Spécialités, ambiance, histoire du restaurant…"
+              style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif; resize:vertical;"></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>WhatsApp du service commercial</label><input type="text" id="webWhatsapp" placeholder="224623030403 (indicatif sans +)"></div>
+            <div class="field"><label>Horaires d'ouverture</label><input type="text" id="webHoraires" placeholder="Tous les jours de 08h à 23h"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Page Facebook (facultatif)</label><input type="text" id="webFacebook" placeholder="https://facebook.com/…"></div>
+            <div class="field"><label>Instagram (facultatif)</label><input type="text" id="webInstagram" placeholder="https://instagram.com/…"></div>
+          </div>
+          <div class="field"><label>Consignes de paiement affichées au client</label><input type="text" id="webPaiement" placeholder="Ex : paiement Orange Money au 6XX XX XX XX, ou en espèces à la livraison"></div>
+          <button class="btn-primary" onclick="enregistrerPageWeb()">Enregistrer la page</button>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Photos du restaurant</h3>
+          <div class="sub">Jusqu'à 8 photos (salle, plats, terrasse…). Elles sont réduites automatiquement avant enregistrement.</div>
+          <input type="file" id="webImagesInput" accept="image/*" multiple onchange="ajouterImagesWeb(this)"
+            style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
+          <div id="webImagesNote" style="font-size:12px; color:var(--text-dim); margin-top:8px;"></div>
+          <div class="web-gallery" id="webGallery"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Commandes reçues en ligne</h3>
+          <div class="sub" id="webCommandesSub">Aucune commande en ligne pour l'instant.</div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <select id="webCmdFiltre" onchange="renderCommandesEnLigne()" style="padding:9px 11px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
+              <option value="toutes">Toutes les commandes</option>
+              <option value="nouvelle">Non gérées</option>
+              <option value="traitee">Gérées</option>
+            </select>
+            <button class="btn-outline" style="color:var(--text);" onclick="loadPageWeb()">Actualiser</button>
+          </div>
+          <table class="commandes-table" id="webCmdTable">
+            <thead><tr><th>Date</th><th>Client</th><th>Plats</th><th>Total</th><th>État</th><th>Actions</th></tr></thead>
+            <tbody id="webCmdBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -1554,6 +1795,7 @@
             <label>Rôle</label>
             <select id="rhFormRole" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
               <option value="gerant">Gérant</option>
+              <option value="cuisinier">Cuisinier</option>
               <option value="caissier">Caissier</option>
               <option value="serveur">Serveur</option>
               <option value="rh">RH</option>
@@ -2063,6 +2305,7 @@
   let cart = {}; // { produitId: quantite }
 
   let storeZones = [];
+  let storeSite = {};
   let storeFraisService = 0;
   let trackerInterval = null;
 
@@ -2088,13 +2331,27 @@
         return;
       }
 
+      // Configuration de la page web propre à ce restaurant
+      storeSite = await agrGet('agr_tenants/' + code + '/siteweb') || {};
+
+      if(storeSite.actif === false){
+        err.textContent = 'La page de ce restaurant est momentanément hors ligne.';
+        err.style.color = '#E19488';
+        document.getElementById('storeBody').style.display = 'none';
+        document.getElementById('storeGallery').innerHTML = '';
+        document.getElementById('storeInfos').style.display = 'none';
+        return;
+      }
+
       storeTenantCode = code;
       cart = {};
       err.style.display = 'none';
       document.getElementById('storeRestaurantName').textContent = info.nomRestaurant || code;
       document.getElementById('storeHeroTitle').textContent = (info.nomRestaurant || code) + (info.ville ? ' — ' + info.ville : '');
-      document.getElementById('storeHeroText').textContent = 'Composez votre commande ci-dessous ; le paiement est enregistré directement dans la caisse du restaurant.';
+      document.getElementById('storeHeroText').textContent =
+        storeSite.slogan || 'Composez votre commande ci-dessous, puis envoyez-la au restaurant sur WhatsApp.';
       document.getElementById('storeBody').style.display = 'grid';
+      renderStoreVitrine(info);
 
       const produits = await agrGet('agr_tenants/' + code + '/produits') || {};
       storeMenuItems = Object.entries(produits)
@@ -2234,6 +2491,171 @@
     }
   }
 
+  // ---------------------------------------------------------------
+  // Vitrine du restaurant — présentation, photos et consignes de paiement
+  // alimentées par l'onglet « Page web du restaurant ».
+  // ---------------------------------------------------------------
+  function renderStoreVitrine(info){
+    const images = Array.isArray(storeSite.images) ? storeSite.images : Object.values(storeSite.images || {});
+    document.getElementById('storeGallery').innerHTML =
+      images.map((src, i) => `<img src="${src}" alt="Photo ${i+1} du restaurant">`).join('');
+
+    const infosEl = document.getElementById('storeInfos');
+    const lignes = [];
+    if(storeSite.description) lignes.push('<p style="margin:0 0 10px;">' + storeSite.description + '</p>');
+    const details = [];
+    if(storeSite.horaires) details.push('🕒 ' + storeSite.horaires);
+    if(info.adresse || info.ville) details.push('📍 ' + [info.adresse, info.ville].filter(Boolean).join(', '));
+    if(info.telephone) details.push('📞 ' + info.telephone);
+    if(storeSite.whatsapp) details.push('💬 WhatsApp : +' + storeSite.whatsapp);
+    if(details.length) lignes.push('<p style="margin:0 0 8px;">' + details.join(' &nbsp;·&nbsp; ') + '</p>');
+
+    const reseaux = [];
+    if(storeSite.facebook)  reseaux.push('<a href="' + storeSite.facebook + '" target="_blank" style="color:var(--gold-soft);">Facebook</a>');
+    if(storeSite.instagram) reseaux.push('<a href="' + storeSite.instagram + '" target="_blank" style="color:var(--gold-soft);">Instagram</a>');
+    if(reseaux.length) lignes.push('<p style="margin:0;">' + reseaux.join(' · ') + '</p>');
+
+    infosEl.innerHTML = lignes.join('');
+    infosEl.style.display = lignes.length ? 'block' : 'none';
+
+    // Consignes de paiement affichées juste au-dessus du bouton de commande
+    document.getElementById('storePaiementNote').textContent =
+      storeSite.paiement || 'Votre commande part sur le WhatsApp du service commercial, qui vous confirmera le paiement.';
+
+    const waBtn = document.getElementById('waBtn');
+    waBtn.disabled = !storeSite.whatsapp;
+    waBtn.textContent = storeSite.whatsapp
+      ? 'Commander sur WhatsApp'
+      : 'WhatsApp non configuré par le restaurant';
+  }
+
+  // Construit le récapitulatif texte envoyé au service commercial
+  function messageWhatsapp(nomRestaurant, totaux, clientNom, clientTel, note){
+    const lignes = Object.entries(cart).filter(([,q]) => q > 0).map(([id, q]) => {
+      const item = storeMenuItems.find(m => m.id === id);
+      return item ? '• ' + q + ' × ' + item.nom + ' — ' + fmtGNF((item.prixVente||0) * q) : '';
+    }).filter(Boolean);
+
+    const txt = [
+      'Bonjour ' + nomRestaurant + ', je souhaite passer une commande :',
+      '',
+      lignes.join('\n'),
+      '',
+      'Mode : ' + (totaux.mode === 'livraison' ? 'Livraison' + (totaux.zoneNom ? ' (' + totaux.zoneNom + ')' : '') : 'Sur place / à emporter'),
+      'Total à payer : ' + fmtGNF(totaux.total),
+      '',
+      'Nom : ' + (clientNom || 'non précisé'),
+      'Téléphone : ' + (clientTel || 'non précisé'),
+    ];
+    if(note) txt.push('Précisions : ' + note);
+    return encodeURIComponent(txt.join('\n'));
+  }
+
+  // Enregistre la commande côté restaurant puis ouvre WhatsApp pré-rempli
+  async function envoyerCommandeWhatsapp(){
+    const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+    const banner = document.getElementById('paidBanner');
+    if(entries.length === 0 || !storeTenantCode) return;
+
+    if(!storeSite.whatsapp){
+      banner.style.display = 'block';
+      banner.style.color = '#E19488';
+      banner.textContent = "Ce restaurant n'a pas encore renseigné son WhatsApp commercial.";
+      return;
+    }
+
+    const infoRestaurant = document.getElementById('storeRestaurantName').textContent;
+    const clientNom = document.getElementById('storeClientNom').value.trim();
+    const clientTel = document.getElementById('storeClientTelephone').value.trim();
+    const note = document.getElementById('storeClientNote').value.trim();
+    const totaux = recalculerTotal();
+
+    // La fenêtre WhatsApp est ouverte tout de suite : ouverte après l'appel
+    // réseau, elle serait bloquée par les navigateurs mobiles.
+    const url = 'https://wa.me/' + storeSite.whatsapp + '?text=' +
+                messageWhatsapp(infoRestaurant, totaux, clientNom, clientTel, note);
+    const fenetre = window.open(url, '_blank');
+
+    try {
+      await enregistrerCommandeClient({ origine: 'Commande WhatsApp', canal: 'whatsapp', note });
+      banner.style.display = 'block';
+      banner.style.color = '';
+      banner.textContent = 'Commande transmise au restaurant. Finalisez le paiement sur WhatsApp.';
+      cart = {};
+      document.getElementById('cartOrderForm').style.display = 'none';
+      document.getElementById('cartTrackerWrap').style.display = 'block';
+      demarrerChrono(totaux.mode === 'livraison' ? totaux.delaiMinutes : 20);
+    } catch(e){
+      banner.style.display = 'block';
+      banner.style.color = '#E19488';
+      banner.textContent = "La commande est partie sur WhatsApp mais n'a pas pu être enregistrée dans le restaurant.";
+    }
+    if(!fenetre){
+      banner.textContent += ' (Si WhatsApp ne s\'est pas ouvert, autorisez les fenêtres pop-up.)';
+    }
+  }
+
+  // Écriture commune aux deux modes de commande : la commande alimente la
+  // caisse du restaurant et la liste des commandes en ligne à traiter.
+  async function enregistrerCommandeClient(extra){
+    const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+    let totalPlats = 0;
+    const platsCommande = {};
+    entries.forEach(([id, qty]) => {
+      const item = storeMenuItems.find(m => m.id === id);
+      if(!item) return;
+      totalPlats += qty;
+      platsCommande[id] = { nom: item.nom, qty, prix: item.prixVente || 0 };
+    });
+
+    const { fraisLivraison, total, mode, zoneNom } = recalculerTotal();
+    const clientNom = document.getElementById('storeClientNom').value.trim();
+    const clientTelephone = document.getElementById('storeClientTelephone').value.trim();
+
+    const commande = {
+      origine: (extra && extra.origine) || 'Page web',
+      plats: platsCommande,
+      platsVendus: totalPlats,
+      revenu: total,
+      mode, zone: zoneNom || null,
+      fraisService: storeFraisService, fraisLivraison,
+      date: Date.now(),
+      clientNom: clientNom || null,
+      clientTelephone: clientTelephone || null,
+    };
+
+    const base = 'agr_tenants/' + storeTenantCode + '/';
+    await window._agrSet(window._agrPush(agrRef(base + 'commandes')), commande);
+
+    // Suivi dédié : c'est cette liste que le gérant traite dans l'onglet Page web
+    await window._agrSet(window._agrPush(agrRef(base + 'commandesEnLigne')), Object.assign({}, commande, {
+      statut: 'nouvelle',
+      canal: (extra && extra.canal) || 'page_web',
+      total,
+      note: (extra && extra.note) || null,
+    }));
+
+    if(clientTelephone){
+      await enregistrerClient(storeTenantCode, clientNom, clientTelephone, total);
+    }
+    return commande;
+  }
+
+  // ---------------------------------------------------------------
+  // Lien direct vers la page d'un restaurant : …/index.html#/r/CODE
+  // C'est l'adresse que le restaurant partage à ses clients.
+  // ---------------------------------------------------------------
+  function ouvrirDepuisLien(){
+    const m = (location.hash || '').match(/^#\/r\/([A-Za-z0-9_-]+)/);
+    if(!m) return false;
+    showView('storefront');
+    document.getElementById('storeCodeInput').value = m[1].toUpperCase();
+    chargerBoutique();
+    return true;
+  }
+
+  window.addEventListener('hashchange', ouvrirDepuisLien);
+
   async function payOrder(){
     const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
     if(entries.length === 0 || !storeTenantCode) return;
@@ -2254,25 +2676,15 @@
 
     const banner = document.getElementById('paidBanner');
     try {
-      const newRef = window._agrPush(agrRef('agr_tenants/' + storeTenantCode + '/commandes'));
-      await window._agrSet(newRef, {
-        origine: 'Page publicitaire',
-        plats: platsCommande,
-        platsVendus: totalPlats,
-        revenu: total,
-        mode, zone: zoneNom || null,
-        fraisService: storeFraisService, fraisLivraison,
-        date: Date.now(),
-        clientNom: clientNom || null,
-        clientTelephone: clientTelephone || null,
+      await enregistrerCommandeClient({
+        origine: 'Page web',
+        canal: 'page_web',
+        note: document.getElementById('storeClientNote').value.trim(),
       });
 
-      if(clientTelephone){
-        await enregistrerClient(storeTenantCode, clientNom, clientTelephone, total);
-      }
-
       banner.style.display = 'block';
-      banner.textContent = 'Paiement de ' + total.toLocaleString('fr-FR') + ' GNF enregistré dans la caisse du restaurant.';
+      banner.style.color = '';
+      banner.textContent = 'Commande de ' + total.toLocaleString('fr-FR') + ' GNF enregistrée. Le restaurant vous rappellera pour le paiement.';
       cart = {};
 
       document.getElementById('cartOrderForm').style.display = 'none';
@@ -2408,7 +2820,7 @@
 
   const roleLabels = {
     dg: 'Directeur Général', fondateur: 'Fondateur', comptable: 'Comptable',
-    gerant: 'Gérant', caissier: 'Caissier', serveur: 'Serveur',
+    gerant: 'Gérant', cuisinier: 'Cuisinier', caissier: 'Caissier', serveur: 'Serveur',
     rh: 'RH', employe: 'Employé', super_admin: 'Super Admin'
   };
 
@@ -2431,6 +2843,8 @@
   // ---------------------------------------------------------------
   const sectionTitles = {
     overview: 'Tableau de bord', commandes: 'Commandes', tables: 'Tables',
+    service: 'Service en salle', encaissement: 'Encaissement',
+    pageweb: 'Page web du restaurant',
     menu: 'Menu & Catégories', stocks: 'Stocks', clients: 'Clients & Fidélité',
     comptabilite: 'Comptabilité', depenses: 'Dépenses', banque: 'Gestion bancaire',
     rh: 'Ressources Humaines', pointage: 'Pointage biométrique', evaluation: 'Évaluation',
@@ -2469,31 +2883,45 @@
   });
 
   // ---------------------------------------------------------------
-  // Restrictions d'accès par rôle
-  // Le gérant n'a pas accès au tableau de bord (aperçu global du restaurant).
+  // DROITS D'ACCÈS PAR RÔLE
+  // Chaque rôle ne voit que les onglets dont il a besoin pour son métier.
+  // '*' = accès complet (direction). Le gérant est proche du DG mais n'a
+  // ni la comptabilité, ni la banque, ni les paramètres, ni la licence :
+  // il exploite le restaurant et fait remonter l'information au DG.
   // ---------------------------------------------------------------
-  const hiddenSectionsByRole = {
-    gerant: ['overview'],
+  const sectionsByRole = {
+    dg:          '*',
+    fondateur:   '*',
+    super_admin: '*',
+    gerant:      ['overview','commandes','service','encaissement','tables','menu','pageweb',
+                  'stocks','clients','depenses','rh','pointage','evaluation','audit'],
+    cuisinier:   ['menu','stocks','commandes'],
+    serveur:     ['service','tables','commandes'],
+    caissier:    ['encaissement','commandes'],
+    comptable:   ['comptabilite','depenses','banque','rh'],
+    rh:          ['rh','pointage','evaluation'],
+    employe:     ['pointage'],
   };
 
   function isSectionAllowed(name){
-    const hidden = hiddenSectionsByRole[currentRole] || [];
-    return !hidden.includes(name);
+    const allowed = sectionsByRole[currentRole];
+    if(!allowed) return true;            // rôle inconnu : on ne bloque rien
+    if(allowed === '*') return true;
+    return allowed.includes(name);
   }
 
-  // Première section visible pour le rôle courant (sert de page d'atterrissage)
+  // Première section autorisée : sert de page d'atterrissage après connexion
   function defaultSectionForRole(){
     if(isSectionAllowed('overview')) return 'overview';
-    const firstVisible = Array.from(document.querySelectorAll('.navlink'))
-      .find(el => el.style.display !== 'none' && isSectionAllowed(el.dataset.section));
-    return firstVisible ? firstVisible.dataset.section : 'commandes';
+    const premier = Array.from(document.querySelectorAll('.navlink'))
+      .find(el => isSectionAllowed(el.dataset.section));
+    return premier ? premier.dataset.section : 'commandes';
   }
 
-  // Masque dans le menu les onglets interdits au rôle connecté
+  // Masque dans le menu tous les onglets interdits au rôle connecté
   function applyRoleRestrictions(){
-    const hidden = hiddenSectionsByRole[currentRole] || [];
     document.querySelectorAll('.navlink').forEach(el => {
-      el.style.display = hidden.includes(el.dataset.section) ? 'none' : '';
+      el.style.display = isSectionAllowed(el.dataset.section) ? '' : 'none';
     });
     // Un groupe dont tous les onglets sont masqués disparaît avec son intitulé
     document.querySelectorAll('.nav-group').forEach(group => {
@@ -2532,6 +2960,9 @@
     if(name === 'pointage') loadPointage();
     if(name === 'evaluation') loadEvaluation();
     if(name === 'comptabilite') loadComptabilite();
+    if(name === 'service') loadServiceSection();
+    if(name === 'encaissement') loadEncaissementSection();
+    if(name === 'pageweb') loadPageWeb();
   }
 
   // ---------------------------------------------------------------
@@ -3189,57 +3620,718 @@
   // ---------------------------------------------------------------
   // Tableau de bord — KPIs réels calculés depuis les commandes du tenant
   // ---------------------------------------------------------------
+  // ===============================================================
+  // GRAPHIQUES — rendu SVG maison, sans bibliothèque externe
+  // (aucun CDN supplémentaire : les graphiques s'affichent même
+  //  avec une connexion lente ou coupée)
+  // ===============================================================
+  function chartEmpty(el, message){
+    el.innerHTML = '<div class="chart-empty">' + message + '</div>';
+  }
+
+  function fmtGNF(v){ return Number(v || 0).toLocaleString('fr-FR') + ' GNF'; }
+  function fmtCourt(v){
+    v = Number(v || 0);
+    if(v >= 1000000) return (v/1000000).toFixed(1).replace('.0','') + 'M';
+    if(v >= 1000)    return Math.round(v/1000) + 'k';
+    return String(Math.round(v));
+  }
+
+  // Histogramme vertical simple : points = [{label, value}]
+  function chartBars(el, points, couleur, formatValeur){
+    if(!points.length || points.every(p => !p.value)){
+      chartEmpty(el, 'Aucune donnée sur la période.');
+      return;
+    }
+    const W = 440, H = 190, padB = 26, padT = 14;
+    const max = Math.max(...points.map(p => p.value), 1);
+    const pas = W / points.length;
+    const larg = Math.max(4, pas * 0.6);
+
+    const barres = points.map((p, i) => {
+      const h = Math.max(2, (p.value / max) * (H - padB - padT));
+      const x = i * pas + (pas - larg) / 2;
+      const y = H - padB - h;
+      return `<g><title>${p.label} : ${(formatValeur || fmtGNF)(p.value)}</title>` +
+             `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${larg.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${couleur}"/></g>` +
+             `<text x="${(i*pas + pas/2).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9" fill="#9AA4B2">${p.label}</text>`;
+    }).join('');
+
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">
+      <line x1="0" y1="${H-padB}" x2="${W}" y2="${H-padB}" stroke="#2B3440" stroke-width="1"/>
+      ${barres}
+      <text x="2" y="${padT}" font-size="9" fill="#9AA4B2">max ${(formatValeur || fmtGNF)(max)}</text>
+    </svg>`;
+  }
+
+  // Histogramme empilé à deux séries : points = [{label, a, b}]
+  function chartStacked(el, points, coulA, coulB, nomA, nomB){
+    if(!points.length || points.every(p => !p.a && !p.b)){
+      chartEmpty(el, 'Aucune donnée sur la période.');
+      return;
+    }
+    const W = 440, H = 190, padB = 26, padT = 14;
+    const max = Math.max(...points.map(p => p.a + p.b), 1);
+    const pas = W / points.length;
+    const larg = Math.max(6, pas * 0.55);
+
+    const barres = points.map((p, i) => {
+      const hA = (p.a / max) * (H - padB - padT);
+      const hB = (p.b / max) * (H - padB - padT);
+      const x = i * pas + (pas - larg) / 2;
+      const yB = H - padB - hB;
+      const yA = yB - hA;
+      return `<g><title>${p.label} — ${nomA} : ${p.a}, ${nomB} : ${p.b}</title>` +
+             `<rect x="${x.toFixed(1)}" y="${yB.toFixed(1)}" width="${larg.toFixed(1)}" height="${Math.max(0,hB).toFixed(1)}" fill="${coulB}"/>` +
+             `<rect x="${x.toFixed(1)}" y="${yA.toFixed(1)}" width="${larg.toFixed(1)}" height="${Math.max(0,hA).toFixed(1)}" rx="2" fill="${coulA}"/></g>` +
+             `<text x="${(i*pas + pas/2).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-size="9" fill="#9AA4B2">${p.label}</text>`;
+    }).join('');
+
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">
+      <line x1="0" y1="${H-padB}" x2="${W}" y2="${H-padB}" stroke="#2B3440" stroke-width="1"/>
+      ${barres}
+    </svg>`;
+  }
+
+  // Barres horizontales (classements) : points = [{label, value}]
+  function chartHBars(el, points, couleur, formatValeur){
+    if(!points.length){
+      chartEmpty(el, 'Aucune vente enregistrée.');
+      return;
+    }
+    const W = 440, ligne = 30, H = points.length * ligne + 8;
+    const max = Math.max(...points.map(p => p.value), 1);
+
+    const lignes = points.map((p, i) => {
+      const y = i * ligne + 4;
+      const l = Math.max(3, (p.value / max) * (W - 130));
+      const nom = p.label.length > 22 ? p.label.slice(0, 21) + '…' : p.label;
+      return `<text x="0" y="${y + 13}" font-size="11" fill="#EDEAE2">${nom}</text>` +
+             `<rect x="0" y="${y + 18}" width="${l.toFixed(1)}" height="7" rx="3.5" fill="${couleur}"/>` +
+             `<text x="${W}" y="${y + 13}" text-anchor="end" font-size="11" fill="#9AA4B2">${(formatValeur || String)(p.value)}</text>`;
+    }).join('');
+
+    el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">${lignes}</svg>`;
+  }
+
+  // Anneau de répartition : points = [{label, value}]
+  const PALETTE = ['#C9A227','#2F6F5E','#B4483A','#4E9784','#E4C660','#6C8AA8','#8E6FB0'];
+
+  function chartDonut(el, points, legendEl){
+    const total = points.reduce((s,p) => s + p.value, 0);
+    if(!total){
+      chartEmpty(el, 'Aucune vente à répartir.');
+      if(legendEl) legendEl.innerHTML = '';
+      return;
+    }
+    const R = 68, r = 42, cx = 110, cy = 92;
+    let angle = -Math.PI / 2;
+
+    // Une seule catégorie : l'arc de 360° serait dégénéré, on trace deux cercles
+    if(points.filter(p => p.value > 0).length === 1){
+      const seul = points.find(p => p.value > 0);
+      el.innerHTML = `<svg viewBox="0 0 220 184" role="img">
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="${PALETTE[0]}"><title>${seul.label} : ${fmtGNF(seul.value)} (100%)</title></circle>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="#171D25"/>
+        <text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="13" fill="#EDEAE2" font-weight="600">${fmtCourt(total)}</text>
+        <text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="9" fill="#9AA4B2">GNF</text>
+      </svg>`;
+      if(legendEl) legendEl.innerHTML = `<span><i style="background:${PALETTE[0]};"></i>${seul.label} — 100%</span>`;
+      return;
+    }
+
+    const parts = points.map((p, i) => {
+      const a = (p.value / total) * Math.PI * 2;
+      const x1 = cx + R * Math.cos(angle),        y1 = cy + R * Math.sin(angle);
+      const x2 = cx + R * Math.cos(angle + a),    y2 = cy + R * Math.sin(angle + a);
+      const x3 = cx + r * Math.cos(angle + a),    y3 = cy + r * Math.sin(angle + a);
+      const x4 = cx + r * Math.cos(angle),        y4 = cy + r * Math.sin(angle);
+      const grand = a > Math.PI ? 1 : 0;
+      angle += a;
+      const c = PALETTE[i % PALETTE.length];
+      return `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} A${R},${R} 0 ${grand},1 ${x2.toFixed(1)},${y2.toFixed(1)} L${x3.toFixed(1)},${y3.toFixed(1)} A${r},${r} 0 ${grand},0 ${x4.toFixed(1)},${y4.toFixed(1)} Z" fill="${c}"><title>${p.label} : ${fmtGNF(p.value)} (${Math.round(p.value/total*100)}%)</title></path>`;
+    }).join('');
+
+    el.innerHTML = `<svg viewBox="0 0 220 184" role="img">${parts}
+      <text x="${cx}" y="${cy - 2}" text-anchor="middle" font-size="13" fill="#EDEAE2" font-weight="600">${fmtCourt(total)}</text>
+      <text x="${cx}" y="${cy + 13}" text-anchor="middle" font-size="9" fill="#9AA4B2">GNF</text>
+    </svg>`;
+
+    if(legendEl){
+      legendEl.innerHTML = points.map((p, i) =>
+        `<span><i style="background:${PALETTE[i % PALETTE.length]};"></i>${p.label} — ${Math.round(p.value/total*100)}%</span>`
+      ).join('');
+    }
+  }
+
+  // ===============================================================
+  // Outils de date partagés par les modules ci-dessous
+  // ===============================================================
+  function jourKey(ts){
+    const d = new Date(ts || 0);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function jourLabel(d){
+    return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+  }
+  function derniersJours(n){
+    const out = [];
+    for(let i = n - 1; i >= 0; i--){
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() - i);
+      out.push({ date: d, key: jourKey(d.getTime()), label: jourLabel(d) });
+    }
+    return out;
+  }
+  function estAujourdhui(ts){ return jourKey(ts) === jourKey(Date.now()); }
+  function heureCourte(ts){
+    return new Date(ts || 0).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+  }
+  function nomUtilisateurCourant(){
+    return document.getElementById('userName').textContent || 'Utilisateur';
+  }
+  async function agrPush(path, value){
+    const ref = window._agrPush(agrRef(path));
+    await window._agrSet(ref, value);
+    return ref.key;
+  }
+
+  // ===============================================================
+  // TABLEAU DE BORD — réservé à la direction (DG, fondateur, gérant)
+  // Vue complète de la progression du restaurant, avec graphiques.
+  // ===============================================================
   async function loadOverview(){
     if(!currentTenantId) return;
     try {
-      const [commandes, produits, users] = await Promise.all([
-        agrGet('agr_tenants/' + currentTenantId + '/commandes'),
-        agrGet('agr_tenants/' + currentTenantId + '/produits'),
-        agrGet('agr_tenants/' + currentTenantId + '/users'),
+      const base = 'agr_tenants/' + currentTenantId + '/';
+      const [commandes, produits, users, services, encaissements, enligne] = await Promise.all([
+        agrGet(base + 'commandes'),
+        agrGet(base + 'produits'),
+        agrGet(base + 'users'),
+        agrGet(base + 'service'),
+        agrGet(base + 'encaissements'),
+        agrGet(base + 'commandesEnLigne'),
       ]);
+
       const now = new Date();
-      const isSameDay = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()===now.getDate();
-      const isSameMonth = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+      const memeMois = (d) => d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+      const listeCommandes = Object.values(commandes || {});
+      const duMois = listeCommandes.filter(c => memeMois(new Date(c.date || 0)));
 
-      // Le tableau de bord ne charge que le mois en cours
-      const list = Object.values(commandes || {}).filter(c => isSameMonth(new Date(c.date || 0)));
-
+      // ---- Indicateurs de vente
       let caJour = 0, caMois = 0, platsVendus = 0;
-      list.forEach(c => {
-        const d = new Date(c.date || 0);
+      duMois.forEach(c => {
         caMois += (c.revenu || 0);
-        if(isSameDay(d)) caJour += (c.revenu || 0);
         platsVendus += (c.platsVendus || 0);
+        if(estAujourdhui(c.date)) caJour += (c.revenu || 0);
       });
 
-      document.getElementById('kpiCaJour').textContent = caJour.toLocaleString('fr-FR') + ' GNF';
-      document.getElementById('kpiCaMois').textContent = caMois.toLocaleString('fr-FR') + ' GNF';
-      document.getElementById('kpiCommandes').textContent = list.length;
+      // Comparaison avec la veille pour situer la journée
+      const hier = new Date(); hier.setDate(hier.getDate() - 1);
+      const cleHier = jourKey(hier.getTime());
+      const caHier = listeCommandes.filter(c => jourKey(c.date) === cleHier)
+                                   .reduce((s,c) => s + (c.revenu || 0), 0);
+
+      document.getElementById('kpiCaJour').textContent = fmtGNF(caJour);
+      document.getElementById('kpiCaMois').textContent = fmtGNF(caMois);
+      document.getElementById('kpiCommandes').textContent = duMois.length;
       document.getElementById('kpiPlatsVendus').textContent = platsVendus;
       document.getElementById('kpiEffectif').textContent = Object.keys(users || {}).length;
 
+      const deltaEl = document.getElementById('kpiCaJourDelta');
+      if(caHier > 0){
+        const ecart = Math.round((caJour - caHier) / caHier * 100);
+        deltaEl.textContent = (ecart >= 0 ? '▲ +' : '▼ ') + ecart + ' % vs hier';
+        deltaEl.className = 'delta ' + (ecart >= 0 ? 'up' : 'down');
+      } else {
+        deltaEl.textContent = 'Pas de vente hier';
+        deltaEl.className = 'delta';
+      }
+      const nbJoursEcoules = now.getDate();
+      document.getElementById('kpiCaMoisDelta').textContent =
+        'Moyenne : ' + fmtGNF(Math.round(caMois / Math.max(1, nbJoursEcoules))) + ' / jour';
+
+      // ---- Service, encaissement et commandes en ligne
+      const listeServices = Object.values(services || {});
+      const listeEnc = Object.values(encaissements || {});
+      const listeEnligne = Object.values(enligne || {});
+
+      const servisJour = listeServices.filter(s => estAujourdhui(s.date))
+                                      .reduce((t,s) => t + (s.quantite || 0), 0);
+      const encJour = listeEnc.filter(e => estAujourdhui(e.date));
+      const platsPayesJour = encJour.reduce((t,e) => t + (e.quantite || 0), 0);
+      const montantEncaisseJour = encJour.reduce((t,e) => t + (e.montant || 0), 0);
+
+      const enligneJour = listeEnligne.filter(c => estAujourdhui(c.date));
+      const nonGerees = enligneJour.filter(c => c.statut !== 'traitee').length;
+
+      document.getElementById('kpiPlatsServis').textContent = servisJour;
+      document.getElementById('kpiPlatsPayes').textContent = platsPayesJour;
+      document.getElementById('kpiEncaisse').textContent = fmtGNF(montantEncaisseJour);
+      document.getElementById('kpiEnligneJour').textContent = enligneJour.length;
+      document.getElementById('kpiEnligneNonGerees').textContent = nonGerees;
+      document.getElementById('kpiEnligneGerees').textContent =
+        (enligneJour.length - nonGerees) + ' déjà gérée(s)';
+      document.getElementById('kpiEnligneGerees').className = 'delta ' + (nonGerees ? 'down' : 'up');
+
+      // ---- Graphique 1 : chiffre d'affaires des 14 derniers jours
+      const jours14 = derniersJours(14);
+      const caParJour = {};
+      listeCommandes.forEach(c => {
+        const k = jourKey(c.date);
+        caParJour[k] = (caParJour[k] || 0) + (c.revenu || 0);
+      });
+      chartBars(document.getElementById('chartCa'),
+        jours14.map(j => ({ label: j.label, value: caParJour[j.key] || 0 })), '#C9A227');
+
+      // ---- Graphique 2 : commandes en ligne gérées / non gérées sur 7 jours
+      const jours7 = derniersJours(7);
+      const enligneParJour = {};
+      listeEnligne.forEach(c => {
+        const k = jourKey(c.date);
+        if(!enligneParJour[k]) enligneParJour[k] = { gerees: 0, non: 0 };
+        if(c.statut === 'traitee') enligneParJour[k].gerees++; else enligneParJour[k].non++;
+      });
+      chartStacked(document.getElementById('chartEnligne'),
+        jours7.map(j => ({
+          label: j.label,
+          a: (enligneParJour[j.key] || {}).gerees || 0,
+          b: (enligneParJour[j.key] || {}).non || 0,
+        })), '#4E9784', '#B4483A', 'gérées', 'non gérées');
+
+      // ---- Graphique 3 : top 5 des plats vendus ce mois
+      const parPlat = {};
+      duMois.forEach(c => {
+        Object.values(c.plats || {}).forEach(p => {
+          const nom = p.nom || 'Plat';
+          parPlat[nom] = (parPlat[nom] || 0) + (p.qty || 0);
+        });
+      });
+      const top = Object.entries(parPlat).map(([label, value]) => ({ label, value }))
+        .sort((a,b) => b.value - a.value).slice(0, 5);
+      chartHBars(document.getElementById('chartTopPlats'), top, '#2F6F5E', v => v + ' plat(s)');
+
+      // ---- Graphique 4 : répartition du CA par catégorie de plat
+      const catParProduit = {};
+      Object.entries(produits || {}).forEach(([id, p]) => { catParProduit[p.nom] = p.categorie || 'Autres'; });
+      const parCategorie = {};
+      duMois.forEach(c => {
+        Object.values(c.plats || {}).forEach(p => {
+          const cat = catParProduit[p.nom] || 'Autres';
+          parCategorie[cat] = (parCategorie[cat] || 0) + (p.prix || 0) * (p.qty || 0);
+        });
+      });
+      const cats = Object.entries(parCategorie).map(([label, value]) => ({ label, value }))
+        .sort((a,b) => b.value - a.value).slice(0, 6);
+      chartDonut(document.getElementById('chartCategories'), cats, document.getElementById('legendCategories'));
+
+      // ---- Graphique 5 : plats servis vs plats payés sur 7 jours
+      const servisParJour = {}, payesParJour = {};
+      listeServices.forEach(s => {
+        const k = jourKey(s.date);
+        servisParJour[k] = (servisParJour[k] || 0) + (s.quantite || 0);
+      });
+      listeEnc.forEach(e => {
+        const k = jourKey(e.date);
+        payesParJour[k] = (payesParJour[k] || 0) + (e.quantite || 0);
+      });
+      chartStacked(document.getElementById('chartServicePaye'),
+        jours7.map(j => ({ label: j.label, a: servisParJour[j.key] || 0, b: payesParJour[j.key] || 0 })),
+        '#E4C660', '#4E9784', 'servis', 'payés');
+
+      // ---- Synthèse écrite pour la direction
       const nbProduits = Object.keys(produits || {}).length;
       document.getElementById('menuSummarySub').textContent =
-        nbProduits === 0 ? 'Aucun plat au menu pour l\'instant.' : nbProduits + ' plat(s) au menu.';
+        nbProduits === 0 ? "Aucun plat au menu pour l'instant." : nbProduits + ' plat(s) au menu.';
 
-      // Graphique des ventes du mois en cours, jour par jour
-      const chartWrap = document.getElementById('salesChartWrap');
-      if(list.length === 0){
-        chartWrap.innerHTML = '<div style="color:var(--text-dim); font-size:12.5px; padding:20px 0;">Aucune vente enregistrée ce mois-ci.</div>';
-      } else {
-        const nbJours = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-        const totals = new Array(nbJours).fill(0);
-        list.forEach(c => {
-          const d = new Date(c.date || 0);
-          totals[d.getDate()-1] += (c.revenu || 0);
-        });
-        const max = Math.max(...totals, 1);
-        chartWrap.innerHTML = totals.map((v,i) => `
-          <div class="bar" style="height:${Math.max(4, Math.round(v/max*100))}%"><span class="tag">${i+1}</span></div>
-        `).join('');
-      }
+      const alertes = [];
+      if(nonGerees > 0)
+        alertes.push('🔴 <strong>' + nonGerees + ' commande(s) en ligne non gérée(s)</strong> aujourd\'hui — à traiter dans l\'onglet Page web.');
+      if(servisJour > platsPayesJour)
+        alertes.push('🟠 <strong>' + (servisJour - platsPayesJour) + ' plat(s) servis mais pas encore encaissés</strong> aujourd\'hui — écart à vérifier avec la caisse.');
+      if(platsPayesJour > servisJour && platsPayesJour > 0)
+        alertes.push('🟠 Plus de plats encaissés que de plats déclarés servis — la saisie des serveurs est peut-être en retard.');
+      if(nbProduits === 0)
+        alertes.push('🔵 Le menu est vide : ajoutez vos plats pour permettre les commandes en ligne.');
+      if(!alertes.length)
+        alertes.push('🟢 Rien à signaler : service, caisse et commandes en ligne sont cohérents aujourd\'hui.');
+
+      document.getElementById('overviewAlertes').innerHTML = alertes.map(a => '<div>' + a + '</div>').join('');
     } catch(e){
       // silencieux : l'aperçu reste à ses valeurs par défaut si Firebase est injoignable
+    }
+  }
+
+  // ===============================================================
+  // SERVICE EN SALLE — saisie des serveurs
+  // Chaque ligne indique le nombre de plats réellement servis à une table.
+  // ===============================================================
+  async function loadServiceSection(){
+    if(!currentTenantId) return;
+    showBanner('serviceError', null);
+    showBanner('serviceSuccess', null);
+    try {
+      const base = 'agr_tenants/' + currentTenantId + '/';
+      const [info, produits] = await Promise.all([agrGet(base + 'info'), agrGet(base + 'produits')]);
+
+      const nbTables = (info || {}).nombreTables || 0;
+      const options = ['<option value="À emporter">À emporter</option>'];
+      for(let i = 1; i <= nbTables; i++) options.push('<option value="Table ' + i + '">Table ' + i + '</option>');
+      document.getElementById('serviceTable').innerHTML = options.join('');
+
+      const liste = Object.entries(produits || {}).map(([id, p]) => ({ id, ...p }));
+      document.getElementById('servicePlat').innerHTML = liste.length
+        ? liste.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')
+        : '<option value="">Aucun plat au menu</option>';
+
+      renderServiceDuJour();
+    } catch(e){
+      showBanner('serviceError', 'Impossible de charger les données du service.');
+    }
+  }
+
+  async function renderServiceDuJour(){
+    const body = document.getElementById('serviceTableBody');
+    const sub = document.getElementById('serviceSub');
+    try {
+      const services = await agrGet('agr_tenants/' + currentTenantId + '/service') || {};
+      const jour = Object.values(services).filter(s => estAujourdhui(s.date))
+                                          .sort((a,b) => (b.date||0) - (a.date||0));
+      if(!jour.length){
+        body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">Aucun plat servi déclaré aujourd\'hui.</td></tr>';
+        sub.textContent = "Aucun plat servi déclaré aujourd'hui.";
+        return;
+      }
+      const total = jour.reduce((t,s) => t + (s.quantite || 0), 0);
+      sub.textContent = total + ' plat(s) servi(s) aujourd\'hui, sur ' + jour.length + ' déclaration(s).';
+      body.innerHTML = jour.map(s => `
+        <tr>
+          <td>${heureCourte(s.date)}</td>
+          <td>${s.table || '—'}</td>
+          <td>${s.platNom || '—'}</td>
+          <td>${s.quantite || 0}</td>
+          <td>${s.par || '—'}</td>
+          <td>${s.note || ''}</td>
+        </tr>`).join('');
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="6" style="color:#E19488;">Impossible de charger les services du jour.</td></tr>';
+    }
+  }
+
+  async function enregistrerService(){
+    showBanner('serviceError', null);
+    showBanner('serviceSuccess', null);
+    const platId = document.getElementById('servicePlat').value;
+    const quantite = parseInt(document.getElementById('serviceQuantite').value, 10);
+
+    if(!platId){ showBanner('serviceError', 'Aucun plat sélectionné — le menu est vide.'); return; }
+    if(!quantite || quantite < 1){ showBanner('serviceError', 'Indiquez un nombre de plats servis valide.'); return; }
+
+    try {
+      const produit = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + platId) || {};
+      await agrPush('agr_tenants/' + currentTenantId + '/service', {
+        table: document.getElementById('serviceTable').value,
+        produitId: platId,
+        platNom: produit.nom || 'Plat',
+        quantite,
+        note: document.getElementById('serviceNote').value.trim() || null,
+        par: nomUtilisateurCourant(),
+        parRole: currentRole,
+        date: Date.now(),
+      });
+      await recordAudit('Plats servis déclarés', quantite + ' × ' + (produit.nom || 'plat'));
+      showBanner('serviceSuccess', quantite + ' plat(s) enregistré(s) comme servis.');
+      document.getElementById('serviceQuantite').value = 1;
+      document.getElementById('serviceNote').value = '';
+      renderServiceDuJour();
+    } catch(e){
+      showBanner('serviceError', "Impossible d'enregistrer le service — vérifiez la connexion.");
+    }
+  }
+
+  // ===============================================================
+  // ENCAISSEMENT — saisie des caissiers
+  // Nombre de plats payés et prix réellement payé pour chaque plat.
+  // ===============================================================
+  let encProduits = [];
+
+  async function loadEncaissementSection(){
+    if(!currentTenantId) return;
+    showBanner('encaissementError', null);
+    showBanner('encaissementSuccess', null);
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      encProduits = Object.entries(produits).map(([id, p]) => ({ id, ...p }));
+      document.getElementById('encPlat').innerHTML = encProduits.length
+        ? encProduits.map(p => `<option value="${p.id}">${p.nom}</option>`).join('')
+        : '<option value="">Aucun plat au menu</option>';
+      encPrixParDefaut();
+      renderEncaissementsDuJour();
+    } catch(e){
+      showBanner('encaissementError', 'Impossible de charger le menu.');
+    }
+  }
+
+  // Pré-remplit le prix du menu, que le caissier peut corriger
+  // (remise, prix négocié, arrondi) avant d'enregistrer.
+  function encPrixParDefaut(){
+    const id = document.getElementById('encPlat').value;
+    const p = encProduits.find(x => x.id === id);
+    document.getElementById('encPrixUnitaire').value = p ? (p.prixVente || 0) : 0;
+    encRecalcul();
+  }
+
+  function encRecalcul(){
+    const q = parseInt(document.getElementById('encQuantite').value, 10) || 0;
+    const pu = parseFloat(document.getElementById('encPrixUnitaire').value) || 0;
+    document.getElementById('encMontantTotal').textContent = fmtGNF(q * pu);
+  }
+
+  async function renderEncaissementsDuJour(){
+    const body = document.getElementById('encTableBody');
+    const sub = document.getElementById('encSub');
+    const modes = { especes:'Espèces', orange_money:'Orange Money', mobile_money:'Mobile Money', carte:'Carte', virement:'Virement' };
+    try {
+      const encs = await agrGet('agr_tenants/' + currentTenantId + '/encaissements') || {};
+      const jour = Object.values(encs).filter(e => estAujourdhui(e.date))
+                                      .sort((a,b) => (b.date||0) - (a.date||0));
+      if(!jour.length){
+        body.innerHTML = '<tr><td colspan="7" style="color:var(--text-dim);">Aucun encaissement enregistré aujourd\'hui.</td></tr>';
+        sub.textContent = "Aucun encaissement enregistré aujourd'hui.";
+        return;
+      }
+      const nbPlats = jour.reduce((t,e) => t + (e.quantite || 0), 0);
+      const total = jour.reduce((t,e) => t + (e.montant || 0), 0);
+      sub.textContent = nbPlats + ' plat(s) payé(s) aujourd\'hui pour ' + fmtGNF(total) + '.';
+      body.innerHTML = jour.map(e => `
+        <tr>
+          <td>${heureCourte(e.date)}</td>
+          <td>${e.platNom || '—'}</td>
+          <td>${e.quantite || 0}</td>
+          <td>${fmtGNF(e.prixUnitaire)}</td>
+          <td>${fmtGNF(e.montant)}</td>
+          <td>${modes[e.mode] || e.mode || '—'}</td>
+          <td>${e.par || '—'}</td>
+        </tr>`).join('');
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="7" style="color:#E19488;">Impossible de charger les encaissements.</td></tr>';
+    }
+  }
+
+  async function enregistrerEncaissement(){
+    showBanner('encaissementError', null);
+    showBanner('encaissementSuccess', null);
+    const platId = document.getElementById('encPlat').value;
+    const quantite = parseInt(document.getElementById('encQuantite').value, 10);
+    const prixUnitaire = parseFloat(document.getElementById('encPrixUnitaire').value);
+
+    if(!platId){ showBanner('encaissementError', 'Aucun plat sélectionné — le menu est vide.'); return; }
+    if(!quantite || quantite < 1){ showBanner('encaissementError', 'Indiquez un nombre de plats payés valide.'); return; }
+    if(isNaN(prixUnitaire) || prixUnitaire < 0){ showBanner('encaissementError', 'Indiquez le prix payé pour un plat.'); return; }
+
+    const produit = encProduits.find(p => p.id === platId) || {};
+    try {
+      await agrPush('agr_tenants/' + currentTenantId + '/encaissements', {
+        produitId: platId,
+        platNom: produit.nom || 'Plat',
+        quantite,
+        prixUnitaire,
+        montant: quantite * prixUnitaire,
+        prixMenu: produit.prixVente || 0,
+        mode: document.getElementById('encMode').value,
+        table: document.getElementById('encTable').value.trim() || null,
+        par: nomUtilisateurCourant(),
+        parRole: currentRole,
+        date: Date.now(),
+      });
+      await recordAudit('Encaissement', quantite + ' × ' + (produit.nom || 'plat') + ' — ' + fmtGNF(quantite * prixUnitaire));
+      showBanner('encaissementSuccess', 'Encaissement de ' + fmtGNF(quantite * prixUnitaire) + ' enregistré.');
+      document.getElementById('encQuantite').value = 1;
+      document.getElementById('encTable').value = '';
+      encRecalcul();
+      renderEncaissementsDuJour();
+    } catch(e){
+      showBanner('encaissementError', "Impossible d'enregistrer l'encaissement — vérifiez la connexion.");
+    }
+  }
+
+  // ===============================================================
+  // PAGE WEB DU RESTAURANT
+  // Chaque restaurant dispose de sa propre page publique, accessible
+  // par un lien direct contenant son code (…/index.html#/r/CODE).
+  // ===============================================================
+  let webImages = [];            // photos en base64
+  let webCommandes = [];         // commandes reçues en ligne
+
+  function lienPageWeb(code){
+    return location.origin + location.pathname + '#/r/' + code;
+  }
+
+  async function loadPageWeb(){
+    if(!currentTenantId) return;
+    showBanner('webError', null);
+    showBanner('webSuccess', null);
+    document.getElementById('webPublicUrl').textContent = lienPageWeb(currentTenantId);
+
+    try {
+      const base = 'agr_tenants/' + currentTenantId + '/';
+      const [site, cmds] = await Promise.all([
+        agrGet(base + 'siteweb'),
+        agrGet(base + 'commandesEnLigne'),
+      ]);
+      const s = site || {};
+      document.getElementById('webActif').value = s.actif === false ? 'non' : 'oui';
+      document.getElementById('webSlogan').value = s.slogan || '';
+      document.getElementById('webDescription').value = s.description || '';
+      document.getElementById('webWhatsapp').value = s.whatsapp || '';
+      document.getElementById('webHoraires').value = s.horaires || '';
+      document.getElementById('webFacebook').value = s.facebook || '';
+      document.getElementById('webInstagram').value = s.instagram || '';
+      document.getElementById('webPaiement').value = s.paiement || '';
+
+      webImages = Array.isArray(s.images) ? s.images.slice() : Object.values(s.images || {});
+      renderWebGallery();
+
+      webCommandes = Object.entries(cmds || {}).map(([id, c]) => ({ id, ...c }))
+                           .sort((a,b) => (b.date||0) - (a.date||0));
+      renderCommandesEnLigne();
+    } catch(e){
+      showBanner('webError', 'Impossible de charger la configuration de la page web.');
+    }
+  }
+
+  function renderWebGallery(){
+    const g = document.getElementById('webGallery');
+    document.getElementById('webImagesNote').textContent = webImages.length + ' photo(s) sur 8.';
+    g.innerHTML = webImages.map((src, i) => `
+      <div class="web-thumb">
+        <img src="${src}" alt="Photo ${i+1}">
+        <button onclick="supprimerImageWeb(${i})" title="Supprimer">&times;</button>
+      </div>`).join('');
+  }
+
+  // Les photos sont redimensionnées avant stockage pour ne pas alourdir
+  // la base ni ralentir l'affichage de la page publique.
+  async function ajouterImagesWeb(input){
+    const fichiers = Array.from(input.files || []);
+    if(!fichiers.length) return;
+    showBanner('webError', null);
+
+    for(const f of fichiers){
+      if(webImages.length >= 8){
+        showBanner('webError', 'Limite de 8 photos atteinte — supprimez-en une avant d\'en ajouter.');
+        break;
+      }
+      try { webImages.push(await fileToResizedBase64(f, 900)); } catch(e){ /* image ignorée */ }
+    }
+    input.value = '';
+    renderWebGallery();
+    showBanner('webSuccess', 'Photos préparées — cliquez sur « Enregistrer la page » pour les publier.');
+  }
+
+  function supprimerImageWeb(i){
+    webImages.splice(i, 1);
+    renderWebGallery();
+    showBanner('webSuccess', 'Photo retirée — enregistrez la page pour confirmer.');
+  }
+
+  async function enregistrerPageWeb(){
+    showBanner('webError', null);
+    showBanner('webSuccess', null);
+    const whatsapp = document.getElementById('webWhatsapp').value.replace(/[^0-9]/g, '');
+
+    if(document.getElementById('webActif').value === 'oui' && !whatsapp){
+      showBanner('webError', 'Indiquez le numéro WhatsApp du service commercial : il reçoit les commandes des clients.');
+      return;
+    }
+
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/siteweb', {
+        actif: document.getElementById('webActif').value === 'oui',
+        slogan: document.getElementById('webSlogan').value.trim(),
+        description: document.getElementById('webDescription').value.trim(),
+        whatsapp,
+        horaires: document.getElementById('webHoraires').value.trim(),
+        facebook: document.getElementById('webFacebook').value.trim(),
+        instagram: document.getElementById('webInstagram').value.trim(),
+        paiement: document.getElementById('webPaiement').value.trim(),
+        images: webImages,
+        misAJourLe: Date.now(),
+      });
+      await recordAudit('Page web mise à jour', currentTenantId);
+      showBanner('webSuccess', 'Page web enregistrée. Elle est accessible via le lien ci-dessus.');
+    } catch(e){
+      showBanner('webError', "Impossible d'enregistrer la page — les photos sont peut-être trop lourdes.");
+    }
+  }
+
+  function copierLienWeb(){
+    const url = lienPageWeb(currentTenantId);
+    const note = document.getElementById('webCopieNote');
+    const succes = () => { note.textContent = 'Lien copié : ' + url; };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(succes, () => { note.textContent = 'Copie impossible — sélectionnez le lien à la main.'; });
+    } else {
+      note.textContent = 'Copie automatique indisponible — sélectionnez le lien à la main.';
+    }
+  }
+
+  function ouvrirPageWeb(){
+    window.open(lienPageWeb(currentTenantId), '_blank');
+  }
+
+  function renderCommandesEnLigne(){
+    const body = document.getElementById('webCmdBody');
+    const sub = document.getElementById('webCommandesSub');
+    const filtre = document.getElementById('webCmdFiltre').value;
+
+    const liste = webCommandes.filter(c =>
+      filtre === 'toutes' ? true : (filtre === 'traitee' ? c.statut === 'traitee' : c.statut !== 'traitee'));
+
+    const nonGerees = webCommandes.filter(c => c.statut !== 'traitee').length;
+    const duJour = webCommandes.filter(c => estAujourdhui(c.date)).length;
+    sub.textContent = duJour + ' commande(s) reçue(s) aujourd\'hui · ' + nonGerees + ' non gérée(s) au total.';
+
+    if(!liste.length){
+      body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">Aucune commande pour ce filtre.</td></tr>';
+      return;
+    }
+
+    body.innerHTML = liste.map(c => {
+      const plats = Object.values(c.plats || {}).map(p => (p.qty || 1) + '× ' + p.nom).join(', ');
+      const traitee = c.statut === 'traitee';
+      const tel = (c.clientTelephone || '').replace(/[^0-9]/g, '');
+      return `
+        <tr>
+          <td>${new Date(c.date||0).toLocaleDateString('fr-FR')} ${heureCourte(c.date)}</td>
+          <td>${c.clientNom || 'Client'}<div style="font-size:10.5px;color:var(--text-dim);">${c.clientTelephone || ''}</div></td>
+          <td style="font-family:'Inter',sans-serif;">${plats || '—'}</td>
+          <td>${fmtGNF(c.total)}</td>
+          <td><span class="etat-badge ${traitee ? 'traitee' : 'nouvelle'}">${traitee ? 'Gérée' : 'Non gérée'}</span></td>
+          <td>
+            <div style="display:flex; gap:5px; flex-wrap:wrap;">
+              <button class="cdb-btn ${traitee ? '' : 'ok'}" onclick="basculerCommandeEnLigne('${c.id}')">${traitee ? 'Rouvrir' : 'Marquer gérée'}</button>
+              ${tel ? `<a class="cdb-btn" href="https://wa.me/${tel}" target="_blank">WhatsApp client</a>` : ''}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  async function basculerCommandeEnLigne(id){
+    const c = webCommandes.find(x => x.id === id);
+    if(!c) return;
+    const nouveau = c.statut === 'traitee' ? 'nouvelle' : 'traitee';
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/commandesEnLigne/' + id + '/statut', nouveau);
+      await agrSet('agr_tenants/' + currentTenantId + '/commandesEnLigne/' + id + '/traiteePar',
+                   nouveau === 'traitee' ? nomUtilisateurCourant() : null);
+      c.statut = nouveau;
+      await recordAudit('Commande en ligne', nouveau === 'traitee' ? 'marquée gérée' : 'rouverte');
+      renderCommandesEnLigne();
+    } catch(e){
+      showBanner('webError', 'Impossible de mettre à jour cette commande.');
     }
   }
 
@@ -4477,7 +5569,15 @@
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
+  // Le script Firebase est un module : il s'exécute après ce script. On affiche
+  // donc l'accueil tout de suite, puis on ouvre la page du restaurant demandée
+  // par le lien dès que la base est prête.
   showView('home');
+  (function routerQuandPret(){
+    if(!/^#\/r\//.test(location.hash || '')) return;
+    if(!window._agrReady){ setTimeout(routerQuandPret, 150); return; }
+    ouvrirDepuisLien();
+  })();
 </script>
 
 </body>
