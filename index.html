@@ -695,13 +695,136 @@
     .tables-grid{grid-template-columns:repeat(4,1fr);}
   }
 
+  /* ================= RESPONSIVE — menu hamburger (téléphone & tablette Android) =================
+     Détection automatique de l'appareil par media query : au-dessus de 1024 px la barre
+     latérale reste toujours visible (ordinateur / tablette en paysage) ; en dessous elle
+     devient un tiroir coulissant ouvert par le bouton hamburger. Aucun réglage manuel
+     n'est demandé à l'utilisateur. */
+  .nav-toggle{
+    display:none; align-items:center; justify-content:center;
+    width:42px; height:42px; flex-shrink:0; margin-right:12px;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
+    color:var(--text); cursor:pointer; padding:0;
+  }
+  .nav-toggle span{position:relative; display:block; width:19px; height:2px; background:currentColor; border-radius:2px;}
+  .nav-toggle span::before, .nav-toggle span::after{
+    content:""; position:absolute; left:0; width:19px; height:2px;
+    background:currentColor; border-radius:2px;
+  }
+  .nav-toggle span::before{top:-6px;}
+  .nav-toggle span::after{top:6px;}
+
+  .nav-backdrop{
+    display:none; position:fixed; inset:0; z-index:390;
+    background:rgba(0,0,0,0.55);
+  }
+  .nav-backdrop.show{display:block;}
+
+  .sidebar-close{display:none;}
+  .topbar-left{display:flex; align-items:center; min-width:0;}
+
+  @media (max-width: 1024px){
+    .nav-toggle{display:flex;}
+    .app-shell{display:block;}
+    .sidebar{
+      position:fixed; top:0; left:0; bottom:0; z-index:400;
+      width:272px; max-width:84vw;
+      padding:20px 14px 22px;
+      transform:translateX(-102%);
+      transition:transform 0.26s ease;
+      overflow-y:auto; -webkit-overflow-scrolling:touch;
+      box-shadow:0 0 60px rgba(0,0,0,0.55);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-close{
+      display:flex; align-items:center; justify-content:center;
+      position:absolute; top:12px; right:12px;
+      width:30px; height:30px; border-radius:8px; line-height:1;
+      background:rgba(255,255,255,0.18); color:#fff;
+      border:none; font-size:17px; cursor:pointer;
+    }
+    /* L'indicateur de connexion est fixé en haut à droite : on réserve la bande */
+    .main{padding:56px 16px 34px;}
+    .topbar{flex-wrap:wrap; gap:12px; margin-bottom:18px;}
+    .topbar h1{font-size:19px;}
+    .navlink{padding:12px 12px; font-size:14.5px;}
+    .conn-status{top:10px; right:10px; padding:6px 11px; font-size:11.5px;}
+    /* Les tableaux larges défilent horizontalement au lieu de casser la mise en page */
+    .panel{overflow-x:auto;}
+    .commandes-table{min-width:520px;}
+  }
+
+  @media (max-width: 720px){
+    .main{padding:52px 12px 30px;}
+    .topbar h1{font-size:17.5px;}
+    .kpi-row{grid-template-columns:repeat(2,1fr); gap:10px;}
+    .tables-grid{grid-template-columns:repeat(3,1fr);}
+  }
+
+  @media (max-width: 460px){
+    .kpi-row{grid-template-columns:1fr;}
+    .tables-grid{grid-template-columns:repeat(2,1fr);}
+    .nav-toggle{width:38px; height:38px; margin-right:10px;}
+    .kpi-card .val{font-size:19px;}
+  }
+
+  /* ================= ESPACE CONCEPTEUR — base de données des restaurants ================= */
+  .h2-concepteur-note.admin{
+    position:fixed; top:50%; left:50%; right:auto; bottom:auto;
+    transform:translate(-50%,-50%);
+    width:min(980px,94vw); max-width:none; max-height:88vh; overflow-y:auto;
+    padding:18px 20px 20px;
+  }
+  .cdb-title{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:12px;}
+  .cdb-toolbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;}
+  .cdb-toolbar input, .cdb-toolbar select{
+    padding:8px 10px; background:#060d24; border:1px solid rgba(37,99,235,0.35);
+    border-radius:6px; color:#e2e8f0; font-size:12px; font-family:inherit;
+  }
+  .cdb-toolbar input{flex:1; min-width:150px;}
+  .cdb-wrap{border:1px solid rgba(37,99,235,0.22); border-radius:8px; overflow:auto; max-height:46vh;}
+  .cdb-table{width:100%; border-collapse:collapse; font-size:11.5px; min-width:860px;}
+  .cdb-table th{
+    position:sticky; top:0; z-index:2; background:#0d1b33; text-align:left; padding:9px 8px;
+    font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:#64748b;
+    border-bottom:1px solid rgba(37,99,235,0.25); white-space:nowrap;
+  }
+  .cdb-table td{padding:9px 8px; border-bottom:1px solid rgba(37,99,235,0.12); color:#cbd5e1; vertical-align:middle;}
+  .cdb-table tr:last-child td{border-bottom:none;}
+  .cdb-table tbody tr:hover td{background:rgba(37,99,235,0.07);}
+  .cdb-code{font-family:'IBM Plex Mono',monospace; font-weight:700; color:#93c5fd;}
+  .cdb-name{color:#e2e8f0; font-weight:600;}
+  .cdb-sub{font-size:10px; color:#64748b;}
+  .cdb-badge{display:inline-block; padding:2px 8px; border-radius:999px; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; white-space:nowrap;}
+  .cdb-badge.actif{background:rgba(34,197,94,0.15); color:#4ade80;}
+  .cdb-badge.essai{background:rgba(37,99,235,0.18); color:#93c5fd;}
+  .cdb-badge.bloque{background:rgba(239,68,68,0.15); color:#f87171;}
+  .cdb-badge.expire{background:rgba(245,158,11,0.15); color:#fbbf24;}
+  .cdb-act{display:flex; gap:5px; flex-wrap:wrap;}
+  .cdb-btn{
+    padding:5px 9px; border:1px solid rgba(37,99,235,0.35); border-radius:6px;
+    background:rgba(37,99,235,0.12); color:#93c5fd; white-space:nowrap;
+    font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .cdb-btn:hover{background:rgba(37,99,235,0.24);}
+  .cdb-btn.danger{border-color:rgba(239,68,68,0.4); background:rgba(239,68,68,0.12); color:#f87171;}
+  .cdb-btn.ok{border-color:rgba(34,197,94,0.4); background:rgba(34,197,94,0.12); color:#4ade80;}
+  .cdb-stat{cursor:pointer; transition:border-color 0.15s ease;}
+  .cdb-stat.on{border-color:#2563eb !important; background:rgba(37,99,235,0.16) !important;}
+  .cdb-empty{padding:22px; text-align:center; color:#64748b; font-size:12px;}
+
+  @media (max-width: 640px){
+    .h2-concepteur-note.admin{width:96vw; max-height:92vh; padding:14px;}
+    .cdb-wrap{max-height:40vh;}
+  }
+
   /* ================= IMPRESSION — rapports journaliers/mensuels/annuels =================
      S'applique quel que soit l'onglet ouvert : seule la section visible s'imprime,
      avec les couleurs de la charte (KPI, tableaux, statuts) conservées sur le papier. */
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff !important; }
-    .conn-status, .sidebar, .no-print, .banner, .logo-slot, .storefront-nav, .home-nav { display:none !important; }
+    .conn-status, .sidebar, .nav-toggle, .nav-backdrop, .no-print, .banner, .logo-slot, .storefront-nav, .home-nav { display:none !important; }
     #view-home, #view-login, #view-storefront, #view-blocked{ display:none !important; }
     .app-shell{ display:block !important; }
     .main{ padding:0 !important; }
@@ -779,28 +902,73 @@
     </div>
 
     <div id="conceptAdminView" style="display:none;">
-      <div style="font-weight:700; color:#e2e8f0; margin-bottom:10px;">Espace Concepteur — vue plateforme</div>
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <div style="flex:1; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
+      <div class="cdb-title">
+        <div>
+          <div style="font-weight:700; color:#e2e8f0;">Espace Concepteur — base de données des restaurants</div>
+          <div style="font-size:11px; color:#475569;">Souleymane Diallo · vue plateforme</div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="cdb-btn" onclick="loadConcepteurStats()">Actualiser</button>
+          <button class="cdb-btn" onclick="closeConcepteurNote()">Fermer</button>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+        <div class="cdb-stat on" id="cdbStatCardTous" onclick="cdbSetFilter('tous')" style="flex:1; min-width:88px; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
           <div style="font-size:9px; color:#475569; text-transform:uppercase;">Total</div>
           <div style="font-size:16px; font-weight:800; color:#fff;" id="conceptStatTotal">—</div>
         </div>
-        <div style="flex:1; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
+        <div class="cdb-stat" id="cdbStatCardActif" onclick="cdbSetFilter('actif')" style="flex:1; min-width:88px; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
           <div style="font-size:9px; color:#475569; text-transform:uppercase;">Actifs</div>
-          <div style="font-size:16px; font-weight:800; color:#60a5fa;" id="conceptStatActifs">—</div>
+          <div style="font-size:16px; font-weight:800; color:#4ade80;" id="conceptStatActifs">—</div>
         </div>
-        <div style="flex:1; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
+        <div class="cdb-stat" id="cdbStatCardEssai" onclick="cdbSetFilter('essai')" style="flex:1; min-width:88px; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
+          <div style="font-size:9px; color:#475569; text-transform:uppercase;">En essai</div>
+          <div style="font-size:16px; font-weight:800; color:#60a5fa;" id="conceptStatEssai">—</div>
+        </div>
+        <div class="cdb-stat" id="cdbStatCardExpire" onclick="cdbSetFilter('expire')" style="flex:1; min-width:88px; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
+          <div style="font-size:9px; color:#475569; text-transform:uppercase;">Expirés</div>
+          <div style="font-size:16px; font-weight:800; color:#fbbf24;" id="conceptStatExpires">—</div>
+        </div>
+        <div class="cdb-stat" id="cdbStatCardBloque" onclick="cdbSetFilter('bloque')" style="flex:1; min-width:88px; background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:8px; text-align:center;">
           <div style="font-size:9px; color:#475569; text-transform:uppercase;">Bloqués</div>
           <div style="font-size:16px; font-weight:800; color:#ef4444;" id="conceptStatBloques">—</div>
         </div>
       </div>
-      <div id="conceptStatsNote" style="font-size:11px; color:#475569; margin-bottom:10px;"></div>
-      <div style="margin-bottom:10px;">Contacter le concepteur :</div>
-      <div style="display:flex; gap:7px; flex-wrap:wrap; margin-bottom:10px;">
+
+      <div class="cdb-toolbar">
+        <input type="text" id="cdbSearch" placeholder="Rechercher : code, nom, ville, téléphone, email…" oninput="renderConcepteurList()">
+        <select id="cdbSort" onchange="renderConcepteurList()">
+          <option value="recent">Plus récents d'abord</option>
+          <option value="ancien">Plus anciens d'abord</option>
+          <option value="nom">Nom (A → Z)</option>
+          <option value="expiration">Expiration la plus proche</option>
+          <option value="activite">Plus actifs (commandes)</option>
+        </select>
+        <button class="cdb-btn" onclick="cdbExportCsv()">Exporter CSV</button>
+      </div>
+
+      <div class="cdb-wrap">
+        <table class="cdb-table">
+          <thead>
+            <tr>
+              <th>Code</th><th>Restaurant</th><th>Contact</th><th>Statut</th>
+              <th>Créé le</th><th>Expire le</th><th>Contenu</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="cdbBody">
+            <tr><td colspan="8" class="cdb-empty">Chargement…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="conceptStatsNote" style="font-size:11px; color:#475569; margin:10px 0;"></div>
+
+      <div style="display:flex; gap:7px; flex-wrap:wrap; align-items:center;">
+        <span style="font-size:11.5px; color:#475569;">Contacter le concepteur :</span>
         <a class="wa" href="https://wa.me/224623030403" target="_blank" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:#25D366;border-radius:7px;color:#fff;font-size:12px;font-weight:700;text-decoration:none;">WhatsApp 623 03 04 03</a>
         <a class="mail" href="mailto:souleymane0403@gmail.com" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.3);border-radius:7px;color:#93c5fd;font-size:12px;font-weight:700;text-decoration:none;">Email</a>
       </div>
-      <button onclick="closeConcepteurNote()" style="background:none; border:none; color:#475569; font-size:11.5px; cursor:pointer;">Fermer</button>
     </div>
   </div>
 
@@ -1008,8 +1176,10 @@
 
 <!-- ============ DASHBOARD ============ -->
 <div id="view-dashboard">
+  <div class="nav-backdrop" id="navBackdrop" onclick="closeSidebar()"></div>
   <div class="app-shell">
-    <div class="sidebar stitch">
+    <div class="sidebar stitch" id="appSidebar">
+      <button class="sidebar-close" onclick="closeSidebar()" aria-label="Fermer le menu">&times;</button>
       <div class="brandmark">
         <div class="seal" id="dashSeal">AGR</div>
         <div>
@@ -1056,8 +1226,11 @@
 
     <div class="main">
       <div class="topbar">
-        <h1 id="sectionTitle">Tableau de bord</h1>
-        <div style="display:flex; align-items:center; gap:14px;">
+        <div class="topbar-left">
+          <button class="nav-toggle no-print" id="navToggle" onclick="toggleSidebar()" aria-label="Ouvrir le menu"><span></span></button>
+          <h1 id="sectionTitle">Tableau de bord</h1>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
           <button class="btn-outline no-print" style="color:var(--text);" onclick="exporterOngletPDF()">📄 Exporter ce rapport en PDF A4</button>
           <div class="datepick" id="tenantStatus">Lundi 27 juillet 2026</div>
         </div>
@@ -2264,7 +2437,77 @@
     audit: "Journal d'audit", parametres: 'Paramètres', licence: 'Licence',
   };
 
+  // ---------------------------------------------------------------
+  // Menu hamburger — tiroir latéral sur téléphone et tablette
+  // (sur ordinateur la barre latérale reste affichée : le CSS s'en charge)
+  // ---------------------------------------------------------------
+  function isDrawerMode(){
+    return window.matchMedia('(max-width: 1024px)').matches;
+  }
+
+  function openSidebar(){
+    document.getElementById('appSidebar').classList.add('open');
+    document.getElementById('navBackdrop').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeSidebar(){
+    document.getElementById('appSidebar').classList.remove('open');
+    document.getElementById('navBackdrop').classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  function toggleSidebar(){
+    const open = document.getElementById('appSidebar').classList.contains('open');
+    if(open) closeSidebar(); else openSidebar();
+  }
+
+  // Le passage téléphone → ordinateur (rotation de tablette, redimensionnement)
+  // referme proprement le tiroir pour éviter tout état incohérent.
+  window.addEventListener('resize', () => {
+    if(!isDrawerMode()) closeSidebar();
+  });
+
+  // ---------------------------------------------------------------
+  // Restrictions d'accès par rôle
+  // Le gérant n'a pas accès au tableau de bord (aperçu global du restaurant).
+  // ---------------------------------------------------------------
+  const hiddenSectionsByRole = {
+    gerant: ['overview'],
+  };
+
+  function isSectionAllowed(name){
+    const hidden = hiddenSectionsByRole[currentRole] || [];
+    return !hidden.includes(name);
+  }
+
+  // Première section visible pour le rôle courant (sert de page d'atterrissage)
+  function defaultSectionForRole(){
+    if(isSectionAllowed('overview')) return 'overview';
+    const firstVisible = Array.from(document.querySelectorAll('.navlink'))
+      .find(el => el.style.display !== 'none' && isSectionAllowed(el.dataset.section));
+    return firstVisible ? firstVisible.dataset.section : 'commandes';
+  }
+
+  // Masque dans le menu les onglets interdits au rôle connecté
+  function applyRoleRestrictions(){
+    const hidden = hiddenSectionsByRole[currentRole] || [];
+    document.querySelectorAll('.navlink').forEach(el => {
+      el.style.display = hidden.includes(el.dataset.section) ? 'none' : '';
+    });
+    // Un groupe dont tous les onglets sont masqués disparaît avec son intitulé
+    document.querySelectorAll('.nav-group').forEach(group => {
+      const links = Array.from(group.querySelectorAll('.navlink'));
+      const anyVisible = links.some(el => el.style.display !== 'none');
+      group.style.display = links.length && !anyVisible ? 'none' : '';
+    });
+  }
+
   function showSection(name){
+    // Garde-fou : un rôle restreint ne peut pas ouvrir une section interdite,
+    // même en appelant showSection() directement.
+    if(!isSectionAllowed(name)) name = defaultSectionForRole();
+
     document.querySelectorAll('.dash-section').forEach(el => {
       el.style.display = el.id === 'section-' + name ? 'block' : 'none';
     });
@@ -2272,6 +2515,7 @@
       el.classList.toggle('active', el.dataset.section === name);
     });
     document.getElementById('sectionTitle').textContent = sectionTitles[name] || 'Tableau de bord';
+    if(isDrawerMode()) closeSidebar();
 
     if(name === 'parametres') loadParametres();
     if(name === 'licence') loadLicenceInfo();
@@ -2334,7 +2578,8 @@
     const isOpen = note.style.display === 'block';
     note.style.display = isOpen ? 'none' : 'block';
     if(!isOpen){
-      // Toujours rouvrir sur l'écran de connexion
+      // Toujours rouvrir sur l'écran de connexion, format encart
+      note.classList.remove('admin');
       document.getElementById('conceptPasswordView').style.display = 'block';
       document.getElementById('conceptAdminView').style.display = 'none';
       document.getElementById('conceptEmailInput').value = '';
@@ -2370,6 +2615,10 @@
 
       document.getElementById('conceptPasswordView').style.display = 'none';
       document.getElementById('conceptAdminView').style.display = 'block';
+      // Le petit encart devient un vrai panneau : la base des restaurants
+      // a besoin de largeur pour afficher le tableau complet.
+      document.getElementById('h2ConcepteurNote').classList.add('admin');
+      cdbSetFilter('tous');
       loadConcepteurStats();
     } catch (e) {
       err.textContent = 'Impossible de joindre Firebase — vérifiez la configuration (firebaseConfig).';
@@ -2379,23 +2628,240 @@
     }
   }
 
+  // ---------------------------------------------------------------
+  // BASE DE DONNÉES DES RESTAURANTS (espace concepteur)
+  // Charge tous les restaurants de agr_tenants avec leur fiche complète :
+  // identité, contact, statut de licence, dates et volume de données.
+  // Aucune structure de base n'est modifiée : seuls le statut et la date
+  // d'expiration d'un restaurant peuvent être mis à jour depuis cet écran.
+  // ---------------------------------------------------------------
+  let cdbRestaurants = [];     // fiches chargées
+  let cdbFilter = 'tous';      // filtre de statut actif
+
+  const CDB_JOUR = 24 * 60 * 60 * 1000;
+
+  // Statut réel : un restaurant dont la date d'expiration est dépassée est
+  // signalé « expiré » même si son statut enregistré est encore actif/essai.
+  function cdbStatutReel(info){
+    if(info.statut === 'bloque') return 'bloque';
+    if(info.dateExpiration && Date.now() > info.dateExpiration) return 'expire';
+    return info.statut === 'actif' ? 'actif' : 'essai';
+  }
+
+  function cdbDate(ts){
+    if(!ts) return '—';
+    return new Date(ts).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  }
+
+  function cdbJoursRestants(info){
+    if(!info.dateExpiration) return null;
+    return Math.ceil((info.dateExpiration - Date.now()) / CDB_JOUR);
+  }
+
   async function loadConcepteurStats(){
     const note = document.getElementById('conceptStatsNote');
-    note.textContent = 'Chargement des statistiques…';
+    const body = document.getElementById('cdbBody');
+    note.textContent = 'Chargement de la base des restaurants…';
+    body.innerHTML = '<tr><td colspan="8" class="cdb-empty">Chargement…</td></tr>';
+
     try {
       const tenants = await agrGet('agr_tenants') || {};
-      const infos = Object.values(tenants).map(t => t.info).filter(Boolean);
-      document.getElementById('conceptStatTotal').textContent = infos.length;
-      document.getElementById('conceptStatActifs').textContent = infos.filter(i => i.statut === 'actif' || i.statut === 'essai').length;
-      document.getElementById('conceptStatBloques').textContent = infos.filter(i => i.statut === 'bloque').length;
+      cdbRestaurants = Object.entries(tenants)
+        .filter(([, t]) => t && t.info)
+        .map(([code, t]) => ({
+          code,
+          info: t.info,
+          nbUsers:     t.users     ? Object.keys(t.users).length     : 0,
+          nbProduits:  t.produits  ? Object.keys(t.produits).length  : 0,
+          nbCommandes: t.commandes ? Object.keys(t.commandes).length : 0,
+          nbClients:   t.clients   ? Object.keys(t.clients).length   : 0,
+        }));
+
+      renderConcepteurStats();
+      renderConcepteurList();
       note.textContent = '';
     } catch (e) {
-      note.textContent = 'Impossible de charger les statistiques depuis Firebase.';
+      note.textContent = 'Impossible de charger la base des restaurants depuis Firebase.';
+      body.innerHTML = '<tr><td colspan="8" class="cdb-empty">Aucune donnée disponible.</td></tr>';
     }
   }
 
+  function renderConcepteurStats(){
+    const st = cdbRestaurants.map(r => cdbStatutReel(r.info));
+    document.getElementById('conceptStatTotal').textContent   = cdbRestaurants.length;
+    document.getElementById('conceptStatActifs').textContent  = st.filter(s => s === 'actif').length;
+    document.getElementById('conceptStatEssai').textContent   = st.filter(s => s === 'essai').length;
+    document.getElementById('conceptStatExpires').textContent = st.filter(s => s === 'expire').length;
+    document.getElementById('conceptStatBloques').textContent = st.filter(s => s === 'bloque').length;
+  }
+
+  function cdbSetFilter(f){
+    cdbFilter = f;
+    const map = { tous:'cdbStatCardTous', actif:'cdbStatCardActif', essai:'cdbStatCardEssai',
+                  expire:'cdbStatCardExpire', bloque:'cdbStatCardBloque' };
+    Object.entries(map).forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      if(el) el.classList.toggle('on', key === f);
+    });
+    renderConcepteurList();
+  }
+
+  // Applique recherche, filtre de statut et tri, puis renvoie les fiches à afficher
+  function cdbFiltered(){
+    const q = (document.getElementById('cdbSearch').value || '').trim().toLowerCase();
+    const tri = document.getElementById('cdbSort').value;
+
+    let list = cdbRestaurants.filter(r => {
+      if(cdbFilter !== 'tous' && cdbStatutReel(r.info) !== cdbFilter) return false;
+      if(!q) return true;
+      const i = r.info;
+      return [r.code, i.nomRestaurant, i.ville, i.adresse, i.telephone, i.email]
+        .filter(Boolean).join(' ').toLowerCase().includes(q);
+    });
+
+    const nom = r => (r.info.nomRestaurant || '').toLowerCase();
+    if(tri === 'nom')            list.sort((a,b) => nom(a).localeCompare(nom(b)));
+    else if(tri === 'ancien')    list.sort((a,b) => (a.info.dateCreation||0) - (b.info.dateCreation||0));
+    else if(tri === 'expiration')list.sort((a,b) => (a.info.dateExpiration||Infinity) - (b.info.dateExpiration||Infinity));
+    else if(tri === 'activite')  list.sort((a,b) => b.nbCommandes - a.nbCommandes);
+    else                         list.sort((a,b) => (b.info.dateCreation||0) - (a.info.dateCreation||0));
+
+    return list;
+  }
+
+  function renderConcepteurList(){
+    const body = document.getElementById('cdbBody');
+    const note = document.getElementById('conceptStatsNote');
+    const list = cdbFiltered();
+
+    if(!list.length){
+      body.innerHTML = '<tr><td colspan="8" class="cdb-empty">Aucun restaurant ne correspond à cette recherche.</td></tr>';
+      note.textContent = '0 restaurant affiché sur ' + cdbRestaurants.length + '.';
+      return;
+    }
+
+    const labels = { actif:'Actif', essai:'Essai', expire:'Expiré', bloque:'Bloqué' };
+
+    body.innerHTML = list.map(r => {
+      const i = r.info;
+      const s = cdbStatutReel(i);
+      const jours = cdbJoursRestants(i);
+      const joursTxt = jours === null ? ''
+        : (jours >= 0 ? '<div class="cdb-sub">' + jours + ' j restants</div>'
+                      : '<div class="cdb-sub">dépassé de ' + Math.abs(jours) + ' j</div>');
+      const bloque = i.statut === 'bloque';
+
+      return `
+        <tr>
+          <td><span class="cdb-code">${r.code}</span></td>
+          <td>
+            <div class="cdb-name">${i.nomRestaurant || '—'}</div>
+            <div class="cdb-sub">${[i.ville, i.adresse].filter(Boolean).join(' · ') || '—'}</div>
+          </td>
+          <td>
+            <div>${i.telephone || '—'}</div>
+            <div class="cdb-sub">${i.email || '—'}</div>
+          </td>
+          <td><span class="cdb-badge ${s}">${labels[s]}</span></td>
+          <td>${cdbDate(i.dateCreation)}</td>
+          <td>${cdbDate(i.dateExpiration)}${joursTxt}</td>
+          <td>
+            <div class="cdb-sub">${r.nbUsers} compte(s) · ${r.nbProduits} plat(s)</div>
+            <div class="cdb-sub">${r.nbCommandes} commande(s) · ${r.nbClients} client(s)</div>
+          </td>
+          <td>
+            <div class="cdb-act">
+              <button class="cdb-btn" onclick="cdbProlonger('${r.code}',30)">+30 j</button>
+              <button class="cdb-btn" onclick="cdbProlonger('${r.code}',90)">+90 j</button>
+              <button class="cdb-btn" onclick="cdbProlonger('${r.code}',365)">+1 an</button>
+              <button class="cdb-btn ${bloque ? 'ok' : 'danger'}" onclick="cdbToggleBloc('${r.code}')">
+                ${bloque ? 'Débloquer' : 'Bloquer'}
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+
+    note.textContent = list.length + ' restaurant(s) affiché(s) sur ' + cdbRestaurants.length + '.';
+  }
+
+  // Prolonge la licence : repart de la date d'expiration si elle est encore
+  // devant nous, sinon d'aujourd'hui, et remet le restaurant en service.
+  async function cdbProlonger(code, jours){
+    const r = cdbRestaurants.find(x => x.code === code);
+    if(!r) return;
+    const base = Math.max(Date.now(), r.info.dateExpiration || 0);
+    const nouvelle = base + jours * CDB_JOUR;
+
+    try {
+      await agrSet('agr_tenants/' + code + '/info/dateExpiration', nouvelle);
+      await agrSet('agr_tenants/' + code + '/info/statut', 'actif');
+      r.info.dateExpiration = nouvelle;
+      r.info.statut = 'actif';
+      renderConcepteurStats();
+      renderConcepteurList();
+    } catch (e) {
+      document.getElementById('conceptStatsNote').textContent =
+        'Échec de la mise à jour de la licence de ' + code + '.';
+    }
+  }
+
+  async function cdbToggleBloc(code){
+    const r = cdbRestaurants.find(x => x.code === code);
+    if(!r) return;
+    const bloque = r.info.statut === 'bloque';
+    const nom = r.info.nomRestaurant || code;
+
+    if(!confirm((bloque ? 'Débloquer' : 'Bloquer') + ' le restaurant « ' + nom + ' » ?')) return;
+
+    // Au déblocage, si la licence est déjà dépassée on redonne 30 jours
+    // pour que le restaurant puisse réellement se reconnecter.
+    const statut = bloque ? 'actif' : 'bloque';
+    try {
+      await agrSet('agr_tenants/' + code + '/info/statut', statut);
+      r.info.statut = statut;
+      if(bloque && (!r.info.dateExpiration || Date.now() > r.info.dateExpiration)){
+        const nouvelle = Date.now() + 30 * CDB_JOUR;
+        await agrSet('agr_tenants/' + code + '/info/dateExpiration', nouvelle);
+        r.info.dateExpiration = nouvelle;
+      }
+      renderConcepteurStats();
+      renderConcepteurList();
+    } catch (e) {
+      document.getElementById('conceptStatsNote').textContent =
+        'Échec de la mise à jour du statut de ' + code + '.';
+    }
+  }
+
+  // Export CSV de la vue courante (séparateur « ; » pour Excel en français)
+  function cdbExportCsv(){
+    const list = cdbFiltered();
+    if(!list.length) return;
+    const labels = { actif:'Actif', essai:'Essai', expire:'Expire', bloque:'Bloque' };
+    const entetes = ['Code','Restaurant','Ville','Adresse','Telephone','Email','Statut',
+                     'Cree le','Expire le','Comptes','Plats','Commandes','Clients'];
+
+    const echap = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const lignes = list.map(r => {
+      const i = r.info;
+      return [r.code, i.nomRestaurant, i.ville, i.adresse, i.telephone, i.email,
+              labels[cdbStatutReel(i)], cdbDate(i.dateCreation), cdbDate(i.dateExpiration),
+              r.nbUsers, r.nbProduits, r.nbCommandes, r.nbClients].map(echap).join(';');
+    });
+
+    const csv = '\uFEFF' + [entetes.map(echap).join(';')].concat(lignes).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8;' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'AGR_restaurants_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   function closeConcepteurNote(){
-    document.getElementById('h2ConcepteurNote').style.display = 'none';
+    const note = document.getElementById('h2ConcepteurNote');
+    note.style.display = 'none';
+    note.classList.remove('admin');
   }
 
   function scrollToId(id){
@@ -2544,7 +3010,8 @@
     document.getElementById('userRole').textContent = roleLabels[currentRole] || currentRole;
     document.getElementById('tenantStatus').textContent = 'Restaurant ' + currentTenantId + ' — licence active';
     showView('dashboard');
-    showSection('overview');
+    applyRoleRestrictions();
+    showSection(defaultSectionForRole());
 
     try {
       const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
@@ -2558,6 +3025,7 @@
   }
 
   function doLogout(){
+    closeSidebar();
     currentRole = null; currentTenantId = null; currentUserId = null;
     document.getElementById('loginPassword').value = '';
     showView('home');
