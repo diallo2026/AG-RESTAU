@@ -131,6 +131,18 @@
   .sf-dir-card .nom{font-family:'Fraunces',serif; font-size:16px; display:block;}
   .sf-dir-card .lieu{font-size:11.5px; color:var(--text-dim);}
 
+  .sf-404{
+    display:none; min-height:100vh; flex-direction:column;
+    align-items:center; justify-content:center; text-align:center; padding:40px 24px; gap:6px;
+  }
+  .sf-404.on{display:flex;}
+  .sf-404 .code{
+    font-family:'Fraunces',serif; font-size:88px; line-height:1;
+    color:var(--line); letter-spacing:0.04em;
+  }
+  .sf-404 h1{font-family:'Fraunces',serif; font-size:26px; margin:10px 0 6px; font-weight:600;}
+  .sf-404 p{color:var(--text-dim); font-size:14px; margin:0 0 22px;}
+
   /* ---- Logo du restaurant : sa vraie image, sinon ses initiales ---- */
   .sf-logo{
     border-radius:50%; object-fit:cover; flex-shrink:0;
@@ -430,6 +442,49 @@
   .fiche-mode input{margin-top:3px; accent-color:var(--gold);}
   .fiche-mode .t{font-size:13px; font-weight:600;}
   .fiche-mode .d{font-size:11px; color:var(--text-dim); line-height:1.45;}
+
+  .fiche-retour{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    background:rgba(47,111,94,0.14); border:1px solid var(--teal);
+    border-radius:9px; padding:11px 13px; margin-bottom:16px; font-size:12.5px; color:var(--teal-soft);
+  }
+  .fiche-retour button{
+    background:none; border:1px solid var(--teal); border-radius:6px; color:var(--teal-soft);
+    padding:5px 10px; font-size:11px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .fiche-replier{
+    margin-left:auto; background:none; border:1px solid var(--line); border-radius:6px;
+    color:var(--text-dim); padding:3px 9px; font-size:10px; cursor:pointer;
+    font-family:'Inter',sans-serif; text-transform:none; letter-spacing:0;
+  }
+  .fiche-resume{
+    background:var(--surface-2); border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; font-size:12.5px; line-height:1.8; color:var(--text-dim);
+  }
+  .fiche-resume b{color:var(--text); font-weight:600;}
+
+  /* Rappel de commande abandonnée */
+  .relance{
+    position:fixed; left:50%; bottom:22px; transform:translateX(-50%);
+    z-index:460; width:min(430px,94vw);
+    background:var(--surface); border:1px solid var(--gold); border-radius:12px;
+    padding:16px 18px; box-shadow:0 18px 50px rgba(0,0,0,0.55); display:none;
+  }
+  .relance.on{display:block;}
+  .relance h4{font-family:'Fraunces',serif; font-size:16px; margin:0 0 6px;}
+  .relance p{font-size:12.5px; color:var(--text-dim); margin:0 0 13px; line-height:1.6;}
+  .relance .actions{display:flex; gap:8px; flex-wrap:wrap;}
+
+  /* Carte complète remise au client après commande */
+  .carte-client{
+    text-align:left; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:10px; padding:14px; margin-top:16px; max-height:260px; overflow-y:auto;
+  }
+  .carte-client h5{font-size:11px; text-transform:uppercase; letter-spacing:0.09em;
+    color:var(--gold-soft); margin:12px 0 6px;}
+  .carte-client h5:first-child{margin-top:0;}
+  .carte-client .plat{display:flex; justify-content:space-between; gap:10px; font-size:12.5px; padding:3px 0;}
+  .carte-client .plat span:last-child{font-family:'IBM Plex Mono',monospace; color:var(--gold-soft); white-space:nowrap;}
 
   .fiche-recap{
     background:var(--surface-2); border:1px solid var(--line);
@@ -1193,12 +1248,153 @@
     .cdb-wrap{max-height:40vh;}
   }
 
+  /* ================= NOTIFICATIONS ================= */
+  .nav-badge{
+    margin-left:auto; background:var(--brick); color:#fff;
+    border-radius:999px; padding:1px 7px; font-size:10.5px; font-weight:800;
+    font-family:'IBM Plex Mono',monospace; display:none;
+  }
+  .nav-badge.on{display:inline-block;}
+
+  .toast-zone{position:fixed; right:18px; bottom:18px; z-index:520; display:flex; flex-direction:column; gap:10px; max-width:330px;}
+  .toast{
+    background:var(--surface); border:1px solid var(--gold); border-left:4px solid var(--gold);
+    border-radius:10px; padding:13px 15px; box-shadow:0 18px 40px rgba(0,0,0,0.55);
+    animation:toastIn 0.25s ease; cursor:pointer;
+  }
+  @keyframes toastIn{from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;}}
+  .toast .t{font-size:13px; font-weight:700; margin-bottom:3px;}
+  .toast .d{font-size:12px; color:var(--text-dim); line-height:1.5;}
+
+  .notif-filtres{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .notif-carte{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:16px 18px; margin-bottom:12px; border-left:4px solid var(--line);
+  }
+  .notif-carte.attente{border-left-color:var(--gold);}
+  .notif-carte.validee{border-left-color:var(--teal);}
+  .notif-carte.rejetee{border-left-color:var(--brick); opacity:0.75;}
+  .notif-tete{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:10px;}
+  .notif-num{font-family:'IBM Plex Mono',monospace; font-size:15px; color:var(--gold-soft); font-weight:600;}
+  .notif-date{font-size:11.5px; color:var(--text-dim);}
+  .notif-corps{display:grid; grid-template-columns:1fr 1fr; gap:14px; font-size:12.5px; margin-bottom:12px;}
+  .notif-corps .k{color:var(--text-dim); font-size:10.5px; text-transform:uppercase; letter-spacing:0.07em;}
+  .notif-plats{font-size:12.5px; line-height:1.7; color:var(--text);}
+  .notif-total{font-family:'Fraunces',serif; font-size:19px; color:var(--gold-soft);}
+  .notif-actions{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;}
+  .btn-ok{background:var(--teal); color:#fff; border:none; border-radius:7px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;}
+  .btn-no{background:rgba(180,72,58,0.15); color:#E7A79B; border:1px solid var(--brick); border-radius:7px; padding:9px 16px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;}
+  .btn-doc{background:var(--surface-2); color:var(--text); border:1px solid var(--line); border-radius:7px; padding:9px 16px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;}
+
+  .etat-badge.attente{background:rgba(201,162,39,0.16); color:var(--gold-soft);}
+  .etat-badge.validee{background:rgba(47,111,94,0.18); color:var(--teal-soft);}
+  .etat-badge.rejetee{background:rgba(180,72,58,0.16); color:#E7A79B;}
+
+  /* ================= FORMULAIRES DE SAISIE (fiches) ================= */
+  .form-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:0 14px;}
+  .form-grid.trois{grid-template-columns:repeat(3,1fr);}
+  .form-sep{
+    grid-column:1/-1; font-size:10.5px; text-transform:uppercase; letter-spacing:0.1em;
+    color:var(--gold-soft); margin:8px 0 12px; padding-bottom:6px; border-bottom:1px solid var(--line);
+  }
+  .table-actions{display:flex; gap:6px; flex-wrap:wrap;}
+  .mini-btn{
+    background:var(--surface-2); border:1px solid var(--line); border-radius:6px;
+    color:var(--text-dim); padding:4px 9px; font-size:11px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .mini-btn:hover{border-color:var(--gold); color:var(--gold-soft);}
+  .mini-btn.danger:hover{border-color:var(--brick); color:#E19488;}
+  .totaux-ligne{
+    display:flex; gap:22px; flex-wrap:wrap; margin-bottom:14px;
+    padding:12px 14px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px;
+  }
+  .totaux-ligne div span{display:block; font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.07em;}
+  .totaux-ligne div b{font-family:'IBM Plex Mono',monospace; font-size:16px; color:var(--gold-soft); font-weight:500;}
+
+  /* ================= DOCUMENTS IMPRIMABLES ================= */
+  #printArea{display:none;}
+  .doc{
+    font-family:'Inter',sans-serif; color:#111; background:#fff;
+    padding:14mm 12mm; max-width:190mm; margin:0 auto; font-size:11pt; line-height:1.5;
+  }
+  .doc-entete{display:flex; align-items:flex-start; gap:14px; border-bottom:2px solid #111; padding-bottom:10px; margin-bottom:6px;}
+  .doc-entete img{width:56px; height:56px; object-fit:cover; border-radius:6px; border:1px solid #bbb;}
+  .doc-entete .nom{font-family:'Fraunces',serif; font-size:17pt; font-weight:700; line-height:1.2;}
+  .doc-entete .coord{font-size:9pt; color:#444; line-height:1.45;}
+  .doc-entete .droite{margin-left:auto; text-align:right; font-size:9pt; color:#444;}
+  .doc-titre{
+    text-align:center; font-family:'Fraunces',serif; font-size:15pt; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.06em; margin:14px 0 4px;
+  }
+  .doc-soustitre{text-align:center; font-size:9.5pt; color:#555; margin-bottom:16px;}
+  .doc-ref{
+    display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    border:1px solid #999; border-radius:4px; padding:8px 12px; margin-bottom:16px; font-size:10pt;
+  }
+  .doc-ref b{font-family:'IBM Plex Mono',monospace;}
+  .doc-bloc{margin-bottom:16px; break-inside:avoid;}
+  .doc-bloc h3{
+    font-size:9.5pt; text-transform:uppercase; letter-spacing:0.09em; color:#111;
+    border-bottom:1px solid #999; padding-bottom:4px; margin:0 0 8px;
+  }
+  .doc-champs{display:grid; grid-template-columns:1fr 1fr; gap:5px 20px; font-size:10.5pt;}
+  .doc-champs .l{display:flex; gap:8px;}
+  .doc-champs .l span{color:#555; min-width:105px;}
+  .doc-champs .l b{font-weight:600;}
+  .doc-table{width:100%; border-collapse:collapse; font-size:10pt; margin-top:4px;}
+  .doc-table th{
+    background:#eee; border:1px solid #999; padding:6px 8px; text-align:left;
+    font-size:9pt; text-transform:uppercase; letter-spacing:0.04em;
+  }
+  .doc-table td{border:1px solid #bbb; padding:6px 8px;}
+  .doc-table td.n, .doc-table th.n{text-align:right; font-family:'IBM Plex Mono',monospace; white-space:nowrap;}
+  .doc-table tfoot td{background:#f4f4f4; font-weight:700;}
+  .doc-total{
+    display:flex; justify-content:flex-end; gap:16px; align-items:baseline;
+    border-top:2px solid #111; margin-top:10px; padding-top:8px;
+  }
+  .doc-total .t{font-size:11pt; text-transform:uppercase; letter-spacing:0.06em;}
+  .doc-total .v{font-family:'Fraunces',serif; font-size:17pt; font-weight:700;}
+  .doc-note{font-size:9.5pt; color:#444; border-left:3px solid #999; padding-left:10px; margin:12px 0;}
+  .doc-signatures{display:flex; justify-content:space-between; gap:30px; margin-top:26px; break-inside:avoid;}
+  .doc-signatures div{flex:1; text-align:center; font-size:9.5pt; color:#444;}
+  .doc-signatures .ligne{border-top:1px solid #111; margin-top:38px; padding-top:5px;}
+  .doc-pied{
+    border-top:1px solid #999; margin-top:22px; padding-top:8px;
+    font-size:8.5pt; color:#666; display:flex; justify-content:space-between; gap:12px;
+  }
+  .doc-etat{display:inline-block; border:1px solid #111; border-radius:3px; padding:2px 9px; font-size:9pt; font-weight:700; text-transform:uppercase;}
+
+  @media (max-width: 720px){
+    .form-grid, .form-grid.trois, .notif-corps{grid-template-columns:1fr;}
+    .toast-zone{left:12px; right:12px; max-width:none;}
+  }
+
   /* ================= IMPRESSION — rapports journaliers/mensuels/annuels =================
      S'applique quel que soit l'onglet ouvert : seule la section visible s'imprime,
      avec les couleurs de la charte (KPI, tableaux, statuts) conservées sur le papier. */
+  .periode-bar{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    background:var(--surface-2); border:1px solid var(--line);
+    border-radius:8px; padding:10px 12px; margin:12px 0 14px;
+  }
+  .periode-bar label{font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-dim);}
+  .periode-bar select, .periode-bar input{
+    padding:8px 10px; background:var(--surface); border:1px solid var(--line);
+    border-radius:6px; color:var(--text); font-size:13px; font-family:'Inter',sans-serif;
+  }
+  .periode-libelle{font-size:12px; color:var(--gold-soft); margin-left:auto;}
+  #printArea .doc-table tr.fort td{font-weight:700; border-top:1px solid #333;}
+
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff !important; }
+
+    /* Impression d'une fiche : tout le reste de l'application disparaît */
+    body.impression-fiche > *{ display:none !important; }
+    body.impression-fiche #printArea{ display:block !important; }
+    body.impression-fiche{ background:#fff !important; }
+    #printArea .doc{ color:#111 !important; }
     .conn-status, .sidebar, .nav-toggle, .nav-backdrop, .no-print, .banner, .logo-slot, .storefront-nav, .home-nav { display:none !important; }
     #view-home, #view-login, #view-storefront, #view-blocked{ display:none !important; }
     .app-shell{ display:block !important; }
@@ -1223,6 +1419,9 @@
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 </head>
 <body>
+
+<div id="printArea"></div>
+<div class="toast-zone" id="toastZone"></div>
 
 <div class="conn-status" id="connStatus">
   <span class="conn-dot" id="connStatusDot"></span>
@@ -1274,6 +1473,21 @@
       <button id="conceptLoginBtn" onclick="checkConcepteurPassword()"
         style="width:100%; padding:8px; border:none; border-radius:6px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; font-size:12px; font-weight:700; cursor:pointer;">Accéder</button>
       <div id="conceptPasswordErr" style="display:none; color:#ef4444; margin-top:6px; font-size:11.5px;"></div>
+      <div style="margin-top:10px; text-align:center;">
+        <a onclick="diagnostiquerConcepteur()" style="color:#93c5fd; font-size:11px; cursor:pointer; text-decoration:underline;">Identifiants oubliés ?</a>
+      </div>
+      <div id="conceptAide" style="display:none; margin-top:10px; padding:10px; background:#060d24; border:1px solid rgba(37,99,235,0.3); border-radius:7px; font-size:11.5px; color:#94a3b8; line-height:1.7;"></div>
+      <div id="conceptCreation" style="display:none; margin-top:10px;">
+        <div style="font-size:11.5px; color:#94a3b8; margin-bottom:8px; line-height:1.6;">
+          Aucun compte concepteur n'existe encore. Créez-le maintenant : il sera le seul à pouvoir gérer les licences.
+        </div>
+        <input type="email" id="conceptNewEmail" placeholder="Votre email"
+          style="width:100%; padding:8px 10px; margin-bottom:6px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <input type="password" id="conceptNewPassword" placeholder="Mot de passe (8 caractères minimum)"
+          style="width:100%; padding:8px 10px; margin-bottom:8px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <button onclick="creerCompteConcepteur()"
+          style="width:100%; padding:8px; border:none; border-radius:6px; background:#2f6f5e; color:#fff; font-size:12px; font-weight:700; cursor:pointer;">Créer le compte concepteur</button>
+      </div>
     </div>
 
     <div id="conceptAdminView" style="display:none;">
@@ -1369,6 +1583,13 @@
 <div id="view-storefront">
 
   <!-- Annuaire : affiché quand l'adresse ne désigne aucun restaurant -->
+  <div class="sf-404" id="storeIntrouvable" style="display:none;">
+    <div class="code">404</div>
+    <h1>Page web not found</h1>
+    <p>Cette page de restaurant n'est pas disponible.</p>
+    <button class="sf-btn gh" onclick="ouvrirAnnuairePublic()">Voir les restaurants en ligne</button>
+  </div>
+
   <div class="sf-dir" id="storeDirectory">
     <h1>Les restaurants en ligne</h1>
     <p>Choisissez un restaurant pour découvrir sa carte, ses photos et passer commande.</p>
@@ -1518,17 +1739,28 @@
           <div class="date" id="ficheDate"></div>
         </div>
 
-        <div class="fiche-bloc">
-          <h4><i>1</i> Vos informations</h4>
-          <div class="fiche-2">
-            <div class="field"><label>Nom</label><input type="text" id="ficheNom" placeholder="Diallo"></div>
-            <div class="field"><label>Prénom</label><input type="text" id="fichePrenom" placeholder="Souleymane"></div>
+        <div class="fiche-retour" id="ficheRetour" style="display:none;">
+          <span id="ficheRetourTexte"></span>
+          <button onclick="oublierClient()">Ce n'est pas moi</button>
+        </div>
+
+        <div class="fiche-bloc" id="ficheBlocInfos">
+          <h4><i>1</i> Vos informations <button class="fiche-replier" id="ficheReplierBtn" onclick="basculerInfosClient()" style="display:none;">Modifier</button></h4>
+          <div id="ficheInfosChamps">
+            <div class="fiche-2">
+              <div class="field"><label>Nom</label><input type="text" id="ficheNom" placeholder="Diallo"></div>
+              <div class="field"><label>Prénom</label><input type="text" id="fichePrenom" placeholder="Souleymane"></div>
+            </div>
+            <div class="fiche-2">
+              <div class="field"><label>Téléphone</label><input type="tel" id="ficheTelephone" placeholder="+224 6xx xx xx xx"></div>
+              <div class="field"><label>Email</label><input type="email" id="ficheEmail" placeholder="client@email.com"></div>
+            </div>
+            <div class="fiche-2">
+              <div class="field"><label>Quartier</label><input type="text" id="ficheQuartier" placeholder="Damakania"></div>
+              <div class="field"><label>Adresse</label><input type="text" id="ficheAdresse" placeholder="Rue, repère, immeuble…"></div>
+            </div>
           </div>
-          <div class="fiche-2">
-            <div class="field"><label>Téléphone</label><input type="tel" id="ficheTelephone" placeholder="+224 6xx xx xx xx"></div>
-            <div class="field"><label>Quartier</label><input type="text" id="ficheQuartier" placeholder="Damakania"></div>
-          </div>
-          <div class="field"><label>Adresse</label><input type="text" id="ficheAdresse" placeholder="Rue, repère, immeuble…"></div>
+          <div id="ficheInfosResume" style="display:none;"></div>
         </div>
 
         <div class="fiche-bloc">
@@ -1558,6 +1790,7 @@
               <select id="storeZone" onchange="recalculerTotal()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
             </div>
           </div>
+          <div id="storeZoneLibre" style="display:none; margin-top:12px; font-size:12px; color:var(--text-dim);"></div>
         </div>
 
         <div class="fiche-bloc">
@@ -1583,6 +1816,12 @@
           <div class="sub" id="ficheOkTexte">Le restaurant a reçu votre fiche.</div>
           <div class="num" id="ficheOkNumero">—</div>
           <div id="ficheOkRecap" style="font-size:12.5px; color:var(--text-dim); line-height:1.7; text-align:left;"></div>
+          <div style="text-align:left; margin-top:18px;">
+            <h4 style="font-family:'Fraunces',serif; font-size:15px; margin:0 0 4px;">La carte complète du restaurant</h4>
+            <div style="font-size:11.5px; color:var(--text-dim); margin-bottom:8px;">Gardez-la pour vos prochaines commandes.</div>
+            <div class="carte-client" id="carteClient"></div>
+            <button class="btn-outline" style="color:var(--text); width:100%; margin-top:10px;" onclick="envoyerCarteWhatsapp()">Recevoir la carte sur WhatsApp</button>
+          </div>
           <button class="wa-btn" id="waBtn" onclick="envoyerFicheWhatsapp()" style="margin-top:16px;">Envoyer la fiche sur WhatsApp</button>
           <div id="trackerStages" style="margin:16px 0 8px;"></div>
           <div style="font-family:'Fraunces',serif; font-size:26px; color:var(--gold-soft);" id="trackerChrono">--:--</div>
@@ -1591,6 +1830,15 @@
         </div>
       </div>
     </aside>
+
+    <div class="relance" id="relanceCommande">
+      <h4>Votre commande vous attend</h4>
+      <p id="relanceTexte"></p>
+      <div class="actions">
+        <button class="sf-btn or" onclick="reprendreCommande()">Terminer ma commande</button>
+        <button class="sf-btn gh" onclick="abandonnerRelance()">Plus tard</button>
+      </div>
+    </div>
 
     <div class="sf-lightbox" id="sfLightbox" onclick="fermerLightbox()"><img id="sfLightboxImg" alt=""></div>
   </div>
@@ -1709,6 +1957,7 @@
       <div class="nav-group">
         <div class="grouplabel">Aperçu</div>
         <div class="navlink active" data-section="overview" onclick="showSection('overview')"><span class="ic">◆</span> Tableau de bord</div>
+        <div class="navlink" data-section="notifications" onclick="showSection('notifications')"><span class="ic">🔔</span> Notifications <span class="nav-badge" id="navBadgeNotif">0</span></div>
         <div class="navlink" data-section="commandes" onclick="showSection('commandes')"><span class="ic">▤</span> Commandes</div>
         <div class="navlink" data-section="service" onclick="showSection('service')"><span class="ic">🍽</span> Service en salle</div>
         <div class="navlink" data-section="encaissement" onclick="showSection('encaissement')"><span class="ic">💵</span> Encaissement</div>
@@ -1752,7 +2001,8 @@
           <h1 id="sectionTitle">Tableau de bord</h1>
         </div>
         <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-          <button class="btn-outline no-print" style="color:var(--text);" onclick="exporterOngletPDF()">📄 Exporter ce rapport en PDF A4</button>
+          <button class="btn-outline no-print" style="color:var(--text);" onclick="imprimerOngletCourant()">🖨 Imprimer cet onglet</button>
+          <button class="btn-outline no-print" style="color:var(--text);" onclick="exporterOngletPDF()">📄 Exporter en PDF A4</button>
           <div class="datepick" id="tenantStatus">Lundi 27 juillet 2026</div>
         </div>
       </div>
@@ -1774,7 +2024,7 @@
           <div class="kpi-card"><div class="lbl">Plats payés (jour)</div><div class="val mono" id="kpiPlatsPayes">0</div><div class="delta" id="kpiPlatsPayesSub">Saisie des caissiers</div></div>
           <div class="kpi-card"><div class="lbl">Encaissé en caisse (jour)</div><div class="val mono" id="kpiEncaisse">0 GNF</div></div>
           <div class="kpi-card"><div class="lbl">Commandes en ligne (jour)</div><div class="val mono" id="kpiEnligneJour">0</div></div>
-          <div class="kpi-card"><div class="lbl">Non gérées</div><div class="val mono" id="kpiEnligneNonGerees">0</div><div class="delta" id="kpiEnligneGerees"></div></div>
+          <div class="kpi-card"><div class="lbl">En attente de validation</div><div class="val mono" id="kpiEnligneNonGerees">0</div><div class="delta" id="kpiEnligneGerees"></div></div>
         </div>
 
         <div class="grid-2">
@@ -1824,6 +2074,30 @@
         </div>
       </div>
 
+      <!-- ===== Section : Notifications — commandes en ligne à valider ===== -->
+      <div class="dash-section" id="section-notifications" style="display:none;">
+        <div class="panel">
+          <h3>Commandes reçues en ligne</h3>
+          <div class="sub">Tant qu'une commande n'est pas validée, son montant n'entre pas dans les recettes. La validation crée l'entrée de fonds ; le rejet ne crée rien.</div>
+          <div class="totaux-ligne">
+            <div><span>En attente</span><b id="notifNbAttente">0</b></div>
+            <div><span>Validées (jour)</span><b id="notifNbValidees">0</b></div>
+            <div><span>Rejetées (jour)</span><b id="notifNbRejetees">0</b></div>
+            <div><span>Montant en attente</span><b id="notifMontantAttente">0 GNF</b></div>
+            <div><span>Encaissé validé (jour)</span><b id="notifMontantValide">0 GNF</b></div>
+          </div>
+          <div class="notif-filtres">
+            <button class="mini-btn" id="notifF-attente" onclick="filtrerNotifications('attente')">En attente</button>
+            <button class="mini-btn" id="notifF-validee" onclick="filtrerNotifications('validee')">Validées</button>
+            <button class="mini-btn" id="notifF-rejetee" onclick="filtrerNotifications('rejetee')">Rejetées</button>
+            <button class="mini-btn" id="notifF-toutes" onclick="filtrerNotifications('toutes')">Toutes</button>
+            <button class="mini-btn" onclick="loadNotifications()">Actualiser</button>
+          </div>
+          <div class="banner error" id="notifError"></div>
+          <div id="notifListe"></div>
+        </div>
+      </div>
+
       <!-- ===== Section : Service en salle (serveurs) ===== -->
       <div class="dash-section" id="section-service" style="display:none;">
         <div class="panel">
@@ -1849,6 +2123,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Services enregistrés aujourd'hui</h3>
           <div class="sub" id="serviceSub">Aucun plat servi déclaré aujourd'hui.</div>
+          <div id="pb-service"></div>
           <table class="commandes-table" id="serviceTableList">
             <thead><tr><th>Heure</th><th>Table</th><th>Plat</th><th>Quantité</th><th>Serveur</th><th>Observation</th></tr></thead>
             <tbody id="serviceTableBody"></tbody>
@@ -1893,6 +2168,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Encaissements du jour</h3>
           <div class="sub" id="encSub">Aucun encaissement enregistré aujourd'hui.</div>
+          <div id="pb-encaissements"></div>
           <table class="commandes-table" id="encTableList">
             <thead><tr><th>Heure</th><th>Plat</th><th>Qté payée</th><th>Prix unitaire</th><th>Montant</th><th>Mode</th><th>Caissier</th></tr></thead>
             <tbody id="encTableBody"></tbody>
@@ -1953,6 +2229,17 @@
             <div class="field"><label>Instagram (facultatif)</label><input type="text" id="webInstagram" placeholder="https://instagram.com/…"></div>
           </div>
           <div class="field"><label>Consignes de paiement affichées au client</label><input type="text" id="webPaiement" placeholder="Ex : paiement Orange Money au 6XX XX XX XX, ou en espèces à la livraison"></div>
+          <div class="grid-2">
+            <div class="field"><label>Frais de livraison forfaitaires (GNF)</label><input type="number" id="webFraisLivraison" min="0" placeholder="15000"></div>
+            <div class="field"><label>Délai de livraison estimé (min)</label><input type="number" id="webDelaiLivraison" min="0" placeholder="45"></div>
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); margin:-6px 0 14px;">
+            Utilisés quand aucune zone de livraison n'est définie dans les Paramètres. Laissez vide si les frais sont annoncés au téléphone.
+          </div>
+          <div class="field"><label>Mots-clés pour la recherche Google</label><input type="text" id="webMotsCles" placeholder="restaurant Kindia, cuisine guinéenne, riz gras, livraison"></div>
+          <div style="font-size:12px; color:var(--text-dim); margin:-6px 0 14px;">
+            Séparez par des virgules. Ces mots servent à la recherche dans l'annuaire et au référencement de la page.
+          </div>
           <button class="btn-primary" onclick="enregistrerPageWeb()">Enregistrer la page</button>
         </div>
 
@@ -2032,6 +2319,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Commandes récentes</h3>
           <div class="sub">Plats vendus par commande et revenu généré — inclut les commandes passées depuis la page publicitaire</div>
+          <div id="pb-commandes"></div>
           <table class="commandes-table" id="ordersTable">
             <thead>
               <tr><th>Commande</th><th>Origine</th><th>Plats vendus</th><th>Revenu</th></tr>
@@ -2089,6 +2377,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Historique des pertes</h3>
           <div class="sub" id="pertesListSub">Aucune perte enregistrée.</div>
+          <div id="pb-pertes"></div>
           <table class="commandes-table" id="pertesTable">
             <thead><tr><th>Date</th><th>Plat</th><th>Type</th><th>Qté</th><th>Coût</th><th>Responsable</th></tr></thead>
             <tbody id="pertesTableBody"></tbody>
@@ -2109,6 +2398,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Fiches clients</h3>
           <div class="sub" id="clientsListSub">Aucun client pour l'instant — une fiche est créée automatiquement à chaque commande en ligne.</div>
+          <div id="pb-clients"></div>
           <table class="commandes-table" id="clientsTable">
             <thead><tr><th>Nom</th><th>Téléphone</th><th>Total dépensé</th><th>Points</th><th>Statut</th></tr></thead>
             <tbody id="clientsTableBody"></tbody>
@@ -2148,6 +2438,7 @@
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div><h3>Journal</h3><div class="sub">Toutes les écritures (ventes et dépenses) de la période, dans l'ordre chronologique.</div></div>
             <div style="display:flex; gap:8px;">
+              <button class="mini-btn" onclick="imprimerJournalCompta()">🖨 Imprimer le journal</button>
               <button class="btn-outline" style="color:var(--text);" onclick="exporterPDF('journal')">Export PDF</button>
               <button class="btn-outline" style="color:var(--text);" onclick="exporterExcel('journal')">Export Excel</button>
             </div>
@@ -2161,6 +2452,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Livre de caisse</h3>
           <div class="sub">Solde de caisse cumulé au fil des entrées (ventes) et sorties (dépenses).</div>
+          <div style="margin:10px 0;"><button class="mini-btn" onclick="imprimerLivreCaisse()">🖨 Imprimer le livre de caisse</button></div>
           <table class="commandes-table" id="caisseTable">
             <thead><tr><th>Date</th><th>Libellé</th><th>Entrée</th><th>Sortie</th><th>Solde cumulé</th></tr></thead>
             <tbody id="caisseTableBody"></tbody>
@@ -2170,6 +2462,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Grand livre</h3>
           <div class="sub">Écritures regroupées par compte (Ventes, catégories de dépenses).</div>
+          <div style="margin:10px 0;"><button class="mini-btn" onclick="imprimerGrandLivre()">🖨 Imprimer le grand livre</button></div>
           <table class="commandes-table" id="grandLivreTable">
             <thead><tr><th>Compte</th><th>Débit</th><th>Crédit</th><th>Solde</th></tr></thead>
             <tbody id="grandLivreTableBody"></tbody>
@@ -2179,6 +2472,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Balance</h3>
           <div class="sub">Total des débits et crédits — doit être équilibrée.</div>
+          <div style="margin:10px 0;"><button class="mini-btn" onclick="imprimerBalance()">🖨 Imprimer la balance</button></div>
           <div id="balanceSummary" style="font-size:13.5px; line-height:2;"></div>
         </div>
 
@@ -2186,6 +2480,7 @@
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <div><h3>Compte de résultat</h3><div class="sub">Revenus − Charges = Résultat net, sur la période sélectionnée.</div></div>
             <div style="display:flex; gap:8px;">
+              <button class="mini-btn" onclick="imprimerCompteResultat()">🖨 Imprimer le compte de résultat</button>
               <button class="btn-outline" style="color:var(--text);" onclick="exporterPDF('resultat')">Export PDF</button>
               <button class="btn-outline" style="color:var(--text);" onclick="exporterExcel('resultat')">Export Excel</button>
             </div>
@@ -2196,12 +2491,14 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Bilan (simplifié)</h3>
           <div class="sub">Actif = comptes bancaires + valeur du stock. Bilan simplifié — ne remplace pas un bilan comptable certifié.</div>
+          <div style="margin:10px 0;"><button class="mini-btn" onclick="imprimerBilan()">🖨 Imprimer le bilan</button></div>
           <div id="bilanSummary" style="font-size:13.5px; line-height:2;"></div>
         </div>
 
         <div class="panel" style="margin-top:16px;">
           <h3>Impôts (estimation)</h3>
           <div class="sub">Taux appliqué au résultat net de la période — à titre indicatif, ne remplace pas une déclaration fiscale.</div>
+          <div style="margin:10px 0;"><button class="mini-btn" onclick="imprimerImpots()">🖨 Imprimer l'estimation</button></div>
           <div class="field" style="max-width:220px;"><label>Taux d'imposition (%)</label><input type="number" id="tauxImposition" min="0" max="100" value="0" onchange="saveTauxImposition()"></div>
           <div id="impotsSummary" style="font-size:13.5px; line-height:2; margin-top:8px;"></div>
         </div>
@@ -2209,6 +2506,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Amortissements</h3>
           <div class="sub">Immobilisations du restaurant (matériel, mobilier...) amorties linéairement sur leur durée de vie.</div>
+          <div style="margin:10px 0;"><button class="mini-btn" onclick="imprimerAmortissements()">🖨 Imprimer le tableau</button></div>
           <div class="banner error" id="amortError"></div>
           <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
             <div class="field" style="margin:0;"><label>Nom du bien</label><input type="text" id="amortNom" placeholder="Four professionnel"></div>
@@ -2224,21 +2522,56 @@
       </div>
 
       <!-- ===== Section : Dépenses (réel) ===== -->
+      <!-- ===== Section : Dépenses ===== -->
       <div class="dash-section" id="section-depenses" style="display:none;">
         <div class="panel">
-          <h3>Ajouter une dépense</h3>
-          <div class="sub">Le Directeur crée librement ses catégories de dépenses.</div>
+          <h3>Bon de dépense</h3>
+          <div class="sub">Chaque dépense reçoit un numéro de bon. Le bon est imprimable et sert de justificatif.</div>
           <div class="banner error" id="depenseError"></div>
-          <div class="field"><label>Catégorie</label><input type="text" id="depenseFormCategorie" placeholder="Loyer, électricité, fournitures..."></div>
-          <div class="field"><label>Montant (GNF)</label><input type="number" id="depenseFormMontant" min="0"></div>
-          <div class="field"><label>Commentaire / justificatif</label><input type="text" id="depenseFormCommentaire"></div>
-          <button class="btn-primary" onclick="ajouterDepense()">+ Ajouter la dépense</button>
+          <div class="banner info" id="depenseSuccess"></div>
+
+          <div class="form-grid">
+            <div class="form-sep">Objet de la dépense</div>
+            <div class="field"><label>Date</label><input type="date" id="depenseFormDate"></div>
+            <div class="field"><label>Catégorie</label>
+              <input type="text" id="depenseFormCategorie" list="listeCategoriesDepense" placeholder="Loyer, électricité, achats…">
+              <datalist id="listeCategoriesDepense"></datalist>
+            </div>
+            <div class="field"><label>Libellé de la dépense</label><input type="text" id="depenseFormLibelle" placeholder="Achat de 2 sacs de riz"></div>
+            <div class="field"><label>Bénéficiaire</label><input type="text" id="depenseFormBeneficiaire" placeholder="Fournisseur, employé, prestataire…"></div>
+
+            <div class="form-sep">Règlement</div>
+            <div class="field"><label>Montant (GNF)</label><input type="number" id="depenseFormMontant" min="0"></div>
+            <div class="field"><label>Mode de paiement</label>
+              <select id="depenseFormMode" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
+                <option value="especes">Espèces</option>
+                <option value="orange_money">Orange Money</option>
+                <option value="mobile_money">Mobile Money / MoMo</option>
+                <option value="virement">Virement</option>
+                <option value="cheque">Chèque</option>
+              </select>
+            </div>
+            <div class="field"><label>N° de pièce justificative</label><input type="text" id="depenseFormPiece" placeholder="Facture n° 042"></div>
+            <div class="field"><label>Observation</label><input type="text" id="depenseFormCommentaire" placeholder="Précision utile"></div>
+          </div>
+
+          <button class="btn-primary" onclick="ajouterDepense()">+ Enregistrer le bon de dépense</button>
         </div>
+
         <div class="panel" style="margin-top:16px;">
-          <h3>Historique des dépenses</h3>
+          <h3>Registre des dépenses</h3>
           <div class="sub" id="depensesListSub">Aucune dépense enregistrée.</div>
+          <div id="pb-depenses"></div>
+          <div class="totaux-ligne">
+            <div><span>Total du mois</span><b id="depTotalMois">0 GNF</b></div>
+            <div><span>Total général</span><b id="depTotalGeneral">0 GNF</b></div>
+            <div><span>Nombre de bons</span><b id="depNbBons">0</b></div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <button class="mini-btn" onclick="imprimerRegistreDepenses()">🖨 Imprimer le registre</button>
+          </div>
           <table class="commandes-table" id="depensesTable">
-            <thead><tr><th>Date</th><th>Catégorie</th><th>Montant</th><th>Auteur</th><th>Commentaire</th></tr></thead>
+            <thead><tr><th>N° bon</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th>Bénéficiaire</th><th>Montant</th><th>Actions</th></tr></thead>
             <tbody id="depensesTableBody"></tbody>
           </table>
         </div>
@@ -2264,6 +2597,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Comptes du restaurant</h3>
           <div class="sub" id="comptesListSub">Aucun compte pour l'instant.</div>
+          <div id="pb-comptes"></div>
           <table class="commandes-table" id="comptesTable">
             <thead><tr><th>Compte</th><th>Type</th><th>Solde</th></tr></thead>
             <tbody id="comptesTableBody"></tbody>
@@ -2272,33 +2606,59 @@
       </div>
 
       <!-- ===== Section : Ressources Humaines / Employés (réel, éditable) ===== -->
+      <!-- ===== Section : Ressources Humaines ===== -->
       <div class="dash-section" id="section-rh" style="display:none;">
         <div class="panel">
-          <h3>Ajouter un employé</h3>
-          <div class="sub">Le Fondateur et le DG peuvent créer des comptes pour leurs gérants et employés.</div>
+          <h3>Fiche d'engagement d'un employé</h3>
+          <div class="sub">Renseignez l'identité, le poste et la rémunération. Le matricule est attribué automatiquement.</div>
           <div class="banner error" id="rhError"></div>
-          <div class="field"><label>Nom</label><input type="text" id="rhFormNom" placeholder="Mamadou Bah"></div>
-          <div class="field"><label>Email (identifiant de connexion)</label><input type="email" id="rhFormEmail" placeholder="mamadou@legourmet.gn"></div>
-          <div class="field"><label>Mot de passe</label><input type="password" id="rhFormPassword"></div>
-          <div class="field">
-            <label>Rôle</label>
-            <select id="rhFormRole" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
-              <option value="gerant">Gérant</option>
-              <option value="cuisinier">Cuisinier</option>
-              <option value="caissier">Caissier</option>
-              <option value="serveur">Serveur</option>
-              <option value="rh">RH</option>
-              <option value="comptable">Comptable</option>
-              <option value="employe">Employé</option>
-            </select>
+          <div class="banner info" id="rhSuccess"></div>
+
+          <div class="form-grid">
+            <div class="form-sep">Identité</div>
+            <div class="field"><label>Nom</label><input type="text" id="rhFormNom" placeholder="Bah"></div>
+            <div class="field"><label>Prénom</label><input type="text" id="rhFormPrenom" placeholder="Mamadou"></div>
+            <div class="field"><label>Téléphone</label><input type="tel" id="rhFormTelephone" placeholder="+224 6xx xx xx xx"></div>
+            <div class="field"><label>Adresse / quartier</label><input type="text" id="rhFormAdresse" placeholder="Damakania, Kindia"></div>
+
+            <div class="form-sep">Poste et rémunération</div>
+            <div class="field">
+              <label>Rôle dans l'application</label>
+              <select id="rhFormRole" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif;">
+                <option value="gerant">Gérant</option>
+                <option value="cuisinier">Cuisinier</option>
+                <option value="caissier">Caissier</option>
+                <option value="serveur">Serveur</option>
+                <option value="rh">RH</option>
+                <option value="comptable">Comptable</option>
+                <option value="employe">Employé</option>
+              </select>
+            </div>
+            <div class="field"><label>Intitulé du poste</label><input type="text" id="rhFormPoste" placeholder="Chef de rang, second de cuisine…"></div>
+            <div class="field"><label>Salaire mensuel (GNF)</label><input type="number" id="rhFormSalaire" min="0" placeholder="1500000"></div>
+            <div class="field"><label>Date d'embauche</label><input type="date" id="rhFormEmbauche"></div>
+
+            <div class="form-sep">Accès à l'application</div>
+            <div class="field"><label>Email (identifiant de connexion)</label><input type="email" id="rhFormEmail" placeholder="mamadou@legourmet.gn"></div>
+            <div class="field"><label>Mot de passe</label><input type="password" id="rhFormPassword"></div>
           </div>
-          <button class="btn-primary" onclick="ajouterEmploye()">+ Ajouter l'employé</button>
+
+          <button class="btn-primary" onclick="ajouterEmploye()">+ Enregistrer l'employé</button>
         </div>
+
         <div class="panel" style="margin-top:16px;">
-          <h3>Équipe</h3>
+          <h3>Registre du personnel</h3>
           <div class="sub" id="rhListSub">Chargement…</div>
+          <div id="pb-personnel"></div>
+          <div class="totaux-ligne">
+            <div><span>Effectif</span><b id="rhTotalEffectif">0</b></div>
+            <div><span>Masse salariale mensuelle</span><b id="rhTotalMasse">0 GNF</b></div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <button class="mini-btn" onclick="imprimerRegistrePersonnel()">🖨 Imprimer le registre</button>
+          </div>
           <table class="commandes-table" id="rhTable">
-            <thead><tr><th>Nom</th><th>Rôle</th><th>Email</th><th>Empreinte</th><th>Visage</th><th></th></tr></thead>
+            <thead><tr><th>Matricule</th><th>Employé</th><th>Poste</th><th>Contact</th><th>Salaire</th><th>Biométrie</th><th>Actions</th></tr></thead>
             <tbody id="rhTableBody"></tbody>
           </table>
         </div>
@@ -2344,6 +2704,7 @@
         <div class="panel" style="margin-top:16px;">
           <h3>Historique de présence</h3>
           <div class="sub" id="pointageListSub">Aucun pointage pour l'instant.</div>
+          <div id="pb-pointage"></div>
           <table class="commandes-table" id="pointageTable">
             <thead><tr><th>Employé</th><th>Type</th><th>Date et heure</th></tr></thead>
             <tbody id="pointageTableBody"></tbody>
@@ -2454,6 +2815,7 @@
         <div class="panel">
           <h3>Classement des meilleurs employés</h3>
           <div class="sub">Ventes et retards calculés automatiquement (commandes en salle + pointage biométrique) — erreurs, satisfaction et prime saisies par le Directeur.</div>
+          <div id="pb-evaluation"></div>
           <table class="commandes-table" id="evalTable">
             <thead><tr><th>Rang</th><th>Employé</th><th>Ventes</th><th>Revenu généré</th><th>Retards (min)</th><th>Erreurs</th><th>Clients satisfaits</th><th>Objectif atteint</th><th>Prime proposée</th><th></th></tr></thead>
             <tbody id="evalTableBody"></tbody>
@@ -2797,6 +3159,8 @@
   let storeSite = {};
   let storeSitePublicSlug = null;
   let storeImages = [];
+  let storeCouverture = null;
+  let storeInfoCourante = {};
   let storeCategorie = 'Tout';
   let storeFraisService = 0;
   let trackerInterval = null;
@@ -2814,7 +3178,7 @@
       const sites = await agrGet('agr_sites') || {};
       annuaireSites = Object.entries(sites)
         .map(([slug, v]) => Object.assign({ slug }, v))
-        .filter(v => v.actif !== false)
+        .filter(v => v.actif !== false && v.bloque !== true)
         .sort((a,b) => (a.nom || '').localeCompare(b.nom || ''));
       note.textContent = annuaireSites.length ? '' : "Aucun restaurant n'a encore publié sa page.";
       renderAnnuaire();
@@ -2827,7 +3191,7 @@
     const q = (document.getElementById('sfDirSearch').value || '').trim().toLowerCase();
     const grid = document.getElementById('sfDirGrid');
     const liste = annuaireSites.filter(v =>
-      !q || [v.nom, v.ville, v.slogan].filter(Boolean).join(' ').toLowerCase().includes(q));
+      !q || [v.nom, v.ville, v.slogan, v.motsCles].filter(Boolean).join(' ').toLowerCase().includes(q));
 
     grid.innerHTML = liste.map(v => `
       <div class="sf-dir-card" onclick="ouvrirRestaurant('${v.slug}')">
@@ -2858,6 +3222,7 @@
   // Page web du restaurant — chargement et rendu
   // ---------------------------------------------------------------
   function afficherAnnuaire(){
+    masquerIntrouvable();
     document.getElementById('storeDirectory').style.display = 'block';
     document.getElementById('storePage').style.display = 'none';
     chargerAnnuaire();
@@ -2868,13 +3233,14 @@
     try {
       const base = 'agr_tenants/' + code + '/';
       const info = await agrGet(base + 'info');
-      if(!info){ afficherAnnuaire(); return; }
+      if(!info){ pageIntrouvable(); return; }
 
       storeSite = await agrGet(base + 'siteweb') || {};
-      if(storeSite.actif === false){
-        document.getElementById('sfDirNote').textContent =
-          'La page de ce restaurant est momentanément hors ligne.';
-        afficherAnnuaire();
+
+      // Restaurant bloqué par le concepteur ou licence expirée : la page
+      // publique est suspendue immédiatement — aucune carte, aucune commande.
+      if(restaurantSuspendu(info) || storeSite.actif === false){
+        pageIntrouvable();
         return;
       }
 
@@ -2882,6 +3248,7 @@
       storeSitePublicSlug = slug || storeSite.slug || null;
       cart = {};
 
+      masquerIntrouvable();
       document.getElementById('storeDirectory').style.display = 'none';
       document.getElementById('storePage').style.display = 'block';
 
@@ -2894,21 +3261,23 @@
       renderStoreCategories();
       renderSpecialites();
       renderStoreMenu();
+      appliquerIdentiteWeb(info.nomRestaurant || 'Restaurant', info, storeCouverture);
 
       storeFraisService = info.fraisService || 0;
       const zones = await agrGet(base + 'zonesLivraison') || {};
       storeZones = Object.entries(zones).map(([id,z]) => ({ id, ...z }));
-      // La livraison n'est proposée que si le restaurant dessert des zones
+      // La livraison est toujours proposée. Si le restaurant n'a pas
+      // découpé de zones, on applique le forfait défini dans l'onglet
+      // Page web (ou des frais à confirmer par le restaurant).
       const radioLivraison = document.getElementById('ficheModeLivraison');
-      radioLivraison.disabled = storeZones.length === 0;
-      if(storeZones.length === 0){
-        document.getElementById('ficheModeSurPlace').checked = true;
-        document.getElementById('ficheModeLivraisonD').textContent = "Ce restaurant ne propose pas encore la livraison.";
-        document.getElementById('ficheModeLivraisonLbl').style.opacity = '0.5';
-      } else {
-        document.getElementById('ficheModeLivraisonD').textContent = 'Le restaurant vous livre, des frais s\'appliquent.';
-        document.getElementById('ficheModeLivraisonLbl').style.opacity = '';
-      }
+      radioLivraison.disabled = false;
+      document.getElementById('ficheModeLivraisonLbl').style.opacity = '';
+      document.getElementById('ficheModeLivraisonD').textContent = storeZones.length
+        ? 'Le restaurant vous livre, choisissez votre zone.'
+        : (storeSite.fraisLivraison
+            ? 'Livraison au forfait de ' + Number(storeSite.fraisLivraison).toLocaleString('fr-FR') + ' GNF.'
+            : 'Le restaurant vous livre ; les frais vous seront confirmés.');
+
       document.getElementById('storeZone').innerHTML = storeZones.map(z =>
         `<option value="${z.id}">${z.nom} — ${(z.fraisLivraison||0).toLocaleString('fr-FR')} GNF, ~${z.delaiMinutes} min</option>`
       ).join('');
@@ -2920,14 +3289,48 @@
       document.getElementById('cartOrderForm').style.display = 'block';
       document.getElementById('cartTrackerWrap').style.display = 'none';
       preparerNumeroFiche();
+      chargerClientConnu();
       changerModeFiche();
       renderCart();
+      restaurerPanier();
       loadAvis();
       window.scrollTo(0,0);
     } catch(e){
       document.getElementById('sfDirNote').textContent = 'Impossible de joindre le restaurant.';
       afficherAnnuaire();
     }
+  }
+
+  // Un restaurant bloqué par le concepteur, ou dont la licence est
+  // dépassée, ne doit plus rien exposer publiquement.
+  function restaurantSuspendu(info){
+    if(!info) return true;
+    if(info.statut === 'bloque') return true;
+    if(info.dateExpiration && Date.now() > info.dateExpiration) return true;
+    return false;
+  }
+
+  // Écran 404 : toute action de la page est coupée
+  function pageIntrouvable(){
+    storeTenantCode = null;
+    storeSite = {};
+    storeMenuItems = [];
+    cart = {};
+    if(minuteurRelance) clearTimeout(minuteurRelance);
+    masquerRelance();
+
+    document.getElementById('storePage').style.display = 'none';
+    document.getElementById('storeDirectory').style.display = 'none';
+    document.getElementById('storeIntrouvable').classList.add('on');
+    document.getElementById('storeIntrouvable').style.display = 'flex';
+    document.title = 'Page web not found';
+    window.scrollTo(0,0);
+  }
+
+  function masquerIntrouvable(){
+    const el = document.getElementById('storeIntrouvable');
+    el.classList.remove('on');
+    el.style.display = 'none';
   }
 
   // Le logo enregistré dans les paramètres du restaurant devient
@@ -2950,6 +3353,8 @@
     // Bannière : photo d'accueil choisie par le restaurant
     const images = Array.isArray(storeSite.images) ? storeSite.images : Object.values(storeSite.images || {});
     const couverture = images[storeSite.couverture || 0] || images[0] || null;
+    storeCouverture = couverture;
+    storeInfoCourante = info;
     const hero = document.getElementById('sfHero');
     hero.style.backgroundImage = couverture ? `url("${couverture}")` : '';
 
@@ -3062,10 +3467,57 @@
     meta('property', 'og:url', location.href);
     if(couverture || info.logo) meta('property', 'og:image', info.logo || couverture);
 
+    if(storeSite.motsCles) meta('name', 'keywords', storeSite.motsCles);
+
     if(info.logo){
       document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')
         .forEach(l => { l.href = info.logo; });
     }
+
+    // Adresse canonique déclarée à Google
+    let canon = document.head.querySelector('link[rel="canonical"]');
+    if(!canon){ canon = document.createElement('link'); canon.rel = 'canonical'; document.head.appendChild(canon); }
+    canon.href = location.href;
+
+    // Données structurées : c'est ce qui permet à Google d'afficher le
+    // restaurant, sa carte et ses coordonnées dans les résultats.
+    const donnees = {
+      '@context': 'https://schema.org',
+      '@type': 'Restaurant',
+      name: nom,
+      description: desc,
+      url: location.href,
+      image: couverture || info.logo || undefined,
+      logo: info.logo || undefined,
+      telephone: info.telephone || undefined,
+      email: info.email || undefined,
+      servesCuisine: storeSite.motsCles || undefined,
+      openingHours: storeSite.horaires || undefined,
+      priceRange: 'GNF',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: info.adresse || undefined,
+        addressLocality: info.ville || undefined,
+        addressCountry: 'GN',
+      },
+      hasMenu: storeMenuItems.length ? {
+        '@type': 'Menu',
+        hasMenuItem: storeMenuItems.slice(0, 40).map(p => ({
+          '@type': 'MenuItem',
+          name: p.nom,
+          description: p.description || undefined,
+          offers: { '@type': 'Offer', price: p.prixVente || 0, priceCurrency: 'GNF' },
+        })),
+      } : undefined,
+    };
+    let ld = document.getElementById('donneesStructurees');
+    if(!ld){
+      ld = document.createElement('script');
+      ld.type = 'application/ld+json';
+      ld.id = 'donneesStructurees';
+      document.head.appendChild(ld);
+    }
+    ld.textContent = JSON.stringify(donnees);
   }
 
   function partagerCettePage(){
@@ -3175,7 +3627,18 @@
 
   function changerModeFiche(){
     const livraison = modeFiche() === 'livraison';
-    document.getElementById('storeZoneWrap').style.display = livraison ? 'block' : 'none';
+    const avecZones = storeZones.length > 0;
+
+    document.getElementById('storeZoneWrap').style.display = (livraison && avecZones) ? 'block' : 'none';
+    const libre = document.getElementById('storeZoneLibre');
+    libre.style.display = (livraison && !avecZones) ? 'block' : 'none';
+    if(livraison && !avecZones){
+      libre.textContent = storeSite.fraisLivraison
+        ? 'Frais de livraison : ' + Number(storeSite.fraisLivraison).toLocaleString('fr-FR') + ' GNF' +
+          (storeSite.delaiLivraison ? ' — environ ' + storeSite.delaiLivraison + ' min.' : '.')
+        : "Ce restaurant n'a pas fixé de frais de livraison : ils vous seront confirmés à l'appel.";
+    }
+
     document.getElementById('ficheModeSurPlaceLbl').classList.toggle('on', !livraison);
     document.getElementById('ficheModeLivraisonLbl').classList.toggle('on', livraison);
     recalculerTotal();
@@ -3195,9 +3658,15 @@
     let fraisLivraison = 0, delaiMinutes = 0, zoneNom = '';
 
     if(mode === 'livraison'){
-      const zoneId = document.getElementById('storeZone').value;
-      const zone = storeZones.find(z => z.id === zoneId);
-      if(zone){ fraisLivraison = zone.fraisLivraison||0; delaiMinutes = zone.delaiMinutes||0; zoneNom = zone.nom; }
+      if(storeZones.length){
+        const zoneId = document.getElementById('storeZone').value;
+        const zone = storeZones.find(z => z.id === zoneId);
+        if(zone){ fraisLivraison = zone.fraisLivraison||0; delaiMinutes = zone.delaiMinutes||0; zoneNom = zone.nom; }
+      } else {
+        fraisLivraison = Number(storeSite.fraisLivraison) || 0;
+        delaiMinutes = Number(storeSite.delaiLivraison) || 0;
+        zoneNom = '';
+      }
     }
     const total = sousTotal + storeFraisService + fraisLivraison;
     const gnf = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
@@ -3285,24 +3754,21 @@
       clientNom: clientNom || null,
       clientPrenom: prenom || null,
       clientTelephone: clientTelephone || null,
+      clientEmail: document.getElementById('ficheEmail').value.trim() || null,
       quartier: document.getElementById('ficheQuartier').value.trim() || null,
       adresse: document.getElementById('ficheAdresse').value.trim() || null,
     };
 
+    // La commande est déposée en attente de validation : son montant
+    // n'entre dans les recettes que lorsque le restaurant la valide
+    // depuis sa zone de notification.
     const base = 'agr_tenants/' + storeTenantCode + '/';
-    await window._agrSet(window._agrPush(agrRef(base + 'commandes')), commande);
-
-    // Suivi dédié : c'est cette liste que le gérant traite dans l'onglet Page web
     await window._agrSet(window._agrPush(agrRef(base + 'commandesEnLigne')), Object.assign({}, commande, {
       statut: 'nouvelle',
       canal: (extra && extra.canal) || 'page_web',
       total,
       note: (extra && extra.note) || null,
     }));
-
-    if(clientTelephone){
-      await enregistrerClient(storeTenantCode, clientNom, clientTelephone, total);
-    }
     return commande;
   }
 
@@ -3332,9 +3798,7 @@
     const code = await resoudreAdressePublique(slug);
     if(code){ chargerRestaurant(code, slug); return true; }
 
-    afficherAnnuaire();
-    document.getElementById('sfDirNote').textContent =
-      "Cette adresse ne correspond à aucun restaurant en ligne.";
+    pageIntrouvable();
     return true;
   }
 
@@ -3373,6 +3837,196 @@
   }
 
   window.addEventListener('hashchange', ouvrirDepuisLien);
+
+  // ===============================================================
+  // CLIENT RECONNU — les informations saisies lors d'une première
+  // commande sont conservées sur l'appareil du client. À la visite
+  // suivante il n'a plus qu'à choisir ses plats et la quantité.
+  // Rien n'est envoyé ailleurs : tout reste dans le navigateur.
+  // ===============================================================
+  const CLE_CLIENT = 'agr_client';
+  const CLE_PANIER = 'agr_panier';
+  let clientConnu = null;
+
+  function lireStockage(cle){
+    try { const v = localStorage.getItem(cle); return v ? JSON.parse(v) : null; }
+    catch(e){ return null; }   // navigation privée ou stockage refusé
+  }
+  function ecrireStockage(cle, valeur){
+    try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch(e){}
+  }
+  function effacerStockage(cle){
+    try { localStorage.removeItem(cle); } catch(e){}
+  }
+
+  function chargerClientConnu(){
+    clientConnu = lireStockage(CLE_CLIENT);
+    const bandeau = document.getElementById('ficheRetour');
+
+    if(!clientConnu || !clientConnu.prenom){
+      bandeau.style.display = 'none';
+      document.getElementById('ficheReplierBtn').style.display = 'none';
+      afficherChampsInfos(true);
+      return;
+    }
+
+    ['Nom','Prenom','Telephone','Email','Quartier','Adresse'].forEach(champ => {
+      const el = document.getElementById('fiche' + champ);
+      if(el) el.value = clientConnu[champ.toLowerCase()] || '';
+    });
+
+    document.getElementById('ficheRetourTexte').textContent =
+      'Bon retour, ' + clientConnu.prenom + ' ! Vos informations sont déjà remplies.';
+    bandeau.style.display = 'flex';
+    document.getElementById('ficheReplierBtn').style.display = 'inline-block';
+    afficherChampsInfos(false);
+  }
+
+  // Client reconnu : les champs sont repliés en résumé, modifiables d'un clic
+  function afficherChampsInfos(ouvert){
+    document.getElementById('ficheInfosChamps').style.display = ouvert ? 'block' : 'none';
+    const resume = document.getElementById('ficheInfosResume');
+    resume.style.display = ouvert ? 'none' : 'block';
+    document.getElementById('ficheReplierBtn').textContent = ouvert ? 'Replier' : 'Modifier';
+
+    if(!ouvert && clientConnu){
+      resume.className = 'fiche-resume';
+      resume.innerHTML =
+        `<div><b>${echapper((clientConnu.prenom || '') + ' ' + (clientConnu.nom || ''))}</b></div>` +
+        `<div>${echapper(clientConnu.telephone || '')}${clientConnu.email ? ' · ' + echapper(clientConnu.email) : ''}</div>` +
+        `<div>${echapper([clientConnu.quartier, clientConnu.adresse].filter(Boolean).join(' — ') || '')}</div>`;
+    }
+  }
+
+  function basculerInfosClient(){
+    afficherChampsInfos(document.getElementById('ficheInfosChamps').style.display === 'none');
+  }
+
+  function oublierClient(){
+    effacerStockage(CLE_CLIENT);
+    clientConnu = null;
+    ['Nom','Prenom','Telephone','Email','Quartier','Adresse'].forEach(c => {
+      const el = document.getElementById('fiche' + c); if(el) el.value = '';
+    });
+    document.getElementById('ficheRetour').style.display = 'none';
+    document.getElementById('ficheReplierBtn').style.display = 'none';
+    afficherChampsInfos(true);
+  }
+
+  function memoriserClient(){
+    const c = {
+      nom: document.getElementById('ficheNom').value.trim(),
+      prenom: document.getElementById('fichePrenom').value.trim(),
+      telephone: document.getElementById('ficheTelephone').value.trim(),
+      email: document.getElementById('ficheEmail').value.trim(),
+      quartier: document.getElementById('ficheQuartier').value.trim(),
+      adresse: document.getElementById('ficheAdresse').value.trim(),
+      majLe: Date.now(),
+    };
+    if(c.prenom || c.nom){ clientConnu = c; ecrireStockage(CLE_CLIENT, c); }
+  }
+
+  // ===============================================================
+  // RELANCE — commande commencée puis abandonnée
+  // Au bout de 10 minutes sans validation, un rappel discret propose
+  // de reprendre. Le panier survit aussi à une fermeture de l'onglet.
+  // ===============================================================
+  const DELAI_RELANCE = 10 * 60 * 1000;
+  let minuteurRelance = null;
+
+  function sauvegarderPanier(){
+    if(!storeTenantCode) return;
+    const lignes = Object.entries(cart).filter(([,q]) => q > 0);
+    if(!lignes.length){ effacerStockage(CLE_PANIER); return; }
+    ecrireStockage(CLE_PANIER, { code: storeTenantCode, cart, majLe: Date.now() });
+  }
+
+  function armerRelance(){
+    if(minuteurRelance) clearTimeout(minuteurRelance);
+    const nb = Object.values(cart).reduce((s,q) => s + q, 0);
+    if(!nb) { masquerRelance(); return; }
+    minuteurRelance = setTimeout(afficherRelance, DELAI_RELANCE);
+  }
+
+  function afficherRelance(){
+    const nb = Object.values(cart).reduce((s,q) => s + q, 0);
+    if(!nb) return;
+    if(document.getElementById('cartTrackerWrap').style.display === 'block') return; // déjà validée
+
+    const total = recalculerTotal().total;
+    document.getElementById('relanceTexte').textContent =
+      'Vous avez ' + nb + ' plat(s) sélectionné(s) pour ' + fmtGNF(total) +
+      ', mais la commande n\'a pas été validée. Voulez-vous la terminer ?';
+    document.getElementById('relanceCommande').classList.add('on');
+  }
+
+  function masquerRelance(){
+    document.getElementById('relanceCommande').classList.remove('on');
+  }
+
+  function reprendreCommande(){
+    masquerRelance();
+    ouvrirFiche();
+  }
+
+  // « Plus tard » : le panier est conservé, le rappel revient plus tard
+  function abandonnerRelance(){
+    masquerRelance();
+    armerRelance();
+  }
+
+  // Panier retrouvé d'une visite précédente (même restaurant, moins de 24 h)
+  function restaurerPanier(){
+    const sauve = lireStockage(CLE_PANIER);
+    if(!sauve || sauve.code !== storeTenantCode) return false;
+    if(Date.now() - (sauve.majLe || 0) > 24 * 60 * 60 * 1000){ effacerStockage(CLE_PANIER); return false; }
+
+    const valide = {};
+    Object.entries(sauve.cart || {}).forEach(([id, q]) => {
+      if(q > 0 && storeMenuItems.some(m => m.id === id)) valide[id] = q;
+    });
+    if(!Object.keys(valide).length) return false;
+
+    cart = valide;
+    renderCart();
+    setTimeout(afficherRelance, 2500);   // laisser la page s'afficher d'abord
+    return true;
+  }
+
+  // ===============================================================
+  // CARTE COMPLÈTE remise au client après sa commande
+  // ===============================================================
+  function renderCarteClient(){
+    const el = document.getElementById('carteClient');
+    if(!el) return;
+    const parCategorie = {};
+    storeMenuItems.forEach(p => {
+      const c = p.categorie || 'Autres';
+      (parCategorie[c] = parCategorie[c] || []).push(p);
+    });
+    el.innerHTML = Object.entries(parCategorie).map(([cat, plats]) =>
+      `<h5>${echapper(cat)}</h5>` + plats.map(p =>
+        `<div class="plat"><span>${echapper(p.nom)}</span><span>${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</span></div>`
+      ).join('')
+    ).join('') || '<div style="color:var(--text-dim);">Carte non disponible.</div>';
+  }
+
+  function envoyerCarteWhatsapp(){
+    if(!storeSite.whatsapp) return;
+    const nom = document.getElementById('storeRestaurantName').textContent;
+    const parCategorie = {};
+    storeMenuItems.forEach(p => {
+      const c = p.categorie || 'Autres';
+      (parCategorie[c] = parCategorie[c] || []).push(p);
+    });
+    const lignes = ['Bonjour, merci de m\'envoyer la carte de ' + nom + '. Voici celle que j\'ai reçue :', ''];
+    Object.entries(parCategorie).forEach(([cat, plats]) => {
+      lignes.push('— ' + cat.toUpperCase() + ' —');
+      plats.forEach(p => lignes.push('• ' + p.nom + ' : ' + Number(p.prixVente||0).toLocaleString('fr-FR') + ' GNF'));
+      lignes.push('');
+    });
+    window.open('https://wa.me/' + storeSite.whatsapp + '?text=' + encodeURIComponent(lignes.join('\n')), '_blank');
+  }
 
   // ---------------------------------------------------------------
   // FICHE DE COMMANDE
@@ -3476,6 +4130,8 @@
       </table>`;
     }
     recalculerTotal();
+    sauvegarderPanier();
+    armerRelance();
   }
 
   function ficheErreur(message){
@@ -3492,6 +4148,7 @@
     const nom = document.getElementById('ficheNom').value.trim();
     const prenom = document.getElementById('fichePrenom').value.trim();
     const tel = document.getElementById('ficheTelephone').value.trim();
+    const email = document.getElementById('ficheEmail').value.trim();
     const quartier = document.getElementById('ficheQuartier').value.trim();
     const adresse = document.getElementById('ficheAdresse').value.trim();
     const mode = modeFiche();
@@ -3500,6 +4157,7 @@
     if(!nom)    return ficheErreur('Indiquez votre nom.');
     if(!prenom) return ficheErreur('Indiquez votre prénom.');
     if(tel.replace(/[^0-9]/g, '').length < 8) return ficheErreur('Indiquez un numéro de téléphone valide.');
+    if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return ficheErreur("L'adresse email saisie n'est pas valide.");
     if(mode === 'livraison' && !quartier) return ficheErreur('Indiquez votre quartier pour la livraison.');
     if(mode === 'livraison' && !adresse)  return ficheErreur("Indiquez votre adresse pour la livraison.");
 
@@ -3520,13 +4178,18 @@
 
       ficheDerniereCommande = {
         numero: ficheNumeroCourant,
-        nom, prenom, tel, quartier, adresse,
+        nom, prenom, tel, email, quartier, adresse,
         totaux,
         plats: entries.map(([id, q]) => {
           const it = storeMenuItems.find(m => m.id === id) || {};
           return { nom: it.nom, qty: q, prix: it.prixVente || 0 };
         }),
       };
+
+      memoriserClient();          // le client sera reconnu à sa prochaine visite
+      effacerStockage(CLE_PANIER);
+      if(minuteurRelance) clearTimeout(minuteurRelance);
+      masquerRelance();
 
       afficherConfirmationFiche();
       demarrerChrono(totaux.mode === 'livraison' ? (totaux.delaiMinutes || 30) : 20);
@@ -3555,6 +4218,7 @@
 
     const wa = document.getElementById('waBtn');
     wa.style.display = storeSite.whatsapp ? 'flex' : 'none';
+    renderCarteClient();
     cart = {};
   }
 
@@ -3570,6 +4234,7 @@
       'Nom : ' + c.nom + ' ' + c.prenom,
       'Téléphone : ' + c.tel,
     ];
+    if(c.email) txt.push('Email : ' + c.email);
     if(c.quartier) txt.push('Quartier : ' + c.quartier);
     if(c.adresse)  txt.push('Adresse : ' + c.adresse);
     txt.push('', 'Plats :');
@@ -3593,8 +4258,8 @@
     document.getElementById('cartOrderForm').style.display = 'block';
     document.getElementById('cartTrackerWrap').style.display = 'none';
     document.getElementById('paidBanner').style.display = 'none';
-    ['ficheNom','fichePrenom','ficheTelephone','ficheQuartier','ficheAdresse','storeClientNote']
-      .forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('storeClientNote').value = '';
+    chargerClientConnu();   // les coordonnées connues restent pré-remplies
     ficheErreur(null);
     ficheDerniereCommande = null;
     ficheNumeroCourant = null;
@@ -3698,19 +4363,40 @@
   async function renderOrdersTable(){
     const body = document.getElementById('ordersTableBody');
     if(!body || !currentTenantId) return;
+    initBarrePeriode('commandes', { defaut:'mois', rendu: renderOrdersTable });
     try {
       const commandes = await agrGet('agr_tenants/' + currentTenantId + '/commandes') || {};
-      const list = Object.values(commandes).sort((a,b) => (b.date||0) - (a.date||0));
-
-      if(list.length === 0){
-        body.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">Aucune commande pour l\'instant.</td></tr>';
-        return;
-      }
+      const list = Object.values(commandes).filter(o => dansPeriode(o.date, 'commandes'))
+                                           .sort((a,b) => (b.date||0) - (a.date||0));
 
       const totalRevenu = list.reduce((s,o) => s + (o.revenu || 0), 0);
+      const totalPlats = list.reduce((s,o) => s + (o.platsVendus || 0), 0);
+
+      definirFiche('commandes', {
+        titre: 'Journal des commandes',
+        colonnes: [{titre:'N°'},{titre:'Date'},{titre:'Origine'},{titre:'Client'},
+                   {titre:'Plats',num:true},{titre:'Revenu',num:true}],
+        lignes: list.map((o,i) => [
+          o.numero || ('#' + (list.length - i)),
+          new Date(o.date||0).toLocaleDateString('fr-FR') + ' ' + heureCourte(o.date),
+          o.origine || 'Salle', o.clientNom || '—',
+          o.platsVendus || 0, Number(o.revenu||0).toLocaleString('fr-FR'),
+        ]),
+        totaux: [
+          { libelle: 'Nombre de commandes', valeur: list.length },
+          { libelle: 'Total des plats vendus', valeur: totalPlats },
+          { libelle: 'Revenu total (GNF)', valeur: totalRevenu.toLocaleString('fr-FR') },
+        ],
+        signatureGauche: 'Le caissier', signatureDroite: 'La direction',
+      });
+
+      if(list.length === 0){
+        body.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">Aucune commande sur cette période.</td></tr>';
+        return;
+      }
       body.innerHTML = list.map((o,i) => `
         <tr>
-          <td>Commande #${list.length - i}</td>
+          <td>${o.numero || 'Commande #' + (list.length - i)}</td>
           <td>${o.origine || 'Salle'}</td>
           <td>${o.platsVendus || 0}</td>
           <td>${(o.revenu || 0).toLocaleString('fr-FR')} GNF</td>
@@ -3747,7 +4433,8 @@
   // Navigation entre les sections du tableau de bord (onglets latéraux)
   // ---------------------------------------------------------------
   const sectionTitles = {
-    overview: 'Tableau de bord', commandes: 'Commandes', tables: 'Tables',
+    overview: 'Tableau de bord', notifications: 'Notifications — commandes en ligne',
+    commandes: 'Commandes', tables: 'Tables',
     service: 'Service en salle', encaissement: 'Encaissement',
     pageweb: 'Page web du restaurant',
     menu: 'Menu & Catégories', stocks: 'Stocks', clients: 'Clients & Fidélité',
@@ -3798,11 +4485,11 @@
     dg:          '*',
     fondateur:   '*',
     super_admin: '*',
-    gerant:      ['overview','commandes','service','encaissement','tables','menu','pageweb',
+    gerant:      ['overview','notifications','commandes','service','encaissement','tables','menu','pageweb',
                   'stocks','clients','depenses','rh','pointage','evaluation','audit'],
     cuisinier:   ['menu','stocks','commandes'],
     serveur:     ['service','tables','commandes'],
-    caissier:    ['encaissement','commandes'],
+    caissier:    ['encaissement','commandes','notifications'],
     comptable:   ['comptabilite','depenses','banque','rh'],
     rh:          ['rh','pointage','evaluation'],
     employe:     ['pointage'],
@@ -3848,6 +4535,7 @@
       el.classList.toggle('active', el.dataset.section === name);
     });
     document.getElementById('sectionTitle').textContent = sectionTitles[name] || 'Tableau de bord';
+    sectionCourante = name;
     if(isDrawerMode()) closeSidebar();
 
     if(name === 'parametres') loadParametres();
@@ -3868,6 +4556,7 @@
     if(name === 'service') loadServiceSection();
     if(name === 'encaissement') loadEncaissementSection();
     if(name === 'pageweb') loadPageWeb();
+    if(name === 'notifications') loadNotifications();
   }
 
   // ---------------------------------------------------------------
@@ -3921,6 +4610,60 @@
       document.getElementById('conceptEmailInput').value = '';
       document.getElementById('conceptPasswordInput').value = '';
       document.getElementById('conceptPasswordErr').style.display = 'none';
+    }
+  }
+
+  // Aide au dépannage : dit si un compte existe, et lequel (email seul —
+  // le mot de passe n'est jamais réaffiché ici).
+  async function diagnostiquerConcepteur(){
+    const aide = document.getElementById('conceptAide');
+    const creation = document.getElementById('conceptCreation');
+    aide.style.display = 'block';
+    aide.textContent = 'Vérification…';
+
+    try {
+      const admins = await agrGet('agr_platform_admins') || {};
+      const liste = Object.values(admins).filter(a => a && a.email);
+
+      if(!liste.length){
+        aide.innerHTML = 'Aucun compte concepteur n\'est enregistré dans la base. Créez-le ci-dessous.';
+        creation.style.display = 'block';
+        return;
+      }
+
+      creation.style.display = 'none';
+      aide.innerHTML =
+        'Compte(s) enregistré(s) : <strong>' + liste.map(a => echapper(a.email)).join(', ') + '</strong>.<br><br>' +
+        'Le mot de passe n\'est pas réaffiché ici. Pour le lire ou le changer : ' +
+        'console Firebase → Realtime Database → nœud <strong>agr_platform_admins</strong>. ' +
+        'Il y figure en clair, à côté de l\'email.';
+    } catch(e){
+      aide.textContent = 'Impossible de joindre la base pour vérifier les comptes concepteur.';
+    }
+  }
+
+  async function creerCompteConcepteur(){
+    const email = document.getElementById('conceptNewEmail').value.trim();
+    const mdp = document.getElementById('conceptNewPassword').value;
+    const aide = document.getElementById('conceptAide');
+
+    if(!email || !mdp){ aide.textContent = 'Email et mot de passe requis.'; return; }
+    if(mdp.length < 8){ aide.textContent = 'Le mot de passe doit compter au moins 8 caractères.'; return; }
+
+    try {
+      // Protection : on ne crée un compte que si la liste est réellement vide
+      const admins = await agrGet('agr_platform_admins') || {};
+      if(Object.values(admins).some(a => a && a.email)){
+        aide.textContent = 'Un compte concepteur existe déjà — impossible d\'en créer un autre depuis cet écran.';
+        document.getElementById('conceptCreation').style.display = 'none';
+        return;
+      }
+      await agrSet('agr_platform_admins/principal', { email, password: mdp, creeLe: Date.now() });
+      aide.innerHTML = 'Compte créé. Connectez-vous avec <strong>' + echapper(email) + '</strong>.';
+      document.getElementById('conceptCreation').style.display = 'none';
+      document.getElementById('conceptEmailInput').value = email;
+    } catch(e){
+      aide.textContent = 'Création impossible — vérifiez la connexion à Firebase.';
     }
   }
 
@@ -4156,6 +4899,16 @@
     try {
       await agrSet('agr_tenants/' + code + '/info/statut', statut);
       r.info.statut = statut;
+
+      // La page web publique suit immédiatement le statut du restaurant
+      try {
+        const site = await agrGet('agr_tenants/' + code + '/siteweb');
+        if(site && site.slug){
+          await agrSet('agr_sites/' + site.slug + '/bloque', statut === 'bloque');
+          await agrSet('agr_sites/' + site.slug + '/actif', statut !== 'bloque' && site.actif !== false);
+        }
+      } catch(e){ /* la page reste protégée par le contrôle à l'ouverture */ }
+
       if(bloque && (!r.info.dateExpiration || Date.now() > r.info.dateExpiration)){
         const nouvelle = Date.now() + 30 * CDB_JOUR;
         await agrSet('agr_tenants/' + code + '/info/dateExpiration', nouvelle);
@@ -4351,6 +5104,8 @@
 
     try {
       const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
+      infoRestaurant = info;
+      ecouterNotifications();
       updateDashboardSeal(info.logo || null);
       if(info.themeAccent || info.themeSecondary) applyTheme(info.themeAccent, info.themeSecondary);
       if(info.sidebarBg) applySidebarTheme(info.sidebarBg);
@@ -4362,6 +5117,8 @@
 
   function doLogout(){
     closeSidebar();
+    notifTenantEcoute = null; notifCommandes = []; notifIdsConnus = null;
+    infoRestaurant = {};
     currentRole = null; currentTenantId = null; currentUserId = null;
     document.getElementById('loginPassword').value = '';
     showView('home');
@@ -4769,7 +5526,7 @@
       const montantEncaisseJour = encJour.reduce((t,e) => t + (e.montant || 0), 0);
 
       const enligneJour = listeEnligne.filter(c => estAujourdhui(c.date));
-      const nonGerees = enligneJour.filter(c => c.statut !== 'traitee').length;
+      const nonGerees = enligneJour.filter(c => statutCommande(c) === 'attente').length;
 
       document.getElementById('kpiPlatsServis').textContent = servisJour;
       document.getElementById('kpiPlatsPayes').textContent = platsPayesJour;
@@ -4777,7 +5534,8 @@
       document.getElementById('kpiEnligneJour').textContent = enligneJour.length;
       document.getElementById('kpiEnligneNonGerees').textContent = nonGerees;
       document.getElementById('kpiEnligneGerees').textContent =
-        (enligneJour.length - nonGerees) + ' déjà gérée(s)';
+        enligneJour.filter(c => statutCommande(c) === 'validee').length + ' validée(s) · ' +
+        enligneJour.filter(c => statutCommande(c) === 'rejetee').length + ' rejetée(s)';
       document.getElementById('kpiEnligneGerees').className = 'delta ' + (nonGerees ? 'down' : 'up');
 
       // ---- Graphique 1 : chiffre d'affaires des 14 derniers jours
@@ -4796,7 +5554,7 @@
       listeEnligne.forEach(c => {
         const k = jourKey(c.date);
         if(!enligneParJour[k]) enligneParJour[k] = { gerees: 0, non: 0 };
-        if(c.statut === 'traitee') enligneParJour[k].gerees++; else enligneParJour[k].non++;
+        if(statutCommande(c) === 'validee') enligneParJour[k].gerees++; else enligneParJour[k].non++;
       });
       chartStacked(document.getElementById('chartEnligne'),
         jours7.map(j => ({
@@ -4852,7 +5610,7 @@
 
       const alertes = [];
       if(nonGerees > 0)
-        alertes.push('🔴 <strong>' + nonGerees + ' commande(s) en ligne non gérée(s)</strong> aujourd\'hui — à traiter dans l\'onglet Page web.');
+        alertes.push('🔴 <strong>' + nonGerees + ' commande(s) en ligne en attente de validation</strong> — leur montant n\'est pas encore compté en recette. À traiter dans l\'onglet Notifications.');
       if(servisJour > platsPayesJour)
         alertes.push('🟠 <strong>' + (servisJour - platsPayesJour) + ' plat(s) servis mais pas encore encaissés</strong> aujourd\'hui — écart à vérifier avec la caisse.');
       if(platsPayesJour > servisJour && platsPayesJour > 0)
@@ -4899,20 +5657,37 @@
   async function renderServiceDuJour(){
     const body = document.getElementById('serviceTableBody');
     const sub = document.getElementById('serviceSub');
+    initBarrePeriode('service', { defaut:'jour', rendu: renderServiceDuJour });
     try {
       const services = await agrGet('agr_tenants/' + currentTenantId + '/service') || {};
-      const jour = Object.values(services).filter(s => estAujourdhui(s.date))
-                                          .sort((a,b) => (b.date||0) - (a.date||0));
-      if(!jour.length){
-        body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">Aucun plat servi déclaré aujourd\'hui.</td></tr>';
-        sub.textContent = "Aucun plat servi déclaré aujourd'hui.";
+      const liste = Object.values(services).filter(s => dansPeriode(s.date, 'service'))
+                                           .sort((a,b) => (b.date||0) - (a.date||0));
+      const total = liste.reduce((t,s) => t + (s.quantite || 0), 0);
+
+      definirFiche('service', {
+        titre: 'Fiche de service en salle',
+        colonnes: [{titre:'Date'},{titre:'Heure'},{titre:'Table'},{titre:'Plat'},
+                   {titre:'Servis',num:true},{titre:'Serveur'},{titre:'Observation'}],
+        lignes: liste.map(s => [
+          new Date(s.date||0).toLocaleDateString('fr-FR'), heureCourte(s.date), s.table || '—',
+          s.platNom || '—', s.quantite || 0, s.par || '—', s.note || '—',
+        ]),
+        totaux: [
+          { libelle: 'Nombre de déclarations', valeur: liste.length },
+          { libelle: 'Total des plats servis', valeur: total },
+        ],
+        signatureGauche: 'Le serveur', signatureDroite: 'Le gérant',
+      });
+
+      if(!liste.length){
+        body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">Aucun plat servi déclaré sur cette période.</td></tr>';
+        sub.textContent = 'Aucun plat servi déclaré sur cette période.';
         return;
       }
-      const total = jour.reduce((t,s) => t + (s.quantite || 0), 0);
-      sub.textContent = total + ' plat(s) servi(s) aujourd\'hui, sur ' + jour.length + ' déclaration(s).';
-      body.innerHTML = jour.map(s => `
+      sub.textContent = total + ' plat(s) servi(s), sur ' + liste.length + ' déclaration(s).';
+      body.innerHTML = liste.map(s => `
         <tr>
-          <td>${heureCourte(s.date)}</td>
+          <td>${new Date(s.date||0).toLocaleDateString('fr-FR')} ${heureCourte(s.date)}</td>
           <td>${s.table || '—'}</td>
           <td>${s.platNom || '—'}</td>
           <td>${s.quantite || 0}</td>
@@ -4920,7 +5695,7 @@
           <td>${s.note || ''}</td>
         </tr>`).join('');
     } catch(e){
-      body.innerHTML = '<tr><td colspan="6" style="color:#E19488;">Impossible de charger les services du jour.</td></tr>';
+      body.innerHTML = '<tr><td colspan="6" style="color:#E19488;">Impossible de charger les services.</td></tr>';
     }
   }
 
@@ -4997,21 +5772,40 @@
     const body = document.getElementById('encTableBody');
     const sub = document.getElementById('encSub');
     const modes = { especes:'Espèces', orange_money:'Orange Money', mobile_money:'Mobile Money', carte:'Carte', virement:'Virement' };
+    initBarrePeriode('encaissements', { defaut:'jour', rendu: renderEncaissementsDuJour });
     try {
       const encs = await agrGet('agr_tenants/' + currentTenantId + '/encaissements') || {};
-      const jour = Object.values(encs).filter(e => estAujourdhui(e.date))
-                                      .sort((a,b) => (b.date||0) - (a.date||0));
-      if(!jour.length){
-        body.innerHTML = '<tr><td colspan="7" style="color:var(--text-dim);">Aucun encaissement enregistré aujourd\'hui.</td></tr>';
-        sub.textContent = "Aucun encaissement enregistré aujourd'hui.";
+      const liste = Object.values(encs).filter(e => dansPeriode(e.date, 'encaissements'))
+                                       .sort((a,b) => (b.date||0) - (a.date||0));
+
+      const nbPlats = liste.reduce((t,e) => t + (e.quantite || 0), 0);
+      const total = liste.reduce((t,e) => t + (e.montant || 0), 0);
+
+      definirFiche('encaissements', {
+        titre: 'Fiche des encaissements',
+        colonnes: [{titre:'Date'},{titre:'Heure'},{titre:'Plat'},{titre:'Qté',num:true},
+                   {titre:'P. unitaire',num:true},{titre:'Montant',num:true},{titre:'Mode'},{titre:'Caissier'}],
+        lignes: liste.map(e => [
+          new Date(e.date||0).toLocaleDateString('fr-FR'), heureCourte(e.date), e.platNom || '—',
+          e.quantite || 0, Number(e.prixUnitaire||0).toLocaleString('fr-FR'),
+          Number(e.montant||0).toLocaleString('fr-FR'), modes[e.mode] || e.mode || '—', e.par || '—',
+        ]),
+        totaux: [
+          { libelle: 'Nombre de plats payés', valeur: nbPlats },
+          { libelle: 'Total encaissé (GNF)', valeur: total.toLocaleString('fr-FR') },
+        ],
+        signatureGauche: 'Le caissier', signatureDroite: 'Le gérant',
+      });
+
+      if(!liste.length){
+        body.innerHTML = '<tr><td colspan="7" style="color:var(--text-dim);">Aucun encaissement sur cette période.</td></tr>';
+        sub.textContent = 'Aucun encaissement sur cette période.';
         return;
       }
-      const nbPlats = jour.reduce((t,e) => t + (e.quantite || 0), 0);
-      const total = jour.reduce((t,e) => t + (e.montant || 0), 0);
-      sub.textContent = nbPlats + ' plat(s) payé(s) aujourd\'hui pour ' + fmtGNF(total) + '.';
-      body.innerHTML = jour.map(e => `
+      sub.textContent = nbPlats + ' plat(s) payé(s) pour ' + fmtGNF(total) + '.';
+      body.innerHTML = liste.map(e => `
         <tr>
-          <td>${heureCourte(e.date)}</td>
+          <td>${new Date(e.date||0).toLocaleDateString('fr-FR')} ${heureCourte(e.date)}</td>
           <td>${e.platNom || '—'}</td>
           <td>${e.quantite || 0}</td>
           <td>${fmtGNF(e.prixUnitaire)}</td>
@@ -5130,6 +5924,9 @@
       document.getElementById('webFacebook').value = s.facebook || '';
       document.getElementById('webInstagram').value = s.instagram || '';
       document.getElementById('webPaiement').value = s.paiement || '';
+      document.getElementById('webFraisLivraison').value = s.fraisLivraison || '';
+      document.getElementById('webDelaiLivraison').value = s.delaiLivraison || '';
+      document.getElementById('webMotsCles').value = s.motsCles || '';
 
       document.getElementById('webOuvre').value = s.ouvre || '';
       document.getElementById('webFerme').value = s.ferme || '';
@@ -5268,6 +6065,9 @@
         instagram: document.getElementById('webInstagram').value.trim(),
         paiement: document.getElementById('webPaiement').value.trim(),
         images: webImages,
+        fraisLivraison: parseInt(document.getElementById('webFraisLivraison').value, 10) || 0,
+        delaiLivraison: parseInt(document.getElementById('webDelaiLivraison').value, 10) || 0,
+        motsCles: document.getElementById('webMotsCles').value.trim(),
         misAJourLe: Date.now(),
       });
 
@@ -5279,7 +6079,9 @@
         ville: webInfoRestaurant.ville || '',
         logo: webInfoRestaurant.logo || null,
         slogan: document.getElementById('webSlogan').value.trim(),
+        motsCles: document.getElementById('webMotsCles').value.trim(),
         actif,
+        bloque: webInfoRestaurant.statut === 'bloque',
         misAJourLe: Date.now(),
       });
       if(webSlugActuel && webSlugActuel !== slug){
@@ -5332,11 +6134,11 @@
     const filtre = document.getElementById('webCmdFiltre').value;
 
     const liste = webCommandes.filter(c =>
-      filtre === 'toutes' ? true : (filtre === 'traitee' ? c.statut === 'traitee' : c.statut !== 'traitee'));
+      filtre === 'toutes' ? true : (filtre === 'traitee' ? statutCommande(c) === 'validee' : statutCommande(c) === 'attente'));
 
-    const nonGerees = webCommandes.filter(c => c.statut !== 'traitee').length;
+    const enAttente = webCommandes.filter(c => statutCommande(c) === 'attente').length;
     const duJour = webCommandes.filter(c => estAujourdhui(c.date)).length;
-    sub.textContent = duJour + ' commande(s) reçue(s) aujourd\'hui · ' + nonGerees + ' non gérée(s) au total.';
+    sub.textContent = duJour + ' commande(s) reçue(s) aujourd\'hui · ' + enAttente + ' en attente de validation.';
 
     if(!liste.length){
       body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">Aucune commande pour ce filtre.</td></tr>';
@@ -5345,161 +6147,673 @@
 
     body.innerHTML = liste.map(c => {
       const plats = Object.values(c.plats || {}).map(p => (p.qty || 1) + '× ' + p.nom).join(', ');
-      const traitee = c.statut === 'traitee';
-      const tel = (c.clientTelephone || '').replace(/[^0-9]/g, '');
+      const st = statutCommande(c);
       return `
         <tr>
-          <td>${new Date(c.date||0).toLocaleDateString('fr-FR')} ${heureCourte(c.date)}</td>
-          <td>${c.clientNom || 'Client'}<div style="font-size:10.5px;color:var(--text-dim);">${c.clientTelephone || ''}</div></td>
-          <td style="font-family:'Inter',sans-serif;">${plats || '—'}</td>
+          <td>${new Date(c.date||0).toLocaleDateString('fr-FR')} ${heureCourte(c.date)}<div style="font-size:10.5px;color:var(--text-dim);">${echapper(c.numero || '')}</div></td>
+          <td>${echapper(c.clientNom || 'Client')}<div style="font-size:10.5px;color:var(--text-dim);">${echapper(c.clientTelephone || '')}</div></td>
+          <td style="font-family:'Inter',sans-serif;">${echapper(plats || '—')}</td>
           <td>${fmtGNF(c.total)}</td>
-          <td><span class="etat-badge ${traitee ? 'traitee' : 'nouvelle'}">${traitee ? 'Gérée' : 'Non gérée'}</span></td>
+          <td><span class="etat-badge ${st}">${libelleStatut[st]}</span></td>
           <td>
             <div style="display:flex; gap:5px; flex-wrap:wrap;">
-              <button class="cdb-btn ${traitee ? '' : 'ok'}" onclick="basculerCommandeEnLigne('${c.id}')">${traitee ? 'Rouvrir' : 'Marquer gérée'}</button>
-              ${tel ? `<a class="cdb-btn" href="https://wa.me/${tel}" target="_blank">WhatsApp client</a>` : ''}
+              <button class="cdb-btn" onclick="imprimerFicheCommande('${c.id}')">Fiche</button>
+              ${st !== 'validee' ? `<button class="cdb-btn ok" onclick="validerCommandeEnLigne('${c.id}')">Valider</button>` : ''}
+              ${st !== 'rejetee' ? `<button class="cdb-btn danger" onclick="rejeterCommandeEnLigne('${c.id}')">Rejeter</button>` : ''}
             </div>
           </td>
         </tr>`;
     }).join('');
   }
 
-  async function basculerCommandeEnLigne(id){
-    const c = webCommandes.find(x => x.id === id);
-    if(!c) return;
-    const nouveau = c.statut === 'traitee' ? 'nouvelle' : 'traitee';
+  // ===============================================================
+  // DOCUMENTS IMPRIMABLES
+  // Toutes les fiches (commande, employé, dépense, registre) sont
+  // construites avec la même mise en page : en-tête du restaurant,
+  // titre, références, corps, totaux, signatures et pied de page.
+  // ===============================================================
+  let infoRestaurant = {};       // identité du restaurant connecté
+  let sectionCourante = 'overview';
+
+  function echapper(t){
+    return String(t == null ? '' : t)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function dateLongue(ts){
+    return new Date(ts || Date.now()).toLocaleDateString('fr-FR',
+      { day:'2-digit', month:'long', year:'numeric' });
+  }
+
+  function enteteDocument(titre, sousTitre){
+    const i = infoRestaurant || {};
+    const coord = [i.adresse, i.ville].filter(Boolean).join(', ');
+    return `
+      <div class="doc-entete">
+        ${i.logo ? `<img src="${i.logo}" alt="">` : ''}
+        <div>
+          <div class="nom">${echapper(i.nomRestaurant || currentTenantId || 'Restaurant')}</div>
+          <div class="coord">
+            ${coord ? echapper(coord) + '<br>' : ''}
+            ${i.telephone ? 'Tél. ' + echapper(i.telephone) : ''}
+            ${i.email ? ' · ' + echapper(i.email) : ''}
+          </div>
+        </div>
+        <div class="droite">
+          Édité le ${dateLongue(Date.now())}<br>
+          par ${echapper(nomUtilisateurCourant())}<br>
+          ${echapper(roleLabels[currentRole] || currentRole || '')}
+        </div>
+      </div>
+      <div class="doc-titre">${echapper(titre)}</div>
+      ${sousTitre ? `<div class="doc-soustitre">${echapper(sousTitre)}</div>` : ''}`;
+  }
+
+  function piedDocument(mention){
+    return `<div class="doc-pied">
+      <span>${echapper(infoRestaurant.nomRestaurant || currentTenantId || '')} — document interne</span>
+      <span>${echapper(mention || 'Édité avec AGR')}</span>
+    </div>`;
+  }
+
+  function signaturesDocument(gauche, droite){
+    return `<div class="doc-signatures">
+      <div>${echapper(gauche)}<div class="ligne">Nom et signature</div></div>
+      <div>${echapper(droite)}<div class="ligne">Nom et signature</div></div>
+    </div>`;
+  }
+
+  // Envoie un document à l'imprimante sans quitter l'application
+  // ===============================================================
+  // FICHES PÉRIODIQUES
+  // Un même mécanisme pour tous les tableaux de l'application :
+  // filtre par jour / mois / année, et impression d'une fiche portant
+  // l'en-tête du restaurant (logo, adresse, téléphone) et la période.
+  // ===============================================================
+  const fichesPeriodes = {};   // clé -> { mode, jour, mois, annee }
+  const fichesRendu    = {};   // clé -> fonction de rendu à rappeler
+  const fichesDonnees  = {};   // clé -> dernier jeu de données affiché
+
+  const MOIS_FR = ['janvier','février','mars','avril','mai','juin',
+                   'juillet','août','septembre','octobre','novembre','décembre'];
+
+  function isoJour(d){
+    const x = new Date(d);
+    return x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0');
+  }
+
+  // Construit la barre de période au-dessus d'un tableau. Idempotent :
+  // les appels suivants ne font que rafraîchir le libellé.
+  function initBarrePeriode(cle, config){
+    const el = document.getElementById('pb-' + cle);
+    if(!el) return;
+
+    fichesRendu[cle] = config.rendu || fichesRendu[cle];
+    if(!fichesPeriodes[cle]){
+      const n = new Date();
+      fichesPeriodes[cle] = {
+        mode: config.defaut || 'mois',
+        jour: isoJour(n),
+        mois: n.getMonth(),
+        annee: n.getFullYear(),
+      };
+    }
+    const p = fichesPeriodes[cle];
+
+    if(!el.dataset.pret){
+      const anneeCourante = new Date().getFullYear();
+      const annees = [];
+      for(let a = anneeCourante + 1; a >= anneeCourante - 6; a--) annees.push(a);
+
+      el.className = 'periode-bar';
+      el.innerHTML = config.sansPeriode ? `
+        <span class="periode-libelle" id="pbl-${cle}"></span>
+        <button class="mini-btn" onclick="imprimerFiche('${cle}')">🖨 Imprimer la fiche</button>
+      ` : `
+        <label>Période</label>
+        <select id="pbm-${cle}" onchange="majPeriode('${cle}')">
+          <option value="jour">Journalière</option>
+          <option value="mois">Mensuelle</option>
+          <option value="annee">Annuelle</option>
+          <option value="tout">Tout l'historique</option>
+        </select>
+        <input type="date" id="pbj-${cle}" value="${p.jour}" onchange="majPeriode('${cle}')">
+        <select id="pbmo-${cle}" onchange="majPeriode('${cle}')">
+          ${MOIS_FR.map((m,i) => `<option value="${i}">${m.charAt(0).toUpperCase()+m.slice(1)}</option>`).join('')}
+        </select>
+        <select id="pba-${cle}" onchange="majPeriode('${cle}')">
+          ${annees.map(a => `<option value="${a}">${a}</option>`).join('')}
+        </select>
+        <button class="mini-btn" onclick="imprimerFiche('${cle}')">🖨 Imprimer la fiche</button>
+        <span class="periode-libelle" id="pbl-${cle}"></span>
+      `;
+      el.dataset.pret = '1';
+
+      if(!config.sansPeriode){
+        document.getElementById('pbm-' + cle).value = p.mode;
+        document.getElementById('pbmo-' + cle).value = p.mois;
+        document.getElementById('pba-' + cle).value = p.annee;
+      }
+    }
+    majAffichagePeriode(cle, config.sansPeriode);
+  }
+
+  function majAffichagePeriode(cle, sansPeriode){
+    const p = fichesPeriodes[cle];
+    const lbl = document.getElementById('pbl-' + cle);
+    if(!sansPeriode){
+      const aff = (id, ok) => { const e = document.getElementById(id); if(e) e.style.display = ok ? '' : 'none'; };
+      aff('pbj-' + cle,  p.mode === 'jour');
+      aff('pbmo-' + cle, p.mode === 'mois');
+      aff('pba-' + cle,  p.mode === 'mois' || p.mode === 'annee');
+    }
+    if(lbl) lbl.textContent = libellePeriode(cle, sansPeriode);
+  }
+
+  function majPeriode(cle){
+    const p = fichesPeriodes[cle];
+    p.mode  = document.getElementById('pbm-' + cle).value;
+    p.jour  = document.getElementById('pbj-' + cle).value || p.jour;
+    p.mois  = parseInt(document.getElementById('pbmo-' + cle).value, 10);
+    p.annee = parseInt(document.getElementById('pba-' + cle).value, 10);
+    majAffichagePeriode(cle, false);
+    if(fichesRendu[cle]) fichesRendu[cle]();
+  }
+
+  // Filtre commun : une ligne datée appartient-elle à la période choisie ?
+  function dansPeriode(ts, cle){
+    const p = fichesPeriodes[cle];
+    if(!p || p.mode === 'tout') return true;
+    const d = new Date(ts || 0);
+    if(p.mode === 'jour')  return isoJour(d) === p.jour;
+    if(p.mode === 'mois')  return d.getFullYear() === p.annee && d.getMonth() === p.mois;
+    return d.getFullYear() === p.annee;
+  }
+
+  function libellePeriode(cle, sansPeriode){
+    if(sansPeriode) return 'Situation arrêtée au ' + dateLongue(Date.now());
+    const p = fichesPeriodes[cle] || {};
+    if(p.mode === 'jour')  return 'Journée du ' + dateLongue(new Date(p.jour + 'T12:00:00').getTime());
+    if(p.mode === 'mois')  return 'Mois de ' + MOIS_FR[p.mois] + ' ' + p.annee;
+    if(p.mode === 'annee') return 'Année ' + p.annee;
+    return 'Tout l\'historique';
+  }
+
+  // Chaque tableau déclare ici ce qu'il affiche : la fiche imprimable
+  // reprend exactement les mêmes lignes.
+  function definirFiche(cle, o){
+    fichesDonnees[cle] = Object.assign({ sansPeriode:false }, o);
+  }
+
+  // Document A4 : en-tête du restaurant, période, tableau, totaux, signatures
+  function imprimerFiche(cle, libelleForce){
+    const f = fichesDonnees[cle];
+    if(!f){ return; }
+
+    const nbCol = f.colonnes.length;
+    const entetes = f.colonnes.map(c =>
+      `<th${c.num ? ' class="n"' : ''}>${echapper(c.titre)}</th>`).join('');
+
+    const corps = f.lignes.length
+      ? f.lignes.map(l => '<tr>' + l.map((v,i) =>
+          `<td${f.colonnes[i] && f.colonnes[i].num ? ' class="n"' : ''}>${v == null ? '—' : echapper(String(v))}</td>`
+        ).join('') + '</tr>').join('')
+      : `<tr><td colspan="${nbCol}">Aucune écriture sur cette période.</td></tr>`;
+
+    const pied = (f.totaux || []).map(t =>
+      `<tr><td colspan="${nbCol - 1}">${echapper(t.libelle)}</td><td class="n">${echapper(String(t.valeur))}</td></tr>`
+    ).join('');
+
+    imprimerDocument(
+      enteteDocument(f.titre, libelleForce || libellePeriode(cle, f.sansPeriode)) +
+      (f.note ? `<div class="doc-note">${echapper(f.note)}</div>` : '') +
+      `<table class="doc-table">
+        <thead><tr>${entetes}</tr></thead>
+        <tbody>${corps}</tbody>
+        ${pied ? `<tfoot>${pied}</tfoot>` : ''}
+      </table>` +
+      signaturesDocument(f.signatureGauche || 'Le responsable', f.signatureDroite || 'La direction') +
+      piedDocument(f.titre)
+    );
+  }
+
+  // Impression d'un état de synthèse (balance, résultat, bilan, impôts) :
+  // ces états sont des listes de lignes « libellé / montant ».
+  function imprimerSynthese(titre, periodeTexte, lignes, note){
+    imprimerDocument(
+      enteteDocument(titre, periodeTexte) +
+      (note ? `<div class="doc-note">${echapper(note)}</div>` : '') +
+      `<table class="doc-table">
+        <thead><tr><th>Poste</th><th class="n">Montant (GNF)</th></tr></thead>
+        <tbody>${lignes.map(l => `<tr${l.fort ? ' class="fort"' : ''}>
+          <td>${echapper(l.libelle)}</td><td class="n">${echapper(String(l.valeur))}</td></tr>`).join('')}</tbody>
+      </table>` +
+      signaturesDocument('Le comptable', 'La direction') +
+      piedDocument(titre)
+    );
+  }
+
+  function imprimerDocument(html){
+    const zone = document.getElementById('printArea');
+    zone.innerHTML = '<div class="doc">' + html + '</div>';
+    document.body.classList.add('impression-fiche');
+
+    const nettoyer = () => {
+      document.body.classList.remove('impression-fiche');
+      window.removeEventListener('afterprint', nettoyer);
+    };
+    window.addEventListener('afterprint', nettoyer);
+    setTimeout(() => { window.print(); setTimeout(nettoyer, 1200); }, 60);
+  }
+
+  // Impression de l'onglet affiché : chaque panneau devient un bloc du
+  // document, chaque tableau est repris en version imprimable.
+  function imprimerOngletCourant(){
+    const section = document.getElementById('section-' + sectionCourante);
+    if(!section) return;
+    const titre = document.getElementById('sectionTitle').textContent;
+
+    let corps = '';
+    section.querySelectorAll('.panel').forEach(panel => {
+      const h3 = panel.querySelector('h3');
+      const tables = panel.querySelectorAll('table');
+      const totaux = panel.querySelector('.totaux-ligne');
+      if(!tables.length && !totaux) return;   // les formulaires de saisie ne s'impriment pas
+
+      corps += '<div class="doc-bloc">';
+      if(h3) corps += '<h3>' + echapper(h3.textContent) + '</h3>';
+
+      if(totaux){
+        corps += '<div class="doc-champs">';
+        totaux.querySelectorAll('div').forEach(d => {
+          const k = d.querySelector('span'), v = d.querySelector('b');
+          if(k && v) corps += '<div class="l"><span>' + echapper(k.textContent) + '</span><b>' + echapper(v.textContent) + '</b></div>';
+        });
+        corps += '</div>';
+      }
+
+      tables.forEach(t => { corps += tableauVersDocument(t); });
+      corps += '</div>';
+    });
+
+    if(!corps) corps = '<div class="doc-note">Cet onglet ne contient pas de tableau à imprimer.</div>';
+    imprimerDocument(enteteDocument(titre, 'État au ' + dateLongue(Date.now())) + corps + piedDocument());
+  }
+
+  // Recopie un tableau de l'écran en tableau de document (sans les boutons)
+  function tableauVersDocument(table){
+    const ligne = (tr, cellule) => {
+      let out = '<tr>';
+      tr.querySelectorAll(cellule).forEach(td => {
+        const clone = td.cloneNode(true);
+        clone.querySelectorAll('button, a.mini-btn, .table-actions').forEach(el => el.remove());
+        const txt = clone.textContent.replace(/\s+/g, ' ').trim();
+        out += '<' + cellule + '>' + echapper(txt) + '</' + cellule + '>';
+      });
+      return out + '</tr>';
+    };
+    let html = '<table class="doc-table">';
+    const thead = table.querySelector('thead');
+    if(thead) html += '<thead>' + Array.from(thead.rows).map(tr => ligne(tr, 'th')).join('') + '</thead>';
+    const tbody = table.querySelector('tbody');
+    if(tbody) html += '<tbody>' + Array.from(tbody.rows).map(tr => ligne(tr, 'td')).join('') + '</tbody>';
+    return html + '</table>';
+  }
+
+  // Compteur générique (matricules, bons de dépense, commandes…)
+  async function prochainNumero(cle){
+    const chemin = 'agr_tenants/' + currentTenantId + '/compteurs/' + cle;
+    let n = 0;
+    try { n = Number(await agrGet(chemin)) || 0; } catch(e){}
+    const suivant = n + 1;
+    try { await agrSet(chemin, suivant); } catch(e){}
+    return suivant;
+  }
+
+  // ===============================================================
+  // ZONE DE NOTIFICATION — commandes en ligne à valider
+  // Une commande reçue n'entre PAS dans les recettes tant qu'elle
+  // n'est pas validée. La validation crée l'entrée de fonds dans les
+  // commandes ; le rejet n'ajoute rien au chiffre d'affaires.
+  // ===============================================================
+  let notifCommandes = [];
+  let notifFiltre = 'attente';
+  let notifIdsConnus = null;      // null tant que la première lecture n'a pas eu lieu
+  let notifTenantEcoute = null;
+
+  function statutCommande(c){
+    if(c.statut === 'validee' || c.statut === 'traitee') return 'validee';
+    if(c.statut === 'rejetee') return 'rejetee';
+    return 'attente';
+  }
+
+  const libelleStatut = { attente:'En attente', validee:'Validée', rejetee:'Rejetée' };
+
+  // Écoute permanente : le badge et les notifications arrivent en direct
+  function ecouterNotifications(){
+    if(!currentTenantId || notifTenantEcoute === currentTenantId) return;
+    notifTenantEcoute = currentTenantId;
+    const tenant = currentTenantId;
+    notifIdsConnus = null;
+
+    window._agrOnValue(agrRef('agr_tenants/' + tenant + '/commandesEnLigne'), (snap) => {
+      if(currentTenantId !== tenant) return;   // le restaurant a changé entre-temps
+      const val = snap.val() || {};
+      notifCommandes = Object.entries(val).map(([id, c]) => Object.assign({ id }, c))
+                             .sort((a,b) => (b.date||0) - (a.date||0));
+
+      const enAttente = notifCommandes.filter(c => statutCommande(c) === 'attente');
+      if(notifIdsConnus !== null){
+        enAttente.filter(c => !notifIdsConnus.has(c.id)).forEach(c => {
+          afficherToast('Nouvelle commande en ligne',
+            (c.numero || '') + ' — ' + (c.clientNom || 'Client') + ' · ' + fmtGNF(c.total),
+            () => showSection('notifications'));
+        });
+      }
+      notifIdsConnus = new Set(enAttente.map(c => c.id));
+
+      majBadgeNotifications();
+      if(sectionCourante === 'notifications') renderNotifications();
+      if(sectionCourante === 'pageweb'){ webCommandes = notifCommandes; renderCommandesEnLigne(); }
+    });
+  }
+
+  function majBadgeNotifications(){
+    const n = notifCommandes.filter(c => statutCommande(c) === 'attente').length;
+    const badge = document.getElementById('navBadgeNotif');
+    badge.textContent = n;
+    badge.classList.toggle('on', n > 0);
+  }
+
+  function afficherToast(titre, detail, action){
+    const zone = document.getElementById('toastZone');
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = '<div class="t">🔔 ' + echapper(titre) + '</div><div class="d">' + echapper(detail) + '</div>';
+    el.onclick = () => { el.remove(); if(action) action(); };
+    zone.appendChild(el);
+    setTimeout(() => el.remove(), 12000);
+  }
+
+  async function loadNotifications(){
+    showBanner('notifError', null);
+    if(!currentTenantId) return;
     try {
-      await agrSet('agr_tenants/' + currentTenantId + '/commandesEnLigne/' + id + '/statut', nouveau);
-      await agrSet('agr_tenants/' + currentTenantId + '/commandesEnLigne/' + id + '/traiteePar',
-                   nouveau === 'traitee' ? nomUtilisateurCourant() : null);
-      c.statut = nouveau;
-      await recordAudit('Commande en ligne', nouveau === 'traitee' ? 'marquée gérée' : 'rouverte');
-      renderCommandesEnLigne();
+      const cmds = await agrGet('agr_tenants/' + currentTenantId + '/commandesEnLigne') || {};
+      notifCommandes = Object.entries(cmds).map(([id, c]) => Object.assign({ id }, c))
+                             .sort((a,b) => (b.date||0) - (a.date||0));
+      majBadgeNotifications();
+      renderNotifications();
     } catch(e){
-      showBanner('webError', 'Impossible de mettre à jour cette commande.');
+      showBanner('notifError', 'Impossible de charger les commandes en ligne.');
     }
   }
 
-  // ---------------------------------------------------------------
-  // Tables — dérivées de info.nombreTables (statut "libre" par défaut)
-  // ---------------------------------------------------------------
-  async function loadTablesSection(){
-    if(!currentTenantId) return;
-    try {
-      const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
-      const n = info.nombreTables || 0;
-      const grid = document.getElementById('tablesGrid');
-      const sub = document.getElementById('tablesSub');
-      if(n === 0){
-        grid.innerHTML = '';
-        sub.textContent = 'Aucune table configurée — définissez le nombre de tables dans Paramètres.';
-        return;
-      }
-      sub.textContent = n + ' table(s) — configuration dans Paramètres.';
-      grid.innerHTML = Array.from({length:n}, (_,i) => `<div class="table-cell libre">T${i+1}</div>`).join('');
-    } catch(e){}
+  function filtrerNotifications(f){
+    notifFiltre = f;
+    renderNotifications();
   }
 
-  // ---------------------------------------------------------------
-  // Menu & Catégories — CRUD réel sur agr_tenants/{code}/produits
-  // ---------------------------------------------------------------
-  async function ajouterPlat(){
-    showBanner('menuError', null);
-    const nom = document.getElementById('menuFormNom').value.trim();
-    const categorie = document.getElementById('menuFormCategorie').value.trim();
-    const prixVente = parseInt(document.getElementById('menuFormPrixVente').value, 10) || 0;
-    const prixAchat = parseInt(document.getElementById('menuFormPrixAchat').value, 10) || 0;
-    const stock = parseInt(document.getElementById('menuFormStockInitial').value, 10) || 0;
+  function renderNotifications(){
+    const liste = document.getElementById('notifListe');
+    ['attente','validee','rejetee','toutes'].forEach(f => {
+      const b = document.getElementById('notifF-' + f);
+      if(b) b.style.borderColor = (f === notifFiltre) ? 'var(--gold)' : '';
+    });
 
-    if(!nom || !prixVente){
-      showBanner('menuError', 'Le nom du plat et le prix de vente sont requis.');
+    const attente = notifCommandes.filter(c => statutCommande(c) === 'attente');
+    const valideesJour = notifCommandes.filter(c => statutCommande(c) === 'validee' && estAujourdhui(c.date));
+    const rejeteesJour = notifCommandes.filter(c => statutCommande(c) === 'rejetee' && estAujourdhui(c.date));
+
+    document.getElementById('notifNbAttente').textContent = attente.length;
+    document.getElementById('notifNbValidees').textContent = valideesJour.length;
+    document.getElementById('notifNbRejetees').textContent = rejeteesJour.length;
+    document.getElementById('notifMontantAttente').textContent =
+      fmtGNF(attente.reduce((s,c) => s + (c.total || 0), 0));
+    document.getElementById('notifMontantValide').textContent =
+      fmtGNF(valideesJour.reduce((s,c) => s + (c.total || 0), 0));
+
+    const vues = notifCommandes.filter(c =>
+      notifFiltre === 'toutes' ? true : statutCommande(c) === notifFiltre);
+
+    if(!vues.length){
+      liste.innerHTML = '<div style="color:var(--text-dim); font-size:13px; padding:18px 0;">Aucune commande dans cette catégorie.</div>';
       return;
     }
-    try {
-      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/produits'));
-      await window._agrSet(newRef, { nom, categorie, prixVente, prixAchat, stock, seuilAlerte: 0, disponible: true });
-      await recordAudit('Plat ajouté', nom);
-      document.getElementById('menuFormNom').value = '';
-      document.getElementById('menuFormCategorie').value = '';
-      document.getElementById('menuFormPrixVente').value = '';
-      document.getElementById('menuFormPrixAchat').value = '';
-      document.getElementById('menuFormStockInitial').value = '0';
-      loadMenuManagement();
-    } catch(e){
-      showBanner('menuError', "Impossible d'ajouter le plat — vérifiez la connexion à Firebase.");
-    }
+
+    liste.innerHTML = vues.map(c => {
+      const st = statutCommande(c);
+      const plats = Object.values(c.plats || {})
+        .map(p => (p.qty || 1) + ' × ' + p.nom + ' — ' + fmtGNF((p.prix||0) * (p.qty||1)))
+        .join('<br>');
+      return `
+        <div class="notif-carte ${st}">
+          <div class="notif-tete">
+            <div>
+              <div class="notif-num">${echapper(c.numero || 'Commande')}</div>
+              <div class="notif-date">Reçue le ${new Date(c.date||0).toLocaleDateString('fr-FR')} à ${heureCourte(c.date)}</div>
+            </div>
+            <span class="etat-badge ${st}">${libelleStatut[st]}</span>
+          </div>
+          <div class="notif-corps">
+            <div>
+              <div class="k">Client</div>
+              <div>${echapper(c.clientNom || 'Client')}<br>${echapper(c.clientTelephone || '')}${c.clientEmail ? '<br>' + echapper(c.clientEmail) : ''}</div>
+              <div class="k" style="margin-top:8px;">Réception</div>
+              <div>${c.mode === 'livraison'
+                ? 'Livraison' + (c.zone ? ' — ' + echapper(c.zone) : '') + '<br>' + echapper([c.quartier, c.adresse].filter(Boolean).join(', '))
+                : 'Sur place / à emporter'}</div>
+            </div>
+            <div>
+              <div class="k">Plats</div>
+              <div class="notif-plats">${plats || '—'}</div>
+              <div class="notif-total" style="margin-top:8px;">${fmtGNF(c.total)}</div>
+            </div>
+          </div>
+          ${c.note ? `<div style="font-size:12px; color:var(--text-dim);">Précisions : ${echapper(c.note)}</div>` : ''}
+          ${st === 'validee' ? `<div style="font-size:11.5px; color:var(--teal-soft);">Validée par ${echapper(c.valideePar || '—')} — montant ajouté aux recettes.</div>` : ''}
+          ${st === 'rejetee' ? `<div style="font-size:11.5px; color:#E7A79B;">Rejetée par ${echapper(c.rejeteePar || '—')}${c.motif ? ' — ' + echapper(c.motif) : ''} — aucun montant enregistré.</div>` : ''}
+          <div class="notif-actions">
+            <button class="btn-doc" onclick="imprimerFicheCommande('${c.id}')">🖨 Fiche de commande</button>
+            ${st !== 'validee' ? `<button class="btn-ok" onclick="validerCommandeEnLigne('${c.id}')">✓ Valider et encaisser</button>` : ''}
+            ${st !== 'rejetee' ? `<button class="btn-no" onclick="rejeterCommandeEnLigne('${c.id}')">✕ Rejeter</button>` : ''}
+            ${c.clientTelephone ? `<a class="btn-doc" href="https://wa.me/${String(c.clientTelephone).replace(/[^0-9]/g,'')}" target="_blank">WhatsApp client</a>` : ''}
+          </div>
+        </div>`;
+    }).join('');
   }
 
-  async function loadMenuManagement(){
-    const body = document.getElementById('menuTableBody');
-    const sub = document.getElementById('menuListSub');
-    if(!currentTenantId) return;
+  // Validation : c'est ici, et seulement ici, que l'argent entre en caisse
+  async function validerCommandeEnLigne(id){
+    const c = notifCommandes.find(x => x.id === id);
+    if(!c) return;
+    if(!confirm('Valider la commande ' + (c.numero || '') + ' ?\nSon montant de ' + fmtGNF(c.total) + ' sera ajouté aux recettes.')) return;
+
     try {
-      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
-      const entries = Object.entries(produits);
-      if(entries.length === 0){
-        sub.textContent = 'Aucun plat pour l\'instant.';
-        body.innerHTML = '';
-        return;
+      const base = 'agr_tenants/' + currentTenantId + '/';
+      const ref = window._agrPush(agrRef(base + 'commandes'));
+      await window._agrSet(ref, {
+        numero: c.numero || null,
+        origine: 'Commande en ligne validée',
+        plats: c.plats || {},
+        platsVendus: c.platsVendus || 0,
+        revenu: c.total || 0,
+        mode: c.mode || 'sur_place',
+        zone: c.zone || null,
+        fraisService: c.fraisService || 0,
+        fraisLivraison: c.fraisLivraison || 0,
+        date: Date.now(),
+        clientNom: c.clientNom || null,
+        clientTelephone: c.clientTelephone || null,
+        clientEmail: c.clientEmail || null,
+        quartier: c.quartier || null,
+        adresse: c.adresse || null,
+        commandeEnLigneId: id,
+      });
+
+      await agrSet(base + 'commandesEnLigne/' + id + '/statut', 'validee');
+      await agrSet(base + 'commandesEnLigne/' + id + '/commandeId', ref.key);
+      await agrSet(base + 'commandesEnLigne/' + id + '/valideePar', nomUtilisateurCourant());
+      await agrSet(base + 'commandesEnLigne/' + id + '/valideeLe', Date.now());
+
+      if(c.clientTelephone){
+        try { await enregistrerClient(currentTenantId, c.clientNom, c.clientTelephone, c.total || 0); } catch(e){}
       }
-      sub.textContent = entries.length + ' plat(s) au menu.';
-      body.innerHTML = entries.map(([id, p]) => `
-        <tr>
-          <td>${p.nom}</td>
-          <td>${p.categorie || '—'}</td>
-          <td>${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</td>
-          <td>${Number((p.prixVente||0)-(p.prixAchat||0)).toLocaleString('fr-FR')} GNF</td>
-          <td>${p.disponible === false ? 'Non' : 'Oui'}</td>
-          <td><a onclick="supprimerPlat('${id}')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a></td>
-        </tr>
-      `).join('');
+      await recordAudit('Commande en ligne validée', (c.numero || id) + ' — ' + fmtGNF(c.total));
+
+      Object.assign(c, { statut:'validee', commandeId:ref.key, valideePar:nomUtilisateurCourant() });
+      renderNotifications();
+      majBadgeNotifications();
     } catch(e){
-      sub.textContent = 'Impossible de charger le menu depuis Firebase.';
+      showBanner('notifError', "La validation a échoué — rien n'a été ajouté aux recettes.");
     }
   }
 
-  async function supprimerPlat(id){
+  // Rejet : aucun montant en recette ; si la commande avait été validée,
+  // l'entrée de fonds correspondante est retirée.
+  async function rejeterCommandeEnLigne(id){
+    const c = notifCommandes.find(x => x.id === id);
+    if(!c) return;
+    const dejaValidee = statutCommande(c) === 'validee';
+    const motif = prompt(dejaValidee
+      ? 'Cette commande était validée : son montant va être retiré des recettes.\nMotif du rejet :'
+      : 'Motif du rejet (facultatif) :', '');
+    if(motif === null) return;
+
     try {
-      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + id);
-      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + id, null);
-      await recordAudit('Plat supprimé', (p && p.nom) || id);
-      loadMenuManagement();
-    } catch(e){}
+      const base = 'agr_tenants/' + currentTenantId + '/';
+      if(dejaValidee && c.commandeId){
+        await agrSet(base + 'commandes/' + c.commandeId, null);
+        await agrSet(base + 'commandesEnLigne/' + id + '/commandeId', null);
+      }
+      await agrSet(base + 'commandesEnLigne/' + id + '/statut', 'rejetee');
+      await agrSet(base + 'commandesEnLigne/' + id + '/rejeteePar', nomUtilisateurCourant());
+      await agrSet(base + 'commandesEnLigne/' + id + '/motif', motif || null);
+      await agrSet(base + 'commandesEnLigne/' + id + '/rejeteeLe', Date.now());
+      await recordAudit('Commande en ligne rejetée', (c.numero || id) + (motif ? ' — ' + motif : ''));
+
+      Object.assign(c, { statut:'rejetee', rejeteePar:nomUtilisateurCourant(), motif: motif || null, commandeId:null });
+      renderNotifications();
+      majBadgeNotifications();
+    } catch(e){
+      showBanner('notifError', 'Le rejet a échoué.');
+    }
   }
 
-  // ---------------------------------------------------------------
-  // Ressources Humaines — CRUD réel sur agr_tenants/{code}/users
-  // ---------------------------------------------------------------
+  // Fiche de commande imprimable, telle qu'elle doit être remise en cuisine
+  function imprimerFicheCommande(id){
+    const c = notifCommandes.find(x => x.id === id);
+    if(!c) return;
+    const st = statutCommande(c);
+    const plats = Object.values(c.plats || {});
+    const sousTotal = plats.reduce((s,p) => s + (p.prix||0) * (p.qty||0), 0);
+
+    const lignes = plats.map(p => `<tr>
+      <td>${echapper(p.nom)}</td>
+      <td class="n">${p.qty || 0}</td>
+      <td class="n">${Number(p.prix||0).toLocaleString('fr-FR')}</td>
+      <td class="n">${((p.prix||0) * (p.qty||0)).toLocaleString('fr-FR')}</td>
+    </tr>`).join('');
+
+    imprimerDocument(
+      enteteDocument('Fiche de commande', 'Commande passée depuis la page web du restaurant') +
+      `<div class="doc-ref">
+        <span>N° de commande : <b>${echapper(c.numero || '—')}</b></span>
+        <span>Reçue le : <b>${new Date(c.date||0).toLocaleDateString('fr-FR')} à ${heureCourte(c.date)}</b></span>
+        <span>État : <span class="doc-etat">${libelleStatut[st]}</span></span>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Client</h3>
+        <div class="doc-champs">
+          <div class="l"><span>Nom et prénom</span><b>${echapper(c.clientNom || '—')}</b></div>
+          <div class="l"><span>Téléphone</span><b>${echapper(c.clientTelephone || '—')}</b></div>
+          <div class="l"><span>Email</span><b>${echapper(c.clientEmail || '—')}</b></div>
+          <div class="l"><span>Quartier</span><b>${echapper(c.quartier || '—')}</b></div>
+          <div class="l"><span>Adresse</span><b>${echapper(c.adresse || '—')}</b></div>
+        </div>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Détail de la commande</h3>
+        <table class="doc-table">
+          <thead><tr><th>Plat</th><th class="n">Qté</th><th class="n">P. unitaire</th><th class="n">Montant</th></tr></thead>
+          <tbody>${lignes || '<tr><td colspan="4">Aucun plat</td></tr>'}</tbody>
+        </table>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Réception et règlement</h3>
+        <div class="doc-champs">
+          <div class="l"><span>Mode</span><b>${c.mode === 'livraison' ? 'Livraison' + (c.zone ? ' — ' + echapper(c.zone) : '') : 'Sur place / à emporter'}</b></div>
+          <div class="l"><span>Sous-total</span><b>${sousTotal.toLocaleString('fr-FR')} GNF</b></div>
+          <div class="l"><span>Frais de commande</span><b>${Number(c.fraisService||0).toLocaleString('fr-FR')} GNF</b></div>
+          <div class="l"><span>Frais de livraison</span><b>${Number(c.fraisLivraison||0).toLocaleString('fr-FR')} GNF</b></div>
+        </div>
+      </div>
+
+      ${c.note ? `<div class="doc-note">Précisions du client : ${echapper(c.note)}</div>` : ''}
+
+      <div class="doc-total"><span class="t">Grand total</span><span class="v">${Number(c.total||0).toLocaleString('fr-FR')} GNF</span></div>
+      ${st === 'attente' ? '<div class="doc-note">Commande non validée : ce montant n\'est pas encore comptabilisé en recette.</div>' : ''}
+      ${st === 'rejetee' ? '<div class="doc-note">Commande rejetée' + (c.motif ? ' — ' + echapper(c.motif) : '') + ' : aucun montant comptabilisé.</div>' : ''}
+
+      ${signaturesDocument('Le client', 'Le responsable')}
+      ${piedDocument('Fiche de commande')}`
+    );
+  }
+
+  // ===============================================================
+  // RESSOURCES HUMAINES — fiche d'engagement et registre du personnel
+  // ===============================================================
+  let equipeCourante = [];
+
   async function ajouterEmploye(){
     showBanner('rhError', null);
+    showBanner('rhSuccess', null);
     const nom = document.getElementById('rhFormNom').value.trim();
+    const prenom = document.getElementById('rhFormPrenom').value.trim();
     const email = document.getElementById('rhFormEmail').value.trim();
     const password = document.getElementById('rhFormPassword').value;
     const role = document.getElementById('rhFormRole').value;
 
     if(!nom || !email || !password){
-      showBanner('rhError', 'Nom, email et mot de passe sont requis.');
+      showBanner('rhError', 'Le nom, l\'email et le mot de passe sont obligatoires.');
       return;
     }
+
     try {
+      const matricule = 'MAT-' + String(await prochainNumero('employes')).padStart(4, '0');
+      const complet = (prenom + ' ' + nom).trim();
       const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/users'));
       const newId = newRef.key;
-      await window._agrSet(newRef, { role, nom, email, password });
-      await recordAudit('Employé ajouté', nom + ' (' + role + ')');
-      document.getElementById('rhFormNom').value = '';
-      document.getElementById('rhFormEmail').value = '';
-      document.getElementById('rhFormPassword').value = '';
 
-      const err = document.getElementById('rhError');
-      err.className = 'banner info';
-      err.style.display = 'block';
-      err.innerHTML = nom + ' ajouté(e). Terminez sa création tout de suite, pendant qu\'il/elle est devant l\'appareil : ' +
-        '<a onclick="registerFingerprint(\'' + newId + '\', \'' + nom.replace(/'/g,"") + '\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">enregistrer l\'empreinte</a> · ' +
-        '<a onclick="openFaceCapture(\'' + newId + '\', \'' + nom.replace(/'/g,"") + '\', \'register\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">enregistrer le visage</a>';
+      await window._agrSet(newRef, {
+        role, matricule,
+        nom: complet, nomFamille: nom, prenom: prenom || null,
+        email, password,
+        telephone: document.getElementById('rhFormTelephone').value.trim() || null,
+        adresse: document.getElementById('rhFormAdresse').value.trim() || null,
+        poste: document.getElementById('rhFormPoste').value.trim() || (roleLabels[role] || role),
+        salaire: parseInt(document.getElementById('rhFormSalaire').value, 10) || 0,
+        dateEmbauche: document.getElementById('rhFormEmbauche').value || null,
+        creeLe: Date.now(),
+      });
+      await recordAudit('Employé engagé', complet + ' (' + role + ') — ' + matricule);
+
+      ['rhFormNom','rhFormPrenom','rhFormEmail','rhFormPassword','rhFormTelephone',
+       'rhFormAdresse','rhFormPoste','rhFormSalaire'].forEach(id => { document.getElementById(id).value = ''; });
+
+      const ok = document.getElementById('rhSuccess');
+      ok.style.display = 'block';
+      ok.innerHTML = complet + ' enregistré(e) sous le matricule <strong>' + matricule + '</strong>. ' +
+        '<a onclick="imprimerFicheEmploye(\'' + newId + '\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">Imprimer sa fiche</a> · ' +
+        '<a onclick="registerFingerprint(\'' + newId + '\', \'' + complet.replace(/'/g,'') + '\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">enregistrer l\'empreinte</a> · ' +
+        '<a onclick="openFaceCapture(\'' + newId + '\', \'' + complet.replace(/'/g,'') + '\', \'register\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">enregistrer le visage</a>';
 
       loadEquipe();
     } catch(e){
-      showBanner('rhError', "Impossible d'ajouter l'employé — vérifiez la connexion à Firebase.");
+      showBanner('rhError', "Impossible d'enregistrer l'employé — vérifiez la connexion à Firebase.");
     }
   }
 
@@ -5507,290 +6821,177 @@
     const body = document.getElementById('rhTableBody');
     const sub = document.getElementById('rhListSub');
     if(!currentTenantId) return;
+    initBarrePeriode('personnel', { sansPeriode:true, rendu: loadEquipe });
     try {
       const users = await agrGet('agr_tenants/' + currentTenantId + '/users') || {};
-      const entries = Object.entries(users);
-      sub.textContent = entries.length + ' membre(s) de l\'équipe.';
-      body.innerHTML = entries.map(([id, u]) => {
-        const autorise = true; // reconnaissance faciale désormais proposée à tout le personnel
-        let visageCell;
-        if(!autorise){
-          visageCell = '<span style="color:var(--text-dim); font-size:11px;">Non applicable</span>';
-        } else if(u.faceDescriptor){
-          visageCell = '<span style="color:var(--teal-soft); font-size:11.5px;">✓ Enregistré</span>';
-        } else {
-          visageCell = '<a onclick="openFaceCapture(\'' + id + '\', \'' + (u.nom||'').replace(/'/g,"") + '\', \'register\')" style="color:var(--gold-soft); cursor:pointer; font-size:12px;">Enregistrer le visage</a>';
-        }
+      equipeCourante = Object.entries(users).map(([id, u]) => Object.assign({ id }, u));
+
+      const masse = equipeCourante.reduce((s,u) => s + (u.salaire || 0), 0);
+
+      definirFiche('personnel', {
+        sansPeriode: true,
+        titre: 'Registre du personnel',
+        colonnes: [{titre:'Matricule'},{titre:'Employé'},{titre:'Poste'},{titre:'Téléphone'},
+                   {titre:'Embauche'},{titre:'Salaire',num:true}],
+        lignes: equipeCourante.map(u => [
+          u.matricule || '—', u.nom || '—', u.poste || roleLabels[u.role] || '—',
+          u.telephone || '—',
+          u.dateEmbauche ? new Date(u.dateEmbauche).toLocaleDateString('fr-FR') : '—',
+          Number(u.salaire||0).toLocaleString('fr-FR'),
+        ]),
+        totaux: [
+          { libelle: 'Effectif total', valeur: equipeCourante.length },
+          { libelle: 'Masse salariale mensuelle (GNF)', valeur: masse.toLocaleString('fr-FR') },
+        ],
+        signatureGauche: 'Le responsable RH', signatureDroite: 'La direction',
+      });
+      sub.textContent = equipeCourante.length + ' membre(s) enregistré(s) au registre du personnel.';
+      document.getElementById('rhTotalEffectif').textContent = equipeCourante.length;
+      document.getElementById('rhTotalMasse').textContent = fmtGNF(masse);
+
+      body.innerHTML = equipeCourante.map(u => {
+        const nomSansQuote = (u.nom || '').replace(/'/g, '');
+        const bio = [];
+        bio.push(u.credentialId
+          ? '<span style="color:var(--teal-soft);">✓ Empreinte</span>'
+          : `<a onclick="registerFingerprint('${u.id}','${nomSansQuote}')" style="color:var(--gold-soft); cursor:pointer;">+ Empreinte</a>`);
+        bio.push(u.faceDescriptor
+          ? '<span style="color:var(--teal-soft);">✓ Visage</span>'
+          : `<a onclick="openFaceCapture('${u.id}','${nomSansQuote}','register')" style="color:var(--gold-soft); cursor:pointer;">+ Visage</a>`);
+
         return `
         <tr>
-          <td>${u.nom || '—'}</td>
-          <td>${roleLabels[u.role] || u.role}</td>
-          <td>${u.email || '—'}</td>
-          <td>${u.credentialId
-            ? '<span style="color:var(--teal-soft); font-size:11.5px;">✓ Enregistrée</span>'
-            : '<a onclick="registerFingerprint(\'' + id + '\', \'' + (u.nom||'').replace(/'/g,"") + '\')" style="color:var(--gold-soft); cursor:pointer; font-size:12px;">Enregistrer sur cet appareil</a>'}</td>
-          <td>${visageCell}</td>
-          <td>${id === 'dg' ? '<span style="color:var(--text-dim); font-size:11px;">Fondateur/DG</span>' : '<a onclick="supprimerEmploye(\'' + id + '\')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a>'}</td>
+          <td>${echapper(u.matricule || '—')}</td>
+          <td>${echapper(u.nom || '—')}<div style="font-size:10.5px;color:var(--text-dim);">${echapper(roleLabels[u.role] || u.role || '')}</div></td>
+          <td>${echapper(u.poste || roleLabels[u.role] || '—')}<div style="font-size:10.5px;color:var(--text-dim);">${u.dateEmbauche ? 'depuis le ' + new Date(u.dateEmbauche).toLocaleDateString('fr-FR') : ''}</div></td>
+          <td>${echapper(u.telephone || '—')}<div style="font-size:10.5px;color:var(--text-dim);">${echapper(u.email || '')}</div></td>
+          <td>${u.salaire ? fmtGNF(u.salaire) : '—'}</td>
+          <td style="font-size:11px; line-height:1.7;">${bio.join('<br>')}</td>
+          <td><div class="table-actions">
+            <button class="mini-btn" onclick="imprimerFicheEmploye('${u.id}')">🖨 Fiche</button>
+            ${u.id === 'dg' ? '' : `<button class="mini-btn danger" onclick="supprimerEmploye('${u.id}')">Retirer</button>`}
+          </div></td>
         </tr>`;
       }).join('');
     } catch(e){
-      sub.textContent = "Impossible de charger l'équipe depuis Firebase.";
+      sub.textContent = "Impossible de charger le registre du personnel.";
     }
   }
 
-  async function supprimerEmploye(id){
-    if(id === 'dg') return; // protège le compte fondateur/DG
-    try {
-      await agrSet('agr_tenants/' + currentTenantId + '/users/' + id, null);
-      await recordAudit('Suppression employé', id);
-      loadEquipe();
-    } catch(e){}
+  function imprimerFicheEmploye(id){
+    const u = equipeCourante.find(x => x.id === id);
+    if(!u) return;
+    imprimerDocument(
+      enteteDocument('Fiche individuelle de personnel', 'Registre du personnel du restaurant') +
+      `<div class="doc-ref">
+        <span>Matricule : <b>${echapper(u.matricule || '—')}</b></span>
+        <span>Rôle : <b>${echapper(roleLabels[u.role] || u.role || '—')}</b></span>
+        <span>Embauche : <b>${u.dateEmbauche ? new Date(u.dateEmbauche).toLocaleDateString('fr-FR') : '—'}</b></span>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Identité</h3>
+        <div class="doc-champs">
+          <div class="l"><span>Nom</span><b>${echapper(u.nomFamille || u.nom || '—')}</b></div>
+          <div class="l"><span>Prénom</span><b>${echapper(u.prenom || '—')}</b></div>
+          <div class="l"><span>Téléphone</span><b>${echapper(u.telephone || '—')}</b></div>
+          <div class="l"><span>Adresse</span><b>${echapper(u.adresse || '—')}</b></div>
+        </div>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Poste et rémunération</h3>
+        <div class="doc-champs">
+          <div class="l"><span>Poste occupé</span><b>${echapper(u.poste || '—')}</b></div>
+          <div class="l"><span>Salaire mensuel</span><b>${u.salaire ? Number(u.salaire).toLocaleString('fr-FR') + ' GNF' : '—'}</b></div>
+          <div class="l"><span>Date d'embauche</span><b>${u.dateEmbauche ? new Date(u.dateEmbauche).toLocaleDateString('fr-FR') : '—'}</b></div>
+          <div class="l"><span>Salaire annuel</span><b>${u.salaire ? (Number(u.salaire) * 12).toLocaleString('fr-FR') + ' GNF' : '—'}</b></div>
+        </div>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Accès et pointage</h3>
+        <div class="doc-champs">
+          <div class="l"><span>Identifiant</span><b>${echapper(u.email || '—')}</b></div>
+          <div class="l"><span>Empreinte</span><b>${u.credentialId ? 'Enregistrée' : 'Non enregistrée'}</b></div>
+          <div class="l"><span>Reconnaissance faciale</span><b>${u.faceDescriptor ? 'Enregistrée' : 'Non enregistrée'}</b></div>
+        </div>
+      </div>
+
+      ${signaturesDocument("L'employé", 'La direction')}
+      ${piedDocument('Fiche de personnel')}`
+    );
   }
 
-  // ---------------------------------------------------------------
-  // Journal d'audit — écriture seule, jamais de suppression manuelle.
-  // Enregistre les actions sensibles (suppressions, ajouts d'employés,
-  // dépenses, pertes...) avec l'auteur et la date.
-  // ---------------------------------------------------------------
-  async function recordAudit(action, detail){
-    if(!currentTenantId) return;
-    try {
-      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/audit'));
-      await window._agrSet(newRef, {
-        action, detail: detail || '',
-        auteur: document.getElementById('userName').textContent || currentUserId || '—',
-        date: Date.now(),
-      });
-    } catch(e){}
+  function imprimerRegistrePersonnel(){
+    const masse = equipeCourante.reduce((s,u) => s + (u.salaire || 0), 0);
+    const lignes = equipeCourante.map(u => `<tr>
+      <td>${echapper(u.matricule || '—')}</td>
+      <td>${echapper(u.nom || '—')}</td>
+      <td>${echapper(u.poste || roleLabels[u.role] || '—')}</td>
+      <td>${echapper(u.telephone || '—')}</td>
+      <td>${u.dateEmbauche ? new Date(u.dateEmbauche).toLocaleDateString('fr-FR') : '—'}</td>
+      <td class="n">${u.salaire ? Number(u.salaire).toLocaleString('fr-FR') : '—'}</td>
+    </tr>`).join('');
+
+    imprimerDocument(
+      enteteDocument('Registre du personnel', 'Effectif et masse salariale au ' + dateLongue(Date.now())) +
+      `<table class="doc-table">
+        <thead><tr><th>Matricule</th><th>Nom et prénom</th><th>Poste</th><th>Téléphone</th><th>Embauche</th><th class="n">Salaire (GNF)</th></tr></thead>
+        <tbody>${lignes || '<tr><td colspan="6">Aucun employé enregistré</td></tr>'}</tbody>
+        <tfoot><tr><td colspan="5">Effectif : ${equipeCourante.length}</td><td class="n">${masse.toLocaleString('fr-FR')}</td></tr></tfoot>
+      </table>
+      ${signaturesDocument('Le responsable RH', 'La direction')}
+      ${piedDocument('Registre du personnel')}`
+    );
   }
 
-  async function loadAudit(){
-    const body = document.getElementById('auditTableBody');
-    if(!currentTenantId) return;
-    try {
-      const logs = await agrGet('agr_tenants/' + currentTenantId + '/audit') || {};
-      const list = Object.values(logs).sort((a,b) => (b.date||0) - (a.date||0));
-      if(list.length === 0){
-        body.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">Aucune action enregistrée pour l\'instant.</td></tr>';
-        return;
-      }
-      body.innerHTML = list.map(l => `
-        <tr>
-          <td>${new Date(l.date).toLocaleString('fr-FR')}</td>
-          <td>${l.action}</td>
-          <td>${l.detail || '—'}</td>
-          <td>${l.auteur}</td>
-        </tr>
-      `).join('');
-    } catch(e){
-      body.innerHTML = '<tr><td colspan="4" style="color:#E19488;">Impossible de charger le journal.</td></tr>';
-    }
-  }
+  // ===============================================================
+  // DÉPENSES — bons de dépense numérotés et registre
+  // ===============================================================
+  let depensesCourantes = [];
 
-  // ---------------------------------------------------------------
-  // Stocks — niveau de stock par plat + alertes de rupture/stock faible
-  // ---------------------------------------------------------------
-  async function loadStocks(){
-    const body = document.getElementById('stocksTableBody');
-    const sub = document.getElementById('stocksListSub');
-    const perteSelect = document.getElementById('perteFormProduit');
-    if(!currentTenantId) return;
-    try {
-      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
-      const entries = Object.entries(produits);
-      if(entries.length === 0){
-        sub.textContent = 'Ajoutez des plats dans Menu & Catégories pour suivre leur stock.';
-        body.innerHTML = '';
-        perteSelect.innerHTML = '<option value="">Aucun plat</option>';
-        return;
-      }
-      sub.textContent = entries.length + ' plat(s) suivis.';
-      perteSelect.innerHTML = entries.map(([id,p]) => `<option value="${id}">${p.nom}</option>`).join('');
-      body.innerHTML = entries.map(([id, p]) => {
-        const stock = p.stock ?? 0;
-        const seuil = p.seuilAlerte ?? 0;
-        let statut = '<span class="tagpill" style="background:rgba(78,151,132,0.14); color:var(--teal-soft);">OK</span>';
-        if(stock <= 0) statut = '<span class="tagpill out">Rupture</span>';
-        else if(stock <= seuil) statut = '<span class="tagpill low">Faible</span>';
-        return `
-        <tr>
-          <td>${p.nom}</td>
-          <td>${stock}</td>
-          <td><input type="number" value="${seuil}" style="width:60px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; color:var(--text); padding:4px;" onchange="updateSeuil('${id}', this.value)"></td>
-          <td>${statut}</td>
-          <td>
-            <a onclick="ajusterStock('${id}', 1)" style="cursor:pointer; color:var(--teal-soft); margin-right:8px;">+1</a>
-            <a onclick="ajusterStock('${id}', -1)" style="cursor:pointer; color:#E19488;">-1</a>
-          </td>
-        </tr>`;
-      }).join('');
-    } catch(e){
-      sub.textContent = 'Impossible de charger les stocks depuis Firebase.';
-    }
-  }
-
-  async function ajusterStock(produitId, delta){
-    try {
-      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + produitId) || {};
-      const nouveauStock = Math.max(0, (p.stock || 0) + delta);
-      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + produitId + '/stock', nouveauStock);
-      loadStocks();
-    } catch(e){}
-  }
-
-  async function updateSeuil(produitId, valeur){
-    try {
-      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + produitId + '/seuilAlerte', parseInt(valeur, 10) || 0);
-    } catch(e){}
-  }
-
-  async function declarerPerte(){
-    showBanner('perteError', null);
-    const produitId = document.getElementById('perteFormProduit').value;
-    const type = document.getElementById('perteFormType').value.trim();
-    const quantite = parseInt(document.getElementById('perteFormQuantite').value, 10) || 1;
-    const cout = parseInt(document.getElementById('perteFormCout').value, 10) || 0;
-    const commentaire = document.getElementById('perteFormCommentaire').value.trim();
-
-    if(!produitId || !type){
-      showBanner('perteError', 'Sélectionnez un plat et indiquez le type de perte.');
-      return;
-    }
-    try {
-      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
-      const nomPlat = (produits[produitId] || {}).nom || '—';
-
-      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/pertes'));
-      await window._agrSet(newRef, {
-        produitNom: nomPlat, type, quantite, cout, commentaire,
-        responsable: document.getElementById('userName').textContent || '—',
-        date: Date.now(),
-      });
-
-      await ajusterStock(produitId, -Math.abs(quantite));
-      await recordAudit('Perte déclarée', nomPlat + ' — ' + type);
-
-      document.getElementById('perteFormType').value = '';
-      document.getElementById('perteFormCout').value = '';
-      document.getElementById('perteFormCommentaire').value = '';
-      loadPertes();
-    } catch(e){
-      showBanner('perteError', "Impossible d'enregistrer la perte — vérifiez la connexion à Firebase.");
-    }
-  }
-
-  async function loadPertes(){
-    const body = document.getElementById('pertesTableBody');
-    const sub = document.getElementById('pertesListSub');
-    if(!currentTenantId) return;
-    try {
-      const pertes = await agrGet('agr_tenants/' + currentTenantId + '/pertes') || {};
-      const list = Object.values(pertes).sort((a,b) => (b.date||0)-(a.date||0));
-      if(list.length === 0){
-        sub.textContent = 'Aucune perte enregistrée.';
-        body.innerHTML = '';
-        return;
-      }
-      sub.textContent = list.length + ' perte(s) enregistrée(s).';
-      body.innerHTML = list.map(p => `
-        <tr>
-          <td>${new Date(p.date).toLocaleDateString('fr-FR')}</td>
-          <td>${p.produitNom}</td>
-          <td>${p.type}</td>
-          <td>${p.quantite}</td>
-          <td>${(p.cout||0).toLocaleString('fr-FR')} GNF</td>
-          <td>${p.responsable}</td>
-        </tr>
-      `).join('');
-    } catch(e){
-      sub.textContent = 'Impossible de charger les pertes.';
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // Clients & Fidélité
-  // ---------------------------------------------------------------
-  async function saveLoyaltySettings(){
-    if(!currentTenantId) return;
-    try {
-      await agrSet('agr_tenants/' + currentTenantId + '/fidelite', {
-        minMontant: parseInt(document.getElementById('loyaltyMinMontant').value, 10) || 0,
-        avantage: document.getElementById('loyaltyAvantage').value.trim(),
-      });
-      showBanner('loyaltySuccess', 'Programme de fidélité enregistré.');
-    } catch(e){}
-  }
-
-  async function loadLoyaltySettings(){
-    if(!currentTenantId) return;
-    try {
-      const f = await agrGet('agr_tenants/' + currentTenantId + '/fidelite') || {};
-      document.getElementById('loyaltyMinMontant').value = f.minMontant || '';
-      document.getElementById('loyaltyAvantage').value = f.avantage || '';
-    } catch(e){}
-  }
-
-  async function loadClients(){
-    const body = document.getElementById('clientsTableBody');
-    const sub = document.getElementById('clientsListSub');
-    if(!currentTenantId) return;
-    try {
-      const [clients, fidelite] = await Promise.all([
-        agrGet('agr_tenants/' + currentTenantId + '/clients'),
-        agrGet('agr_tenants/' + currentTenantId + '/fidelite'),
-      ]);
-      const list = Object.values(clients || {}).sort((a,b) => (b.totalDepense||0)-(a.totalDepense||0));
-      const minMontant = (fidelite || {}).minMontant || 0;
-
-      if(list.length === 0){
-        sub.textContent = 'Aucun client pour l\'instant — une fiche est créée automatiquement à chaque commande en ligne.';
-        body.innerHTML = '';
-        return;
-      }
-      sub.textContent = list.length + ' client(s).';
-      body.innerHTML = list.map(c => {
-        const fidele = minMontant > 0 && (c.totalDepense||0) >= minMontant;
-        return `
-        <tr>
-          <td>${c.nom || '—'}</td>
-          <td>${c.telephone}</td>
-          <td>${(c.totalDepense||0).toLocaleString('fr-FR')} GNF</td>
-          <td>${c.pointsFidelite||0}</td>
-          <td>${fidele ? '<span class="tagpill" style="background:rgba(201,162,39,0.14); color:var(--gold-soft);">Fidèle</span>' : '—'}</td>
-        </tr>`;
-      }).join('');
-    } catch(e){
-      sub.textContent = 'Impossible de charger les clients.';
-    }
-  }
-
-  // ---------------------------------------------------------------
-  // Dépenses
-  // ---------------------------------------------------------------
   async function ajouterDepense(){
     showBanner('depenseError', null);
+    showBanner('depenseSuccess', null);
     const categorie = document.getElementById('depenseFormCategorie').value.trim();
+    const libelle = document.getElementById('depenseFormLibelle').value.trim();
     const montant = parseInt(document.getElementById('depenseFormMontant').value, 10) || 0;
-    const commentaire = document.getElementById('depenseFormCommentaire').value.trim();
 
-    if(!categorie || !montant){
-      showBanner('depenseError', 'Catégorie et montant sont requis.');
-      return;
-    }
+    if(!categorie){ showBanner('depenseError', 'Indiquez la catégorie de la dépense.'); return; }
+    if(!libelle){ showBanner('depenseError', 'Indiquez le libellé de la dépense.'); return; }
+    if(montant <= 0){ showBanner('depenseError', 'Le montant doit être supérieur à zéro.'); return; }
+
     try {
+      const annee = new Date().getFullYear();
+      const numero = 'DEP-' + annee + '-' + String(await prochainNumero('depenses')).padStart(4, '0');
+      const saisie = document.getElementById('depenseFormDate').value;
+
       const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/depenses'));
       await window._agrSet(newRef, {
-        categorie, montant, commentaire,
-        auteur: document.getElementById('userName').textContent || '—',
-        date: Date.now(),
+        numero, categorie, libelle, montant,
+        beneficiaire: document.getElementById('depenseFormBeneficiaire').value.trim() || null,
+        mode: document.getElementById('depenseFormMode').value,
+        piece: document.getElementById('depenseFormPiece').value.trim() || null,
+        commentaire: document.getElementById('depenseFormCommentaire').value.trim() || null,
+        auteur: nomUtilisateurCourant(),
+        auteurRole: currentRole,
+        date: saisie ? new Date(saisie).getTime() : Date.now(),
+        creeLe: Date.now(),
       });
-      await recordAudit('Dépense ajoutée', categorie + ' — ' + montant.toLocaleString('fr-FR') + ' GNF');
-      document.getElementById('depenseFormCategorie').value = '';
-      document.getElementById('depenseFormMontant').value = '';
-      document.getElementById('depenseFormCommentaire').value = '';
+      await recordAudit('Dépense enregistrée', numero + ' — ' + libelle + ' — ' + fmtGNF(montant));
+
+      ['depenseFormLibelle','depenseFormMontant','depenseFormBeneficiaire','depenseFormPiece','depenseFormCommentaire']
+        .forEach(id => { document.getElementById(id).value = ''; });
+
+      const ok = document.getElementById('depenseSuccess');
+      ok.style.display = 'block';
+      ok.innerHTML = 'Bon <strong>' + numero + '</strong> enregistré pour ' + fmtGNF(montant) + '. ' +
+        '<a onclick="imprimerBonDepense(\'' + newRef.key + '\')" style="color:var(--gold-soft); cursor:pointer; text-decoration:underline;">Imprimer le bon</a>';
+
       loadDepenses();
     } catch(e){
-      showBanner('depenseError', "Impossible d'enregistrer — vérifiez la connexion à Firebase.");
+      showBanner('depenseError', "Impossible d'enregistrer la dépense — vérifiez la connexion.");
     }
   }
 
@@ -5798,28 +6999,132 @@
     const body = document.getElementById('depensesTableBody');
     const sub = document.getElementById('depensesListSub');
     if(!currentTenantId) return;
+
+    const champDate = document.getElementById('depenseFormDate');
+    if(champDate && !champDate.value) champDate.value = new Date().toISOString().slice(0,10);
+
+    const modes = { especes:'Espèces', orange_money:'Orange Money', mobile_money:'Mobile Money', virement:'Virement', cheque:'Chèque' };
+    initBarrePeriode('depenses', { defaut:'mois', rendu: loadDepenses });
     try {
       const depenses = await agrGet('agr_tenants/' + currentTenantId + '/depenses') || {};
-      const list = Object.values(depenses).sort((a,b) => (b.date||0)-(a.date||0));
-      if(list.length === 0){
-        sub.textContent = 'Aucune dépense enregistrée.';
-        body.innerHTML = '';
+      depensesCourantes = Object.entries(depenses).map(([id, d]) => Object.assign({ id }, d))
+                                .filter(d => dansPeriode(d.date, 'depenses'))
+                                .sort((a,b) => (b.date||0) - (a.date||0));
+
+      const now = new Date();
+      const duMois = depensesCourantes.filter(d => {
+        const dt = new Date(d.date || 0);
+        return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth();
+      });
+      const total = depensesCourantes.reduce((s,d) => s + (d.montant||0), 0);
+
+      document.getElementById('depTotalMois').textContent = fmtGNF(duMois.reduce((s,d) => s + (d.montant||0), 0));
+      document.getElementById('depTotalGeneral').textContent = fmtGNF(total);
+      document.getElementById('depNbBons').textContent = depensesCourantes.length;
+
+      // Les catégories déjà utilisées sont proposées à la saisie
+      document.getElementById('listeCategoriesDepense').innerHTML =
+        Array.from(new Set(depensesCourantes.map(d => d.categorie).filter(Boolean)))
+             .map(c => `<option value="${echapper(c)}">`).join('');
+
+      if(!depensesCourantes.length){
+        definirFicheDepenses(modes, 0);
+        sub.textContent = 'Aucune dépense sur cette période.';
+        body.innerHTML = '<tr><td colspan="7" style="color:var(--text-dim);">Aucun bon de dépense sur cette période.</td></tr>';
         return;
       }
-      const total = list.reduce((s,d) => s + (d.montant||0), 0);
-      sub.textContent = list.length + ' dépense(s) — total ' + total.toLocaleString('fr-FR') + ' GNF.';
-      body.innerHTML = list.map(d => `
+
+      sub.textContent = depensesCourantes.length + ' bon(s) de dépense — total ' + fmtGNF(total) + '.';
+      definirFicheDepenses(modes, total);
+      body.innerHTML = depensesCourantes.map(d => `
         <tr>
-          <td>${new Date(d.date).toLocaleDateString('fr-FR')}</td>
-          <td>${d.categorie}</td>
-          <td>${(d.montant||0).toLocaleString('fr-FR')} GNF</td>
-          <td>${d.auteur}</td>
-          <td>${d.commentaire || '—'}</td>
-        </tr>
-      `).join('');
+          <td>${echapper(d.numero || '—')}</td>
+          <td>${new Date(d.date||0).toLocaleDateString('fr-FR')}</td>
+          <td>${echapper(d.categorie || '—')}</td>
+          <td>${echapper(d.libelle || d.commentaire || '—')}</td>
+          <td>${echapper(d.beneficiaire || '—')}<div style="font-size:10.5px;color:var(--text-dim);">${echapper(modes[d.mode] || '')}</div></td>
+          <td>${fmtGNF(d.montant)}</td>
+          <td><div class="table-actions">
+            <button class="mini-btn" onclick="imprimerBonDepense('${d.id}')">🖨 Bon</button>
+          </div></td>
+        </tr>`).join('');
     } catch(e){
       sub.textContent = 'Impossible de charger les dépenses.';
     }
+  }
+
+  function imprimerBonDepense(id){
+    const d = depensesCourantes.find(x => x.id === id);
+    if(!d) return;
+    const modes = { especes:'Espèces', orange_money:'Orange Money', mobile_money:'Mobile Money', virement:'Virement', cheque:'Chèque' };
+
+    imprimerDocument(
+      enteteDocument('Bon de dépense', 'Pièce justificative de sortie de caisse') +
+      `<div class="doc-ref">
+        <span>N° du bon : <b>${echapper(d.numero || '—')}</b></span>
+        <span>Date : <b>${new Date(d.date||0).toLocaleDateString('fr-FR')}</b></span>
+        <span>Catégorie : <b>${echapper(d.categorie || '—')}</b></span>
+      </div>
+
+      <div class="doc-bloc">
+        <h3>Objet de la dépense</h3>
+        <div class="doc-champs">
+          <div class="l"><span>Libellé</span><b>${echapper(d.libelle || '—')}</b></div>
+          <div class="l"><span>Bénéficiaire</span><b>${echapper(d.beneficiaire || '—')}</b></div>
+          <div class="l"><span>Mode de paiement</span><b>${echapper(modes[d.mode] || d.mode || '—')}</b></div>
+          <div class="l"><span>Pièce justificative</span><b>${echapper(d.piece || '—')}</b></div>
+        </div>
+      </div>
+
+      ${d.commentaire ? `<div class="doc-note">Observation : ${echapper(d.commentaire)}</div>` : ''}
+
+      <div class="doc-total"><span class="t">Montant décaissé</span><span class="v">${Number(d.montant||0).toLocaleString('fr-FR')} GNF</span></div>
+      <div class="doc-note">Enregistré par ${echapper(d.auteur || '—')}${d.auteurRole ? ' (' + echapper(roleLabels[d.auteurRole] || d.auteurRole) + ')' : ''} le ${dateLongue(d.creeLe || d.date)}.</div>
+
+      ${signaturesDocument('Le bénéficiaire', 'La direction')}
+      ${piedDocument('Bon de dépense')}`
+    );
+  }
+
+  function definirFicheDepenses(modes, total){
+    definirFiche('depenses', {
+      titre: 'Registre des dépenses',
+      colonnes: [{titre:'N° bon'},{titre:'Date'},{titre:'Catégorie'},{titre:'Libellé'},
+                 {titre:'Bénéficiaire'},{titre:'Mode'},{titre:'Montant',num:true}],
+      lignes: depensesCourantes.map(d => [
+        d.numero || '—', new Date(d.date||0).toLocaleDateString('fr-FR'),
+        d.categorie || '—', d.libelle || d.commentaire || '—', d.beneficiaire || '—',
+        modes[d.mode] || d.mode || '—', Number(d.montant||0).toLocaleString('fr-FR'),
+      ]),
+      totaux: [
+        { libelle: 'Nombre de bons', valeur: depensesCourantes.length },
+        { libelle: 'Total des décaissements (GNF)', valeur: Number(total||0).toLocaleString('fr-FR') },
+      ],
+      signatureGauche: 'Le comptable', signatureDroite: 'La direction',
+    });
+  }
+
+  function imprimerRegistreDepenses(){
+    const total = depensesCourantes.reduce((s,d) => s + (d.montant||0), 0);
+    const lignes = depensesCourantes.map(d => `<tr>
+      <td>${echapper(d.numero || '—')}</td>
+      <td>${new Date(d.date||0).toLocaleDateString('fr-FR')}</td>
+      <td>${echapper(d.categorie || '—')}</td>
+      <td>${echapper(d.libelle || '—')}</td>
+      <td>${echapper(d.beneficiaire || '—')}</td>
+      <td class="n">${Number(d.montant||0).toLocaleString('fr-FR')}</td>
+    </tr>`).join('');
+
+    imprimerDocument(
+      enteteDocument('Registre des dépenses', 'Arrêté au ' + dateLongue(Date.now())) +
+      `<table class="doc-table">
+        <thead><tr><th>N° bon</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th>Bénéficiaire</th><th class="n">Montant (GNF)</th></tr></thead>
+        <tbody>${lignes || '<tr><td colspan="6">Aucune dépense enregistrée</td></tr>'}</tbody>
+        <tfoot><tr><td colspan="5">Total des décaissements — ${depensesCourantes.length} bon(s)</td><td class="n">${total.toLocaleString('fr-FR')}</td></tr></tfoot>
+      </table>
+      ${signaturesDocument('Le comptable', 'La direction')}
+      ${piedDocument('Registre des dépenses')}`
+    );
   }
 
   // ---------------------------------------------------------------
@@ -5843,16 +7148,28 @@
     const body = document.getElementById('comptesTableBody');
     const sub = document.getElementById('comptesListSub');
     if(!currentTenantId) return;
+    initBarrePeriode('comptes', { sansPeriode:true, rendu: loadComptes });
     const typeLabels = { especes:'Espèces', orange_money:'Orange Money', virement:'Virement', cheque:'Chèque', banque:'Compte bancaire' };
     try {
       const comptes = await agrGet('agr_tenants/' + currentTenantId + '/comptesBancaires') || {};
       const list = Object.values(comptes);
+      const total = list.reduce((s,c) => s + (c.solde||0), 0);
+
+      definirFiche('comptes', {
+        sansPeriode: true,
+        titre: 'État des comptes de trésorerie',
+        colonnes: [{titre:'Compte'},{titre:'Type'},{titre:'Solde',num:true}],
+        lignes: list.map(c => [c.nom || '—', typeLabels[c.type] || c.type || '—',
+                               Number(c.solde||0).toLocaleString('fr-FR')]),
+        totaux: [{ libelle: 'Solde total de trésorerie (GNF)', valeur: total.toLocaleString('fr-FR') }],
+        signatureGauche: 'Le comptable', signatureDroite: 'La direction',
+      });
+
       if(list.length === 0){
         sub.textContent = 'Aucun compte pour l\'instant.';
         body.innerHTML = '';
         return;
       }
-      const total = list.reduce((s,c) => s + (c.solde||0), 0);
       sub.textContent = list.length + ' compte(s) — solde total ' + total.toLocaleString('fr-FR') + ' GNF.';
       body.innerHTML = list.map(c => `
         <tr>
@@ -5923,18 +7240,35 @@
 
     populateMonthYearSelectors('presenceMois', 'presenceAnnee');
     loadRegistrePresence();
+    initBarrePeriode('pointage', { defaut:'mois', rendu: loadPointage });
 
     const body = document.getElementById('pointageTableBody');
     const sub = document.getElementById('pointageListSub');
     try {
       const attendance = await agrGet('agr_tenants/' + currentTenantId + '/pointage') || {};
-      const list = Object.values(attendance).sort((a,b) => (b.date||0)-(a.date||0));
+      const list = Object.values(attendance).filter(x => dansPeriode(x.date, 'pointage'))
+                                            .sort((a,b) => (b.date||0)-(a.date||0));
+
+      definirFiche('pointage', {
+        titre: 'Historique des pointages',
+        colonnes: [{titre:'Employé'},{titre:'Type'},{titre:'Date'},{titre:'Heure'}],
+        lignes: list.map(x => [
+          x.nom || '—', x.type === 'entree' ? 'Entrée' : 'Sortie',
+          new Date(x.date||0).toLocaleDateString('fr-FR'), heureCourte(x.date),
+        ]),
+        totaux: [
+          { libelle: 'Nombre de pointages', valeur: list.length },
+          { libelle: 'Dont entrées', valeur: list.filter(x => x.type === 'entree').length },
+        ],
+        signatureGauche: 'Le responsable RH', signatureDroite: 'La direction',
+      });
+
       if(list.length === 0){
-        sub.textContent = 'Aucun pointage pour l\'instant.';
+        sub.textContent = 'Aucun pointage sur cette période.';
         body.innerHTML = '';
         return;
       }
-      sub.textContent = list.length + ' pointage(s) enregistré(s).';
+      sub.textContent = list.length + ' pointage(s) sur cette période.';
       body.innerHTML = list.map(p => `
         <tr><td>${p.nom}</td><td>${p.type === 'entree' ? 'Entrée' : 'Sortie'}</td><td>${new Date(p.date).toLocaleString('fr-FR')}</td></tr>
       `).join('');
@@ -6126,6 +7460,7 @@
   async function loadEvaluation(){
     const body = document.getElementById('evalTableBody');
     if(!currentTenantId) return;
+    initBarrePeriode('evaluation', { sansPeriode:true, rendu: loadEvaluation });
     try {
       const [users, commandes, pointage, info, evaluations] = await Promise.all([
         agrGet('agr_tenants/' + currentTenantId + '/users'),
@@ -6166,6 +7501,27 @@
         };
       }).sort((a,b) => b.revenu - a.revenu);
 
+      definirFiche('evaluation', {
+        sansPeriode: true,
+        titre: 'Classement et évaluation du personnel',
+        colonnes: [{titre:'Rang',num:true},{titre:'Employé'},{titre:'Ventes',num:true},
+                   {titre:'Revenu généré',num:true},{titre:'Retards (min)',num:true},
+                   {titre:'Erreurs',num:true},{titre:'Clients satisfaits',num:true},
+                   {titre:'Objectif'},{titre:'Prime proposée',num:true}],
+        lignes: rows.map((r,i) => [
+          i+1, r.nom, r.ventesCount, Number(r.revenu||0).toLocaleString('fr-FR'),
+          r.retardMin, r.erreurs, r.clientsSatisfaits,
+          r.objectifAtteint ? 'Atteint' : 'Non atteint',
+          Number(r.prime||0).toLocaleString('fr-FR'),
+        ]),
+        totaux: [
+          { libelle: 'Effectif évalué', valeur: rows.length },
+          { libelle: 'Total des primes proposées (GNF)',
+            valeur: rows.reduce((t,r) => t + (r.prime||0), 0).toLocaleString('fr-FR') },
+        ],
+        signatureGauche: 'Le responsable RH', signatureDroite: 'La direction',
+      });
+
       if(rows.length === 0){
         body.innerHTML = '<tr><td colspan="10" style="color:var(--text-dim);">Aucun employé pour l\'instant.</td></tr>';
         return;
@@ -6204,6 +7560,7 @@
   // =================================================================
   let comptaJournalCache = [];   // pour les exports
   let comptaResultatCache = null;
+  let comptaEtats = {};          // journal, caisse, grand livre, balance, bilan… pour l'impression
 
   function toggleComptaPeriodeInputs(){
     const periode = document.getElementById('comptaPeriode').value;
@@ -6306,6 +7663,12 @@
         `<div>Total crédit : <strong>${totalCredit.toLocaleString('fr-FR')} GNF</strong></div>` +
         `<div>${totalDebit === totalCredit ? '✓ Balance équilibrée' : '⚠ Écart de ' + Math.abs(totalDebit-totalCredit).toLocaleString('fr-FR') + ' GNF'}</div>`;
 
+      comptaEtats.label = label;
+      comptaEtats.journal = journal;
+      comptaEtats.caisse = caisseRows;
+      comptaEtats.grandLivre = grandLivreRows;
+      comptaEtats.balance = { totalDebit, totalCredit };
+
       // ---- Amortissements ----
       const immosList = Object.entries(immobilisations || {});
       const amortMensuelTotal = immosList.reduce((s,[,a]) => s + (a.valeur / (a.duree||1)), 0);
@@ -6323,6 +7686,8 @@
       const chargesTotal = chargesDepenses + amortPeriode;
       const resultatNet = revenus - chargesTotal;
       comptaResultatCache = { label, revenus, chargesDepenses, amortPeriode, chargesTotal, resultatNet };
+      comptaEtats.resultat = comptaResultatCache;
+      comptaEtats.amortissements = immosList;
 
       document.getElementById('resultatSummary').innerHTML =
         `<div>Période : <strong>${label}</strong></div>` +
@@ -6335,6 +7700,7 @@
       const taux = parseFloat(document.getElementById('tauxImposition').value) || (info && info.tauxImposition) || 0;
       if(!document.getElementById('tauxImposition').value) document.getElementById('tauxImposition').value = (info && info.tauxImposition) || 0;
       const impot = resultatNet > 0 ? resultatNet * (taux/100) : 0;
+      comptaEtats.impots = { taux, base: Math.max(0, resultatNet), impot, apres: resultatNet - impot };
       document.getElementById('impotsSummary').innerHTML =
         `<div>Résultat net imposable : <strong>${Math.max(0,resultatNet).toLocaleString('fr-FR')} GNF</strong></div>` +
         `<div>Impôt estimé (${taux}%) : <strong>${Math.round(impot).toLocaleString('fr-FR')} GNF</strong></div>` +
@@ -6344,6 +7710,7 @@
       const soldeComptes = Object.values(comptes || {}).reduce((s,c) => s + (c.solde||0), 0);
       const valeurStock = Object.values(produits || {}).reduce((s,p) => s + ((p.stock||0) * (p.prixAchat||0)), 0);
       const actifTotal = soldeComptes + valeurStock;
+      comptaEtats.bilan = { soldeComptes, valeurStock, actifTotal };
       document.getElementById('bilanSummary').innerHTML =
         `<div><strong>Actif</strong></div>` +
         `<div style="padding-left:14px;">Comptes bancaires/caisse : ${soldeComptes.toLocaleString('fr-FR')} GNF</div>` +
@@ -6356,6 +7723,130 @@
       showBanner('paramsError', null); // no-op safe guard
     }
   }
+
+  // ---------------------------------------------------------------
+  // Impression des états comptables — tous portent l'en-tête du
+  // restaurant (logo, adresse, téléphone) et la période sélectionnée.
+  // ---------------------------------------------------------------
+  function periodeCompta(){
+    return 'Période : ' + (comptaEtats.label || '—');
+  }
+  const nb = v => Number(v || 0).toLocaleString('fr-FR');
+
+  function imprimerJournalCompta(){
+    const j = comptaEtats.journal || [];
+    definirFiche('_journal', {
+      sansPeriode: true,
+      titre: 'Journal comptable',
+      colonnes: [{titre:'Date'},{titre:'Libellé'},{titre:'Compte'},{titre:'Débit',num:true},{titre:'Crédit',num:true}],
+      lignes: j.map(e => [
+        new Date(e.date||0).toLocaleDateString('fr-FR'), e.libelle || '—', e.compte || '—',
+        nb(e.debit), nb(e.credit),
+      ]),
+      totaux: [
+        { libelle: 'Total débit (GNF)', valeur: nb(j.reduce((s,e) => s + (e.debit||0), 0)) },
+        { libelle: 'Total crédit (GNF)', valeur: nb(j.reduce((s,e) => s + (e.credit||0), 0)) },
+      ],
+      signatureGauche: 'Le comptable', signatureDroite: 'La direction',
+    });
+    imprimerFiche('_journal', periodeCompta());
+  }
+
+  function imprimerLivreCaisse(){
+    const c = comptaEtats.caisse || [];
+    definirFiche('_caisse', {
+      sansPeriode: true,
+      titre: 'Livre de caisse',
+      colonnes: [{titre:'Date'},{titre:'Libellé'},{titre:'Entrée',num:true},{titre:'Sortie',num:true},{titre:'Solde cumulé',num:true}],
+      lignes: c.map(l => [
+        new Date(l.date||0).toLocaleDateString('fr-FR'), l.libelle || '—',
+        nb(l.entree), nb(l.sortie), nb(l.solde),
+      ]),
+      totaux: [
+        { libelle: 'Total des entrées (GNF)', valeur: nb(c.reduce((s,l) => s + (l.entree||0), 0)) },
+        { libelle: 'Total des sorties (GNF)', valeur: nb(c.reduce((s,l) => s + (l.sortie||0), 0)) },
+        { libelle: 'Solde de clôture (GNF)', valeur: nb(c.length ? c[c.length-1].solde : 0) },
+      ],
+      signatureGauche: 'Le caissier', signatureDroite: 'Le comptable',
+    });
+    imprimerFiche('_caisse', periodeCompta());
+  }
+
+  function imprimerGrandLivre(){
+    const g = comptaEtats.grandLivre || [];
+    definirFiche('_grandlivre', {
+      sansPeriode: true,
+      titre: 'Grand livre',
+      colonnes: [{titre:'Compte'},{titre:'Débit',num:true},{titre:'Crédit',num:true},{titre:'Solde',num:true}],
+      lignes: g.map(([compte, v]) => [compte, nb(v.debit), nb(v.credit), nb(v.debit - v.credit)]),
+      totaux: [
+        { libelle: 'Total débit (GNF)', valeur: nb(g.reduce((s,[,v]) => s + v.debit, 0)) },
+        { libelle: 'Total crédit (GNF)', valeur: nb(g.reduce((s,[,v]) => s + v.credit, 0)) },
+      ],
+      signatureGauche: 'Le comptable', signatureDroite: 'La direction',
+    });
+    imprimerFiche('_grandlivre', periodeCompta());
+  }
+
+  function imprimerAmortissements(){
+    const a = comptaEtats.amortissements || [];
+    definirFiche('_amort', {
+      sansPeriode: true,
+      titre: 'Tableau des amortissements',
+      colonnes: [{titre:'Bien'},{titre:'Valeur',num:true},{titre:'Durée (mois)',num:true},{titre:'Amortissement mensuel',num:true}],
+      lignes: a.map(([, x]) => [x.nom || '—', nb(x.valeur), x.duree || 0, nb(Math.round((x.valeur||0)/(x.duree||1)))]),
+      totaux: [
+        { libelle: 'Valeur totale des immobilisations (GNF)', valeur: nb(a.reduce((s,[,x]) => s + (x.valeur||0), 0)) },
+        { libelle: 'Amortissement mensuel total (GNF)', valeur: nb(Math.round(a.reduce((s,[,x]) => s + (x.valeur||0)/(x.duree||1), 0))) },
+      ],
+      signatureGauche: 'Le comptable', signatureDroite: 'La direction',
+    });
+    imprimerFiche('_amort', periodeCompta());
+  }
+
+  // Les états de synthèse : balance, résultat, bilan, impôts
+  function imprimerBalance(){
+    const b = comptaEtats.balance || { totalDebit:0, totalCredit:0 };
+    const ecart = Math.abs(b.totalDebit - b.totalCredit);
+    imprimerSynthese('Balance générale', periodeCompta(), [
+      { libelle: 'Total des débits', valeur: nb(b.totalDebit) },
+      { libelle: 'Total des crédits', valeur: nb(b.totalCredit) },
+      { libelle: ecart === 0 ? 'Balance équilibrée' : 'Écart constaté', valeur: nb(ecart), fort: true },
+    ]);
+  }
+
+  function imprimerCompteResultat(){
+    const r = comptaEtats.resultat || {};
+    imprimerSynthese('Compte de résultat', periodeCompta(), [
+      { libelle: 'Revenus (ventes)', valeur: nb(r.revenus) },
+      { libelle: 'Charges (dépenses)', valeur: '− ' + nb(r.chargesDepenses) },
+      { libelle: 'Amortissements de la période', valeur: '− ' + nb(Math.round(r.amortPeriode || 0)) },
+      { libelle: 'Total des charges', valeur: nb(Math.round(r.chargesTotal || 0)) },
+      { libelle: 'RÉSULTAT NET', valeur: nb(Math.round(r.resultatNet || 0)), fort: true },
+    ]);
+  }
+
+  function imprimerBilan(){
+    const b = comptaEtats.bilan || {};
+    imprimerSynthese('Bilan simplifié', periodeCompta(), [
+      { libelle: 'ACTIF — Comptes bancaires et caisse', valeur: nb(b.soldeComptes) },
+      { libelle: 'ACTIF — Valeur du stock', valeur: nb(b.valeurStock) },
+      { libelle: 'TOTAL ACTIF', valeur: nb(b.actifTotal), fort: true },
+      { libelle: 'PASSIF — Capitaux propres (simplifié)', valeur: nb(b.actifTotal) },
+      { libelle: 'TOTAL PASSIF', valeur: nb(b.actifTotal), fort: true },
+    ], "Bilan simplifié : l'actif ne comprend que la trésorerie et le stock, aucune dette n'est suivie. Il ne remplace pas un bilan comptable certifié.");
+  }
+
+  function imprimerImpots(){
+    const i = comptaEtats.impots || {};
+    imprimerSynthese('Estimation des impôts', periodeCompta(), [
+      { libelle: 'Résultat net imposable', valeur: nb(i.base) },
+      { libelle: "Taux d'imposition appliqué", valeur: (i.taux || 0) + ' %' },
+      { libelle: 'Impôt estimé', valeur: nb(Math.round(i.impot || 0)), fort: true },
+      { libelle: 'Résultat après impôt', valeur: nb(Math.round(i.apres || 0)) },
+    ], "Estimation indicative calculée sur le résultat de la période. Elle ne remplace pas une déclaration fiscale.");
+  }
+
 
   async function saveTauxImposition(){
     if(!currentTenantId) return;
@@ -6608,6 +8099,347 @@
       dot.className = 'conn-dot ' + (connected ? 'ok' : 'err');
       txt.textContent = connected ? 'En ligne' : 'Hors ligne';
     });
+  }
+
+  // ===============================================================
+  // MODULES DE GESTION — menu, stocks, pertes, clients, tables, audit
+  // (restaurés à leur place après la refonte des fiches ; le journal
+  //  d'audit recordAudit() est utilisé par tous les autres modules)
+  // ===============================================================
+  async function recordAudit(action, detail){
+    if(!currentTenantId) return;
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/audit'));
+      await window._agrSet(newRef, {
+        action, detail: detail || '',
+        auteur: document.getElementById('userName').textContent || currentUserId || '—',
+        date: Date.now(),
+      });
+    } catch(e){}
+  }
+
+  async function ajouterPlat(){
+    showBanner('menuError', null);
+    const nom = document.getElementById('menuFormNom').value.trim();
+    const categorie = document.getElementById('menuFormCategorie').value.trim();
+    const prixVente = parseInt(document.getElementById('menuFormPrixVente').value, 10) || 0;
+    const prixAchat = parseInt(document.getElementById('menuFormPrixAchat').value, 10) || 0;
+    const stock = parseInt(document.getElementById('menuFormStockInitial').value, 10) || 0;
+
+    if(!nom || !prixVente){
+      showBanner('menuError', 'Le nom du plat et le prix de vente sont requis.');
+      return;
+    }
+    try {
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/produits'));
+      await window._agrSet(newRef, { nom, categorie, prixVente, prixAchat, stock, seuilAlerte: 0, disponible: true });
+      await recordAudit('Plat ajouté', nom);
+      document.getElementById('menuFormNom').value = '';
+      document.getElementById('menuFormCategorie').value = '';
+      document.getElementById('menuFormPrixVente').value = '';
+      document.getElementById('menuFormPrixAchat').value = '';
+      document.getElementById('menuFormStockInitial').value = '0';
+      loadMenuManagement();
+    } catch(e){
+      showBanner('menuError', "Impossible d'ajouter le plat — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function supprimerPlat(id){
+    try {
+      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + id);
+      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + id, null);
+      await recordAudit('Plat supprimé', (p && p.nom) || id);
+      loadMenuManagement();
+    } catch(e){}
+  }
+
+  async function loadMenuManagement(){
+    const body = document.getElementById('menuTableBody');
+    const sub = document.getElementById('menuListSub');
+    if(!currentTenantId) return;
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const entries = Object.entries(produits);
+      if(entries.length === 0){
+        sub.textContent = 'Aucun plat pour l\'instant.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = entries.length + ' plat(s) au menu.';
+      body.innerHTML = entries.map(([id, p]) => `
+        <tr>
+          <td>${p.nom}</td>
+          <td>${p.categorie || '—'}</td>
+          <td>${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${Number((p.prixVente||0)-(p.prixAchat||0)).toLocaleString('fr-FR')} GNF</td>
+          <td>${p.disponible === false ? 'Non' : 'Oui'}</td>
+          <td><a onclick="supprimerPlat('${id}')" style="color:#E19488; cursor:pointer; font-size:12px;">Supprimer</a></td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger le menu depuis Firebase.';
+    }
+  }
+
+  async function ajusterStock(produitId, delta){
+    try {
+      const p = await agrGet('agr_tenants/' + currentTenantId + '/produits/' + produitId) || {};
+      const nouveauStock = Math.max(0, (p.stock || 0) + delta);
+      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + produitId + '/stock', nouveauStock);
+      loadStocks();
+    } catch(e){}
+  }
+
+  async function updateSeuil(produitId, valeur){
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/produits/' + produitId + '/seuilAlerte', parseInt(valeur, 10) || 0);
+    } catch(e){}
+  }
+
+  async function loadStocks(){
+    const body = document.getElementById('stocksTableBody');
+    const sub = document.getElementById('stocksListSub');
+    const perteSelect = document.getElementById('perteFormProduit');
+    if(!currentTenantId) return;
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const entries = Object.entries(produits);
+      if(entries.length === 0){
+        sub.textContent = 'Ajoutez des plats dans Menu & Catégories pour suivre leur stock.';
+        body.innerHTML = '';
+        perteSelect.innerHTML = '<option value="">Aucun plat</option>';
+        return;
+      }
+      sub.textContent = entries.length + ' plat(s) suivis.';
+      perteSelect.innerHTML = entries.map(([id,p]) => `<option value="${id}">${p.nom}</option>`).join('');
+      body.innerHTML = entries.map(([id, p]) => {
+        const stock = p.stock ?? 0;
+        const seuil = p.seuilAlerte ?? 0;
+        let statut = '<span class="tagpill" style="background:rgba(78,151,132,0.14); color:var(--teal-soft);">OK</span>';
+        if(stock <= 0) statut = '<span class="tagpill out">Rupture</span>';
+        else if(stock <= seuil) statut = '<span class="tagpill low">Faible</span>';
+        return `
+        <tr>
+          <td>${p.nom}</td>
+          <td>${stock}</td>
+          <td><input type="number" value="${seuil}" style="width:60px; background:var(--surface-2); border:1px solid var(--line); border-radius:4px; color:var(--text); padding:4px;" onchange="updateSeuil('${id}', this.value)"></td>
+          <td>${statut}</td>
+          <td>
+            <a onclick="ajusterStock('${id}', 1)" style="cursor:pointer; color:var(--teal-soft); margin-right:8px;">+1</a>
+            <a onclick="ajusterStock('${id}', -1)" style="cursor:pointer; color:#E19488;">-1</a>
+          </td>
+        </tr>`;
+      }).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les stocks depuis Firebase.';
+    }
+  }
+
+  async function declarerPerte(){
+    showBanner('perteError', null);
+    const produitId = document.getElementById('perteFormProduit').value;
+    const type = document.getElementById('perteFormType').value.trim();
+    const quantite = parseInt(document.getElementById('perteFormQuantite').value, 10) || 1;
+    const cout = parseInt(document.getElementById('perteFormCout').value, 10) || 0;
+    const commentaire = document.getElementById('perteFormCommentaire').value.trim();
+
+    if(!produitId || !type){
+      showBanner('perteError', 'Sélectionnez un plat et indiquez le type de perte.');
+      return;
+    }
+    try {
+      const produits = await agrGet('agr_tenants/' + currentTenantId + '/produits') || {};
+      const nomPlat = (produits[produitId] || {}).nom || '—';
+
+      const newRef = window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/pertes'));
+      await window._agrSet(newRef, {
+        produitNom: nomPlat, type, quantite, cout, commentaire,
+        responsable: document.getElementById('userName').textContent || '—',
+        date: Date.now(),
+      });
+
+      await ajusterStock(produitId, -Math.abs(quantite));
+      await recordAudit('Perte déclarée', nomPlat + ' — ' + type);
+
+      document.getElementById('perteFormType').value = '';
+      document.getElementById('perteFormCout').value = '';
+      document.getElementById('perteFormCommentaire').value = '';
+      loadPertes();
+    } catch(e){
+      showBanner('perteError', "Impossible d'enregistrer la perte — vérifiez la connexion à Firebase.");
+    }
+  }
+
+  async function loadPertes(){
+    const body = document.getElementById('pertesTableBody');
+    const sub = document.getElementById('pertesListSub');
+    if(!currentTenantId) return;
+    initBarrePeriode('pertes', { defaut:'mois', rendu: loadPertes });
+    try {
+      const pertes = await agrGet('agr_tenants/' + currentTenantId + '/pertes') || {};
+      const list = Object.values(pertes).filter(x => dansPeriode(x.date, 'pertes'))
+                                        .sort((a,b) => (b.date||0)-(a.date||0));
+
+      const coutTotal = list.reduce((t,x) => t + (x.cout||0), 0);
+      const qteTotale = list.reduce((t,x) => t + (x.quantite||0), 0);
+      definirFiche('pertes', {
+        titre: 'Historique des pertes',
+        colonnes: [{titre:'Date'},{titre:'Plat'},{titre:'Type'},{titre:'Qté',num:true},
+                   {titre:'Coût',num:true},{titre:'Responsable'}],
+        lignes: list.map(x => [
+          new Date(x.date||0).toLocaleDateString('fr-FR'), x.produitNom || '—', x.type || '—',
+          x.quantite || 0, Number(x.cout||0).toLocaleString('fr-FR'), x.responsable || '—',
+        ]),
+        totaux: [
+          { libelle: 'Quantité totale perdue', valeur: qteTotale },
+          { libelle: 'Coût total des pertes (GNF)', valeur: coutTotal.toLocaleString('fr-FR') },
+        ],
+        signatureGauche: 'Le gérant', signatureDroite: 'La direction',
+      });
+
+      if(list.length === 0){
+        sub.textContent = 'Aucune perte sur cette période.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = list.length + ' perte(s) — coût total ' + fmtGNF(coutTotal) + '.';
+      body.innerHTML = list.map(p => `
+        <tr>
+          <td>${new Date(p.date).toLocaleDateString('fr-FR')}</td>
+          <td>${p.produitNom}</td>
+          <td>${p.type}</td>
+          <td>${p.quantite}</td>
+          <td>${(p.cout||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${p.responsable}</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les pertes.';
+    }
+  }
+
+  async function loadClients(){
+    const body = document.getElementById('clientsTableBody');
+    const sub = document.getElementById('clientsListSub');
+    if(!currentTenantId) return;
+    initBarrePeriode('clients', { sansPeriode:true, rendu: loadClients });
+    try {
+      const [clients, fidelite] = await Promise.all([
+        agrGet('agr_tenants/' + currentTenantId + '/clients'),
+        agrGet('agr_tenants/' + currentTenantId + '/fidelite'),
+      ]);
+      const list = Object.values(clients || {}).sort((a,b) => (b.totalDepense||0)-(a.totalDepense||0));
+      const minMontant = (fidelite || {}).minMontant || 0;
+
+      const totalDepense = list.reduce((t,c) => t + (c.totalDepense||0), 0);
+      definirFiche('clients', {
+        sansPeriode: true,
+        titre: 'Fichier clients',
+        colonnes: [{titre:'Nom'},{titre:'Téléphone'},{titre:'Total dépensé',num:true},
+                   {titre:'Points',num:true},{titre:'Statut'}],
+        lignes: list.map(c => [
+          c.nom || '—', c.telephone || '—',
+          Number(c.totalDepense||0).toLocaleString('fr-FR'),
+          c.pointsFidelite || 0,
+          (minMontant > 0 && (c.totalDepense||0) >= minMontant) ? 'Fidèle' : 'Standard',
+        ]),
+        totaux: [
+          { libelle: 'Nombre de clients', valeur: list.length },
+          { libelle: 'Chiffre d\'affaires clients (GNF)', valeur: totalDepense.toLocaleString('fr-FR') },
+        ],
+        signatureGauche: 'Le gérant', signatureDroite: 'La direction',
+      });
+
+      if(list.length === 0){
+        sub.textContent = 'Aucun client pour l\'instant — une fiche est créée automatiquement à chaque commande en ligne.';
+        body.innerHTML = '';
+        return;
+      }
+      sub.textContent = list.length + ' client(s) — ' + fmtGNF(totalDepense) + ' dépensés au total.';
+      body.innerHTML = list.map(c => {
+        const fidele = minMontant > 0 && (c.totalDepense||0) >= minMontant;
+        return `
+        <tr>
+          <td>${c.nom || '—'}</td>
+          <td>${c.telephone}</td>
+          <td>${(c.totalDepense||0).toLocaleString('fr-FR')} GNF</td>
+          <td>${c.pointsFidelite||0}</td>
+          <td>${fidele ? '<span class="tagpill" style="background:rgba(201,162,39,0.14); color:var(--gold-soft);">Fidèle</span>' : '—'}</td>
+        </tr>`;
+      }).join('');
+    } catch(e){
+      sub.textContent = 'Impossible de charger les clients.';
+    }
+  }
+
+  async function loadLoyaltySettings(){
+    if(!currentTenantId) return;
+    try {
+      const f = await agrGet('agr_tenants/' + currentTenantId + '/fidelite') || {};
+      document.getElementById('loyaltyMinMontant').value = f.minMontant || '';
+      document.getElementById('loyaltyAvantage').value = f.avantage || '';
+    } catch(e){}
+  }
+
+  async function saveLoyaltySettings(){
+    if(!currentTenantId) return;
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/fidelite', {
+        minMontant: parseInt(document.getElementById('loyaltyMinMontant').value, 10) || 0,
+        avantage: document.getElementById('loyaltyAvantage').value.trim(),
+      });
+      showBanner('loyaltySuccess', 'Programme de fidélité enregistré.');
+    } catch(e){}
+  }
+
+  async function loadTablesSection(){
+    if(!currentTenantId) return;
+    try {
+      const info = await agrGet('agr_tenants/' + currentTenantId + '/info') || {};
+      const n = info.nombreTables || 0;
+      const grid = document.getElementById('tablesGrid');
+      const sub = document.getElementById('tablesSub');
+      if(n === 0){
+        grid.innerHTML = '';
+        sub.textContent = 'Aucune table configurée — définissez le nombre de tables dans Paramètres.';
+        return;
+      }
+      sub.textContent = n + ' table(s) — configuration dans Paramètres.';
+      grid.innerHTML = Array.from({length:n}, (_,i) => `<div class="table-cell libre">T${i+1}</div>`).join('');
+    } catch(e){}
+  }
+
+  async function loadAudit(){
+    const body = document.getElementById('auditTableBody');
+    if(!currentTenantId) return;
+    try {
+      const logs = await agrGet('agr_tenants/' + currentTenantId + '/audit') || {};
+      const list = Object.values(logs).sort((a,b) => (b.date||0) - (a.date||0));
+      if(list.length === 0){
+        body.innerHTML = '<tr><td colspan="4" style="color:var(--text-dim);">Aucune action enregistrée pour l\'instant.</td></tr>';
+        return;
+      }
+      body.innerHTML = list.map(l => `
+        <tr>
+          <td>${new Date(l.date).toLocaleString('fr-FR')}</td>
+          <td>${l.action}</td>
+          <td>${l.detail || '—'}</td>
+          <td>${l.auteur}</td>
+        </tr>
+      `).join('');
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="4" style="color:#E19488;">Impossible de charger le journal.</td></tr>';
+    }
+  }
+
+  async function supprimerEmploye(id){
+    if(id === 'dg') return; // protège le compte fondateur/DG
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/users/' + id, null);
+      await recordAudit('Suppression employé', id);
+      loadEquipe();
+    } catch(e){}
   }
 
   initConnectionStatus();
