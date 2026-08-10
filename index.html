@@ -104,73 +104,234 @@
     opacity:0.5;
   }
 
-  /* ================= STOREFRONT (page publicitaire + commande client) ================= */
+  /* ================= PAGE WEB PUBLIQUE DU RESTAURANT =================
+     Vitrine autonome : en-tête collant, bannière, présentation, menu par
+     catégories, galerie photo, avis et panier en tiroir. Aucun identifiant
+     de connexion n'apparaît sur cette page ni dans son adresse. */
   #view-storefront{display:none; min-height:100vh; background:var(--ink);}
-  .storefront-nav{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:16px 40px; border-bottom:1px solid var(--line);
-  }
-  .storefront-nav .back{font-size:12.5px; color:var(--text-dim); cursor:pointer;}
-  .storefront-hero{
-    padding:50px 40px 30px; max-width:1100px; margin:0 auto; text-align:center;
-  }
-  .storefront-hero .eyebrow{
-    font-family:'IBM Plex Mono',monospace; color:var(--gold-soft); font-size:11.5px;
-    letter-spacing:0.14em; text-transform:uppercase; margin-bottom:12px;
-  }
-  .storefront-hero h1{font-family:'Fraunces',serif; font-size:36px; margin:0 0 10px; font-weight:600;}
-  .storefront-hero p{color:var(--text-dim); font-size:14px; max-width:520px; margin:0 auto;}
 
-  .storefront-body{
-    max-width:1100px; margin:0 auto; padding:0 40px 80px;
-    display:grid; grid-template-columns:1fr 320px; gap:28px;
+  /* ---- Annuaire (affiché quand l'adresse ne désigne aucun restaurant) ---- */
+  .sf-dir{max-width:900px; margin:0 auto; padding:64px 24px 80px;}
+  .sf-dir h1{font-family:'Fraunces',serif; font-size:32px; margin:0 0 10px;}
+  .sf-dir p{color:var(--text-dim); font-size:14px; margin:0 0 26px;}
+  .sf-dir-search{
+    display:flex; gap:10px; margin-bottom:26px; flex-wrap:wrap;
   }
-  .menu-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; align-content:start;}
-  .menu-item{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
-    padding:16px; display:flex; flex-direction:column; gap:6px;
+  .sf-dir-search input{
+    flex:1; min-width:200px; padding:13px 15px; border-radius:9px;
+    background:var(--surface); border:1px solid var(--line); color:var(--text); font-size:14px;
   }
-  .menu-item .mcat{font-size:10px; color:var(--gold-soft); text-transform:uppercase; letter-spacing:0.08em;}
-  .menu-item .mname{font-family:'Fraunces',serif; font-size:16px; font-weight:600;}
-  .menu-item .mdesc{font-size:12px; color:var(--text-dim); line-height:1.5; flex:1;}
-  .menu-item .mfoot{display:flex; align-items:center; justify-content:space-between; margin-top:8px;}
-  .menu-item .mprice{font-family:'IBM Plex Mono',monospace; color:var(--text); font-size:13.5px;}
-  .menu-item .maddbtn{
-    background:var(--gold); color:#181205; border:none; border-radius:5px;
-    padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer;
+  .sf-dir-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px;}
+  .sf-dir-card{
+    display:flex; align-items:center; gap:13px; text-align:left;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:15px; cursor:pointer; transition:border-color 0.15s ease, transform 0.15s ease;
   }
-  .menu-item .maddbtn:hover{background:var(--gold-soft);}
+  .sf-dir-card:hover{border-color:var(--gold); transform:translateY(-2px);}
+  .sf-dir-card .nom{font-family:'Fraunces',serif; font-size:16px; display:block;}
+  .sf-dir-card .lieu{font-size:11.5px; color:var(--text-dim);}
 
-  .cart-panel{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
-    padding:20px; align-self:start; position:sticky; top:20px;
+  /* ---- Logo du restaurant : sa vraie image, sinon ses initiales ---- */
+  .sf-logo{
+    border-radius:50%; object-fit:cover; flex-shrink:0;
+    border:2px solid rgba(201,162,39,0.65); background:var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; color:var(--gold-soft); overflow:hidden;
   }
-  .cart-panel h3{font-family:'Fraunces',serif; font-size:16px; margin:0 0 4px;}
-  .cart-panel .sub{font-size:11.5px; color:var(--text-dim); margin-bottom:14px;}
-  .cart-line{display:flex; justify-content:space-between; align-items:center; font-size:12.5px; padding:7px 0; border-bottom:1px solid var(--line);}
-  .cart-line .qty{color:var(--text-dim); font-family:'IBM Plex Mono',monospace; margin-right:6px;}
-  .cart-empty{font-size:12.5px; color:var(--text-dim); padding:14px 0;}
-  .cart-total{display:flex; justify-content:space-between; font-family:'Fraunces',serif; font-size:17px; margin:14px 0; padding-top:10px; border-top:1px solid var(--line);}
+  .sf-logo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .sf-logo.sm{width:42px; height:42px; font-size:15px;}
+  .sf-logo.lg{width:104px; height:104px; font-size:34px; border-width:3px; box-shadow:0 18px 46px rgba(0,0,0,0.55);}
+
+  /* ---- En-tête collant ---- */
+  .sf-header{
+    position:sticky; top:0; z-index:60;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:12px 32px; background:rgba(15,19,25,0.9); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .sf-brand{display:flex; align-items:center; gap:12px; min-width:0;}
+  .sf-brand .nom{font-family:'Fraunces',serif; font-size:17px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .sf-brand .lieu{font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.1em;}
+  .sf-nav{display:flex; align-items:center; gap:24px;}
+  .sf-nav a{color:var(--text-dim); font-size:13.5px; text-decoration:none; cursor:pointer;}
+  .sf-nav a:hover{color:var(--gold-soft);}
+  .sf-header-cta{
+    display:flex; align-items:center; gap:8px; padding:9px 16px; border:none; border-radius:8px;
+    background:var(--gold); color:#181205; font-size:13px; font-weight:700; cursor:pointer;
+    font-family:'Inter',sans-serif; white-space:nowrap;
+  }
+  .sf-header-cta .n{
+    background:#181205; color:var(--gold-soft); border-radius:999px;
+    padding:1px 7px; font-size:11px; font-family:'IBM Plex Mono',monospace;
+  }
+
+  /* ---- Bannière ---- */
+  .sf-hero{
+    position:relative; min-height:440px; display:flex; align-items:flex-end;
+    background:var(--surface-2) center/cover no-repeat; overflow:hidden;
+  }
+  .sf-hero::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(15,19,25,0.55) 0%, rgba(15,19,25,0.75) 55%, var(--ink) 100%);
+  }
+  .sf-hero-inner{
+    position:relative; z-index:2; width:100%; max-width:1120px;
+    margin:0 auto; padding:52px 32px 44px; text-align:center;
+  }
+  .sf-hero-inner .sf-logo{margin:0 auto 18px;}
+  .sf-hero h1{font-family:'Fraunces',serif; font-size:44px; line-height:1.1; margin:0 0 12px; font-weight:600;}
+  .sf-tagline{font-size:16px; color:#D8D3C6; max-width:620px; margin:0 auto 20px; line-height:1.6;}
+  .sf-badges{display:flex; justify-content:center; gap:9px; flex-wrap:wrap; margin-bottom:26px;}
+  .sf-badges span{
+    display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,0.09); border:1px solid rgba(255,255,255,0.16);
+    border-radius:999px; padding:6px 14px; font-size:12.5px; color:#EDEAE2;
+  }
+  .sf-cta{display:flex; justify-content:center; gap:12px; flex-wrap:wrap;}
+  .sf-btn{
+    display:inline-flex; align-items:center; gap:8px; padding:13px 26px;
+    border-radius:9px; font-size:14px; font-weight:700; cursor:pointer;
+    border:none; font-family:'Inter',sans-serif; text-decoration:none;
+  }
+  .sf-btn.or{background:linear-gradient(135deg,var(--gold),var(--gold-soft)); color:#181205;}
+  .sf-btn.wa{background:#25D366; color:#08130F;}
+  .sf-btn.gh{background:rgba(255,255,255,0.10); border:1px solid rgba(255,255,255,0.25); color:#fff;}
+
+  /* ---- Sections ---- */
+  .sf-section{max-width:1120px; margin:0 auto; padding:56px 32px;}
+  .sf-eyebrow{
+    font-family:'IBM Plex Mono',monospace; color:var(--gold-soft); font-size:11px;
+    letter-spacing:0.16em; text-transform:uppercase; margin-bottom:10px;
+  }
+  .sf-section h2{font-family:'Fraunces',serif; font-size:28px; margin:0 0 8px; font-weight:600;}
+  .sf-section .lead{color:var(--text-dim); font-size:14px; line-height:1.75; max-width:680px; margin:0 0 26px;}
+
+  .sf-infos{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .sf-info-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px;
+  }
+  .sf-info-card .ic{font-size:20px; margin-bottom:10px;}
+  .sf-info-card .t{font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.09em; margin-bottom:6px;}
+  .sf-info-card .v{font-size:14px; line-height:1.6;}
+
+  /* ---- Menu ---- */
+  .sf-cats{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;}
+  .sf-chip{
+    padding:8px 16px; border-radius:999px; cursor:pointer; font-size:12.5px;
+    background:var(--surface); border:1px solid var(--line); color:var(--text-dim);
+  }
+  .sf-chip.on{background:rgba(201,162,39,0.14); border-color:var(--gold); color:var(--gold-soft); font-weight:600;}
+  .sf-menu-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(255px,1fr)); gap:16px;}
+  .sf-dish{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:18px; display:flex; flex-direction:column; gap:7px;
+    transition:border-color 0.15s ease, transform 0.15s ease;
+  }
+  .sf-dish:hover{border-color:rgba(201,162,39,0.5); transform:translateY(-2px);}
+  .sf-dish .cat{font-size:10px; color:var(--gold-soft); text-transform:uppercase; letter-spacing:0.09em;}
+  .sf-dish .nom{font-family:'Fraunces',serif; font-size:17px; font-weight:600; line-height:1.3;}
+  .sf-dish .desc{font-size:12.5px; color:var(--text-dim); line-height:1.55; flex:1;}
+  .sf-dish .foot{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px;}
+  .sf-dish .prix{font-family:'IBM Plex Mono',monospace; font-size:14.5px; color:var(--gold-soft);}
+  .sf-add{
+    background:var(--gold); color:#181205; border:none; border-radius:7px;
+    padding:8px 15px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .sf-add:hover{background:var(--gold-soft);}
+
+  /* ---- Galerie ---- */
+  .sf-gallery{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px;}
+  .sf-gallery figure{margin:0; border-radius:12px; overflow:hidden; cursor:zoom-in; background:var(--surface-2); aspect-ratio:4/3;}
+  .sf-gallery img{width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.35s ease;}
+  .sf-gallery figure:hover img{transform:scale(1.06);}
+  .sf-gallery figure:first-child{grid-column:span 2; grid-row:span 2; aspect-ratio:auto; min-height:260px;}
+
+  .sf-lightbox{
+    display:none; position:fixed; inset:0; z-index:500; cursor:zoom-out;
+    background:rgba(0,0,0,0.88); align-items:center; justify-content:center; padding:24px;
+  }
+  .sf-lightbox.on{display:flex;}
+  .sf-lightbox img{max-width:96vw; max-height:92vh; border-radius:10px;}
+
+  /* ---- Avis ---- */
+  .sf-avis-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin-bottom:24px;}
+  .sf-avis-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:16px;}
+  .sf-avis-card .etoiles{color:var(--gold-soft); font-size:14px; letter-spacing:2px;}
+  .sf-avis-card .txt{font-size:13px; line-height:1.6; margin:8px 0;}
+  .sf-avis-card .qui{font-size:11.5px; color:var(--text-dim);}
+  .sf-avis-form{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:20px; max-width:520px;}
+
+  /* ---- Pied de page ---- */
+  .sf-footer{border-top:1px solid var(--line); background:var(--surface); margin-top:20px;}
+  .sf-footer-in{
+    max-width:1120px; margin:0 auto; padding:38px 32px 22px;
+    display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:28px;
+  }
+  .sf-footer h4{font-family:'Fraunces',serif; font-size:15px; margin:0 0 12px;}
+  .sf-footer p, .sf-footer a{font-size:13px; color:var(--text-dim); line-height:1.9; text-decoration:none; display:block;}
+  .sf-footer a:hover{color:var(--gold-soft);}
+  .sf-footer-bas{
+    border-top:1px solid var(--line); padding:14px 32px; text-align:center;
+    font-size:11.5px; color:var(--text-dim);
+  }
+  .sf-footer-bas span{cursor:pointer;}
+  .sf-footer-bas span:hover{color:var(--gold-soft);}
+
+  /* ---- Panier en tiroir ---- */
+  .sf-cart-backdrop{display:none; position:fixed; inset:0; z-index:420; background:rgba(0,0,0,0.55);}
+  .sf-cart-backdrop.on{display:block;}
+  .sf-cart{
+    position:fixed; top:0; right:0; bottom:0; z-index:430;
+    width:394px; max-width:92vw; background:var(--surface);
+    border-left:1px solid var(--line); padding:22px;
+    overflow-y:auto; transform:translateX(103%); transition:transform 0.26s ease;
+  }
+  .sf-cart.on{transform:translateX(0);}
+  .sf-cart h3{font-family:'Fraunces',serif; font-size:19px; margin:0 0 4px;}
+  .sf-cart .sub{font-size:11.5px; color:var(--text-dim); margin-bottom:16px;}
+  .sf-cart-close{
+    position:absolute; top:16px; right:16px; width:30px; height:30px; line-height:1;
+    border:1px solid var(--line); border-radius:8px; background:var(--surface-2);
+    color:var(--text); font-size:17px; cursor:pointer;
+  }
+  .sf-fab{
+    display:none; position:fixed; right:18px; bottom:18px; z-index:410;
+    align-items:center; gap:9px; padding:14px 20px; border:none; border-radius:999px;
+    background:var(--gold); color:#181205; font-size:14px; font-weight:700;
+    cursor:pointer; font-family:'Inter',sans-serif; box-shadow:0 14px 34px rgba(0,0,0,0.5);
+  }
+  .sf-fab.on{display:flex;}
+
+  .cart-line{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:9px 0; border-bottom:1px solid var(--line);}
+  .cart-line .qty{color:var(--gold-soft); font-family:'IBM Plex Mono',monospace; margin-right:7px;}
+  .cart-line button{
+    background:none; border:1px solid var(--line); border-radius:6px; color:var(--text-dim);
+    width:24px; height:24px; cursor:pointer; font-size:14px; line-height:1; margin-left:8px;
+  }
+  .cart-empty{font-size:12.5px; color:var(--text-dim); padding:16px 0;}
+  .cart-total{display:flex; justify-content:space-between; font-family:'Fraunces',serif; font-size:18px; margin:14px 0; padding-top:12px; border-top:1px solid var(--line);}
   .cart-total .val{color:var(--gold-soft);}
-
   .paid-banner{
     display:none; background:rgba(47,111,94,0.14); border:1px solid var(--teal);
     color:var(--teal-soft); font-size:12.5px; border-radius:8px; padding:12px 14px; margin-bottom:14px; line-height:1.6;
   }
 
-  .commandes-table{width:100%; border-collapse:collapse; font-size:12.5px;}
-  .commandes-table th{
-    text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em;
-    color:var(--text-dim); font-weight:500; padding:8px 6px; border-bottom:1px solid var(--line);
+  @media (max-width: 900px){
+    .sf-header{padding:10px 16px;}
+    .sf-nav{display:none;}
+    .sf-hero{min-height:380px;}
+    .sf-hero-inner{padding:40px 18px 34px;}
+    .sf-hero h1{font-size:31px;}
+    .sf-tagline{font-size:14.5px;}
+    .sf-section{padding:40px 18px;}
+    .sf-section h2{font-size:23px;}
+    .sf-infos{grid-template-columns:1fr;}
+    .sf-gallery figure:first-child{grid-column:span 1; grid-row:span 1; min-height:0; aspect-ratio:4/3;}
+    .sf-footer-in{grid-template-columns:1fr; padding:28px 18px 18px;}
+    .sf-cart{width:100%; max-width:100%;}
+    .sf-dir{padding:40px 18px 90px;}
   }
-  .commandes-table td{padding:9px 6px; border-bottom:1px solid var(--line); font-family:'IBM Plex Mono',monospace;}
-  .commandes-table tr:last-child td{border-bottom:none;}
-  .commandes-total-row td{font-family:'Fraunces',serif; color:var(--gold-soft); font-size:13.5px; padding-top:12px;}
 
-  @media (max-width: 780px){
-    .storefront-body{grid-template-columns:1fr;}
-    .menu-grid{grid-template-columns:1fr;}
-  }
 
   /* ================= HOME V2 — style aligné sur l'app de référence (AGP/NEINDI) ================= */
   #view-home{
@@ -935,7 +1096,7 @@
       <div class="h2-access-err" id="h2-code-err"></div>
     </div>
     <a class="h2-link" onclick="goToAuth('register')">Pas encore de restaurant ? Créer un compte gratuitement</a>
-    <a class="h2-sublink" onclick="showView('storefront')">Voir la page publicitaire d'un restaurant (démo)</a>
+    <a class="h2-sublink" onclick="ouvrirAnnuairePublic()">Voir les pages web des restaurants</a>
   </div>
 
   <div class="h2-concepteur-note" id="h2ConcepteurNote">
@@ -1041,41 +1202,83 @@
   </div>
 </div>
 
-<!-- ============ STOREFRONT (page publicitaire + commande client) ============ -->
+<!-- ============ PAGE WEB PUBLIQUE D'UN RESTAURANT ============ -->
 <div id="view-storefront">
-  <nav class="storefront-nav">
-    <div class="brandmark">
-      <div class="seal">AGR</div>
-      <div><span class="name" id="storeRestaurantName" style="font-family:'Fraunces',serif;font-size:15px;">Page publicitaire</span></div>
-    </div>
-    <div class="back" onclick="showView('home')">← Retour à AGR</div>
-  </nav>
 
-  <div class="storefront-hero">
-    <div class="eyebrow">Page publicitaire du restaurant</div>
-    <h1 id="storeHeroTitle">Trouvez un restaurant</h1>
-    <p id="storeHeroText">Entrez l'identifiant du restaurant pour voir son menu et passer commande.</p>
+  <!-- Annuaire : affiché quand l'adresse ne désigne aucun restaurant -->
+  <div class="sf-dir" id="storeDirectory">
+    <h1>Les restaurants en ligne</h1>
+    <p>Choisissez un restaurant pour découvrir sa carte, ses photos et passer commande.</p>
+    <div class="sf-dir-search">
+      <input type="text" id="sfDirSearch" placeholder="Rechercher un restaurant ou une ville…" oninput="renderAnnuaire()">
+      <button class="sf-btn gh" onclick="showView('home')">← Retour</button>
+    </div>
+    <div class="sf-dir-grid" id="sfDirGrid"></div>
+    <div id="sfDirNote" style="color:var(--text-dim); font-size:13px; margin-top:18px;">Chargement…</div>
   </div>
 
-  <div style="max-width:440px; margin:0 auto 30px; padding:0 24px;">
-    <div class="h2-access-row" style="border-color:rgba(201,162,39,0.45);">
-      <input type="text" id="storeCodeInput" placeholder="IDENTIFIANT DU RESTAURANT" onkeydown="if(event.key==='Enter')chargerBoutique()">
-      <button onclick="chargerBoutique()" style="background:linear-gradient(135deg,var(--gold),var(--gold-soft)); color:#181205;">Voir le menu</button>
-    </div>
-    <div class="h2-access-err" id="storeCodeErr" style="color:#E19488;"></div>
-  </div>
+  <!-- Page du restaurant -->
+  <div id="storePage" style="display:none;">
 
-  <div class="store-infos" id="storeInfos" style="display:none;"></div>
-  <div class="store-gallery" id="storeGallery"></div>
+    <header class="sf-header">
+      <div class="sf-brand">
+        <div class="sf-logo sm" id="sfLogoHeader"></div>
+        <div style="min-width:0;">
+          <div class="nom" id="storeRestaurantName">Restaurant</div>
+          <div class="lieu" id="sfHeaderLieu"></div>
+        </div>
+      </div>
+      <nav class="sf-nav">
+        <a onclick="sfAller('sfMenu')">Notre carte</a>
+        <a onclick="sfAller('sfGallery')">Photos</a>
+        <a onclick="sfAller('sfAvis')">Avis</a>
+        <a onclick="sfAller('sfContact')">Contact</a>
+      </nav>
+      <button class="sf-header-cta" onclick="ouvrirPanier()">Ma commande <span class="n" id="sfCartCountTop">0</span></button>
+    </header>
 
-  <div class="storefront-body" id="storeBody" style="display:none;">
-    <div>
-      <div class="menu-grid" id="storeMenuGrid"></div>
+    <section class="sf-hero" id="sfHero">
+      <div class="sf-hero-inner">
+        <div class="sf-logo lg" id="sfLogoHero"></div>
+        <h1 id="storeHeroTitle">Restaurant</h1>
+        <p class="sf-tagline" id="storeHeroText"></p>
+        <div class="sf-badges" id="sfBadges"></div>
+        <div class="sf-cta">
+          <button class="sf-btn or" onclick="sfAller('sfMenu')">Voir la carte</button>
+          <button class="sf-btn wa" id="waHeroBtn" onclick="ouvrirPanier()">Commander sur WhatsApp</button>
+          <button class="sf-btn gh" onclick="partagerCettePage()">Partager</button>
+        </div>
+      </div>
+    </section>
 
-      <div class="panel" style="margin-top:20px;">
-        <h3>Avis clients</h3>
-        <div class="sub" id="avisSummary">Aucun avis pour l'instant.</div>
-        <div id="avisListe" style="margin-bottom:16px;"></div>
+    <section class="sf-section" id="sfAbout">
+      <div class="sf-eyebrow">Le restaurant</div>
+      <h2 id="sfAboutTitre">Bienvenue chez nous</h2>
+      <p class="lead" id="sfAboutTexte"></p>
+      <div class="sf-infos" id="sfInfoCards"></div>
+    </section>
+
+    <section class="sf-section" id="sfMenu">
+      <div class="sf-eyebrow">Notre carte</div>
+      <h2>Les plats du restaurant</h2>
+      <p class="lead" id="sfMenuLead">Ajoutez les plats à votre commande, puis envoyez-la au restaurant.</p>
+      <div class="sf-cats" id="sfCats"></div>
+      <div class="sf-menu-grid" id="storeMenuGrid"></div>
+    </section>
+
+    <section class="sf-section" id="sfGallery" style="display:none;">
+      <div class="sf-eyebrow">En images</div>
+      <h2>Le cadre et les plats</h2>
+      <p class="lead">Quelques photos du restaurant. Cliquez pour agrandir.</p>
+      <div class="sf-gallery" id="storeGallery"></div>
+    </section>
+
+    <section class="sf-section" id="sfAvis">
+      <div class="sf-eyebrow">Ils y sont allés</div>
+      <h2>Avis des clients</h2>
+      <p class="lead" id="avisSummary">Aucun avis pour l'instant.</p>
+      <div class="sf-avis-grid" id="avisListe"></div>
+      <div class="sf-avis-form">
         <div class="field"><label>Votre note</label>
           <select id="avisNote" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
             <option value="5">★★★★★ Excellent</option>
@@ -1085,14 +1288,40 @@
             <option value="1">★ Mauvais</option>
           </select>
         </div>
-        <div class="field"><label>Votre commentaire</label><input type="text" id="avisCommentaire" placeholder="Qualité du service, des plats..."></div>
-        <button class="btn-outline" style="color:var(--text);" onclick="envoyerAvis()">Envoyer mon avis</button>
+        <div class="field"><label>Votre commentaire</label><input type="text" id="avisCommentaire" placeholder="Qualité du service, des plats…"></div>
+        <button class="sf-btn or" onclick="envoyerAvis()">Publier mon avis</button>
       </div>
-    </div>
+    </section>
 
-    <div class="cart-panel">
+    <footer class="sf-footer" id="sfContact">
+      <div class="sf-footer-in">
+        <div>
+          <h4 id="sfFootNom">Le restaurant</h4>
+          <p id="sfFootAdresse"></p>
+          <p id="sfFootHoraires"></p>
+        </div>
+        <div>
+          <h4>Commander</h4>
+          <div id="sfFootCommande"></div>
+        </div>
+        <div>
+          <h4>Nous suivre</h4>
+          <div id="sfFootReseaux"><p>—</p></div>
+        </div>
+      </div>
+      <div class="sf-footer-bas">
+        <span onclick="showView('home')">Espace de gestion du restaurant</span> · Page propulsée par AGR
+      </div>
+    </footer>
+
+    <!-- Panier -->
+    <button class="sf-fab" id="sfCartFab" onclick="ouvrirPanier()">🛒 Commander <span id="sfCartCount">0</span></button>
+    <div class="sf-cart-backdrop" id="sfCartBackdrop" onclick="fermerPanier()"></div>
+
+    <aside class="sf-cart" id="sfCart">
+      <button class="sf-cart-close" onclick="fermerPanier()" aria-label="Fermer">&times;</button>
       <h3>Votre commande</h3>
-      <div class="sub">Paiement direct vers la caisse du restaurant</div>
+      <div class="sub" id="sfCartSub">Envoi direct au service commercial du restaurant</div>
       <div class="paid-banner" id="paidBanner"></div>
 
       <div id="cartOrderForm">
@@ -1101,12 +1330,12 @@
         <div class="field" style="margin-top:14px;">
           <label>Mode</label>
           <select id="storeMode" onchange="toggleLivraisonFields()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
-            <option value="sur_place">Sur place</option>
+            <option value="sur_place">Sur place / à emporter</option>
             <option value="livraison">Livraison</option>
           </select>
         </div>
         <div id="storeZoneWrap" style="display:none;">
-          <div class="field"><label>Zone de livraison (adresse limitée aux zones desservies)</label>
+          <div class="field"><label>Zone de livraison</label>
             <select id="storeZone" onchange="recalculerTotal()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
           </div>
         </div>
@@ -1116,10 +1345,10 @@
 
         <div class="field"><label>Votre nom</label><input type="text" id="storeClientNom" placeholder="Nom"></div>
         <div class="field"><label>Votre téléphone</label><input type="text" id="storeClientTelephone" placeholder="+224 6xx xx xx xx"></div>
-        <div class="field"><label>Précisions pour le restaurant (facultatif)</label><input type="text" id="storeClientNote" placeholder="Adresse exacte, sans piment, heure souhaitée…"></div>
+        <div class="field"><label>Précisions (facultatif)</label><input type="text" id="storeClientNote" placeholder="Adresse exacte, sans piment, heure souhaitée…"></div>
         <div id="storePaiementNote" style="font-size:12px; color:var(--text-dim); margin-bottom:10px;"></div>
         <button class="wa-btn" id="waBtn" onclick="envoyerCommandeWhatsapp()">Commander sur WhatsApp</button>
-        <button class="btn-outline" id="payBtn" style="color:var(--text); width:100%; margin-top:8px;" onclick="payOrder()">Enregistrer sans WhatsApp</button>
+        <button class="btn-outline" id="payBtn" style="color:var(--text); width:100%; margin-top:8px;" onclick="payOrder()">Envoyer sans WhatsApp</button>
       </div>
 
       <div id="cartTrackerWrap" style="display:none;">
@@ -1131,7 +1360,9 @@
         </div>
         <button class="btn-outline" style="color:var(--text); width:100%; margin-top:16px;" onclick="nouvelleCommande()">Passer une nouvelle commande</button>
       </div>
-    </div>
+    </aside>
+
+    <div class="sf-lightbox" id="sfLightbox" onclick="fermerLightbox()"><img id="sfLightboxImg" alt=""></div>
   </div>
 </div>
 
@@ -1443,13 +1674,21 @@
       <div class="dash-section" id="section-pageweb" style="display:none;">
         <div class="panel">
           <h3>Adresse de votre page web</h3>
-          <div class="sub">Partagez ce lien sur WhatsApp, Facebook ou vos affiches : il ouvre directement la page de votre restaurant.</div>
+          <div class="sub">Partagez ce lien sur WhatsApp, Facebook ou vos affiches : il ouvre directement la page de votre restaurant. Votre identifiant de connexion n'y apparaît pas.</div>
+          <div class="field">
+            <label>Adresse web publique (lettres, chiffres et tirets)</label>
+            <input type="text" id="webSlug" placeholder="le-gourmet-kindia">
+          </div>
           <div class="web-link">
             <span class="url" id="webPublicUrl">—</span>
             <button class="btn-outline" style="color:var(--text);" onclick="copierLienWeb()">Copier</button>
             <button class="btn-outline" style="color:var(--text);" onclick="ouvrirPageWeb()">Ouvrir</button>
+            <button class="btn-outline" style="color:var(--text);" onclick="partagerPageWeb()">Partager</button>
           </div>
           <div id="webCopieNote" style="font-size:12px; color:var(--teal-soft);"></div>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">
+            Le logo enregistré dans <strong>Paramètres</strong> est repris automatiquement comme logo de la page.
+          </div>
         </div>
 
         <div class="panel" style="margin-top:16px;">
@@ -1470,7 +1709,14 @@
           </div>
           <div class="grid-2">
             <div class="field"><label>WhatsApp du service commercial</label><input type="text" id="webWhatsapp" placeholder="224623030403 (indicatif sans +)"></div>
-            <div class="field"><label>Horaires d'ouverture</label><input type="text" id="webHoraires" placeholder="Tous les jours de 08h à 23h"></div>
+            <div class="field"><label>Horaires affichés</label><input type="text" id="webHoraires" placeholder="Tous les jours de 08h à 23h"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Heure d'ouverture</label><input type="time" id="webOuvre"></div>
+            <div class="field"><label>Heure de fermeture</label><input type="time" id="webFerme"></div>
+          </div>
+          <div style="font-size:12px; color:var(--text-dim); margin:-6px 0 14px;">
+            Ces deux heures affichent en direct « Ouvert » ou « Fermé » sur la page. Laissez-les vides pour ne rien afficher.
           </div>
           <div class="grid-2">
             <div class="field"><label>Page Facebook (facultatif)</label><input type="text" id="webFacebook" placeholder="https://facebook.com/…"></div>
@@ -1481,8 +1727,21 @@
         </div>
 
         <div class="panel" style="margin-top:16px;">
+          <h3>Logo du restaurant</h3>
+          <div class="sub">Ce logo devient automatiquement celui de la page web, l'icône de l'onglet et l'image affichée quand le lien est partagé sur WhatsApp.</div>
+          <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div class="sf-logo lg" id="webLogoPreview" style="width:82px;height:82px;font-size:26px;"></div>
+            <div style="flex:1; min-width:200px;">
+              <input type="file" id="webLogoInput" accept="image/*" onchange="changerLogoWeb(this)"
+                style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
+              <div id="webLogoNote" style="font-size:12px; color:var(--text-dim); margin-top:8px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
           <h3>Photos du restaurant</h3>
-          <div class="sub">Jusqu'à 8 photos (salle, plats, terrasse…). Elles sont réduites automatiquement avant enregistrement.</div>
+          <div class="sub">Jusqu'à 8 photos (salle, plats, terrasse…), réduites automatiquement. Choisissez celle qui sert de grande photo d'accueil.</div>
           <input type="file" id="webImagesInput" accept="image/*" multiple onchange="ajouterImagesWeb(this)"
             style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
           <div id="webImagesNote" style="font-size:12px; color:var(--text-dim); margin-top:8px;"></div>
@@ -2306,61 +2565,106 @@
 
   let storeZones = [];
   let storeSite = {};
+  let storeSitePublicSlug = null;
+  let storeImages = [];
+  let storeCategorie = 'Tout';
   let storeFraisService = 0;
   let trackerInterval = null;
 
-  async function chargerBoutique(){
-    const input = document.getElementById('storeCodeInput');
-    const err = document.getElementById('storeCodeErr');
-    const code = (input.value || '').trim().toUpperCase();
+  // ---------------------------------------------------------------
+  // Annuaire public — construit à partir de l'index agr_sites.
+  // Cet index ne contient que ce qui est public (nom, ville, logo) :
+  // aucun identifiant de connexion n'est affiché au visiteur.
+  // ---------------------------------------------------------------
+  let annuaireSites = [];
 
-    if(!code){
-      err.textContent = "Entrez l'identifiant du restaurant";
-      err.style.display = 'block';
-      return;
-    }
-    err.textContent = 'Recherche en cours…';
-    err.style.color = '#60a5fa';
-    err.style.display = 'block';
-
+  async function chargerAnnuaire(){
+    const note = document.getElementById('sfDirNote');
     try {
-      const info = await agrGet('agr_tenants/' + code + '/info');
-      if(!info){
-        err.textContent = 'Identifiant introuvable.';
-        err.style.color = '#ef4444';
-        return;
-      }
+      const sites = await agrGet('agr_sites') || {};
+      annuaireSites = Object.entries(sites)
+        .map(([slug, v]) => Object.assign({ slug }, v))
+        .filter(v => v.actif !== false)
+        .sort((a,b) => (a.nom || '').localeCompare(b.nom || ''));
+      note.textContent = annuaireSites.length ? '' : "Aucun restaurant n'a encore publié sa page.";
+      renderAnnuaire();
+    } catch(e){
+      note.textContent = "Impossible de charger la liste des restaurants.";
+    }
+  }
 
-      // Configuration de la page web propre à ce restaurant
-      storeSite = await agrGet('agr_tenants/' + code + '/siteweb') || {};
+  function renderAnnuaire(){
+    const q = (document.getElementById('sfDirSearch').value || '').trim().toLowerCase();
+    const grid = document.getElementById('sfDirGrid');
+    const liste = annuaireSites.filter(v =>
+      !q || [v.nom, v.ville, v.slogan].filter(Boolean).join(' ').toLowerCase().includes(q));
 
+    grid.innerHTML = liste.map(v => `
+      <div class="sf-dir-card" onclick="ouvrirRestaurant('${v.slug}')">
+        <div class="sf-logo sm">${v.logo ? `<img src="${v.logo}" alt="">` : initiales(v.nom)}</div>
+        <div style="min-width:0;">
+          <span class="nom">${v.nom || 'Restaurant'}</span>
+          <span class="lieu">${v.ville || ''}</span>
+        </div>
+      </div>`).join('');
+
+    if(!liste.length && annuaireSites.length){
+      grid.innerHTML = '<div style="color:var(--text-dim); font-size:13px;">Aucun restaurant ne correspond à cette recherche.</div>';
+    }
+  }
+
+  function initiales(nom){
+    return (nom || 'R').trim().split(/\s+/).slice(0,2).map(m => m[0]).join('').toUpperCase();
+  }
+
+  // Ouvre la page d'un restaurant à partir de son adresse publique
+  function ouvrirRestaurant(slug){
+    location.hash = '#/' + slug;
+    ouvrirDepuisLien();
+  }
+
+  // ---------------------------------------------------------------
+  // Page web du restaurant — chargement et rendu
+  // ---------------------------------------------------------------
+  function afficherAnnuaire(){
+    document.getElementById('storeDirectory').style.display = 'block';
+    document.getElementById('storePage').style.display = 'none';
+    chargerAnnuaire();
+  }
+
+  // `code` reste interne : il n'est jamais affiché ni mis dans l'adresse.
+  async function chargerRestaurant(code, slug){
+    try {
+      const base = 'agr_tenants/' + code + '/';
+      const info = await agrGet(base + 'info');
+      if(!info){ afficherAnnuaire(); return; }
+
+      storeSite = await agrGet(base + 'siteweb') || {};
       if(storeSite.actif === false){
-        err.textContent = 'La page de ce restaurant est momentanément hors ligne.';
-        err.style.color = '#E19488';
-        document.getElementById('storeBody').style.display = 'none';
-        document.getElementById('storeGallery').innerHTML = '';
-        document.getElementById('storeInfos').style.display = 'none';
+        document.getElementById('sfDirNote').textContent =
+          'La page de ce restaurant est momentanément hors ligne.';
+        afficherAnnuaire();
         return;
       }
 
       storeTenantCode = code;
+      storeSitePublicSlug = slug || storeSite.slug || null;
       cart = {};
-      err.style.display = 'none';
-      document.getElementById('storeRestaurantName').textContent = info.nomRestaurant || code;
-      document.getElementById('storeHeroTitle').textContent = (info.nomRestaurant || code) + (info.ville ? ' — ' + info.ville : '');
-      document.getElementById('storeHeroText').textContent =
-        storeSite.slogan || 'Composez votre commande ci-dessous, puis envoyez-la au restaurant sur WhatsApp.';
-      document.getElementById('storeBody').style.display = 'grid';
+
+      document.getElementById('storeDirectory').style.display = 'none';
+      document.getElementById('storePage').style.display = 'block';
+
       renderStoreVitrine(info);
 
-      const produits = await agrGet('agr_tenants/' + code + '/produits') || {};
+      const produits = await agrGet(base + 'produits') || {};
       storeMenuItems = Object.entries(produits)
         .map(([id, p]) => ({ id, ...p }))
         .filter(p => p.disponible !== false);
+      renderStoreCategories();
       renderStoreMenu();
 
       storeFraisService = info.fraisService || 0;
-      const zones = await agrGet('agr_tenants/' + code + '/zonesLivraison') || {};
+      const zones = await agrGet(base + 'zonesLivraison') || {};
       storeZones = Object.entries(zones).map(([id,z]) => ({ id, ...z }));
       const modeSelect = document.getElementById('storeMode');
       const livraisonOpt = modeSelect.querySelector('option[value="livraison"]');
@@ -2375,45 +2679,217 @@
       toggleLivraisonFields();
       renderCart();
       loadAvis();
+      window.scrollTo(0,0);
     } catch(e){
-      err.textContent = 'Impossible de joindre Firebase.';
-      err.style.color = '#ef4444';
+      document.getElementById('sfDirNote').textContent = 'Impossible de joindre le restaurant.';
+      afficherAnnuaire();
     }
   }
 
-  function toggleLivraisonFields(){
-    const mode = document.getElementById('storeMode').value;
-    document.getElementById('storeZoneWrap').style.display = mode === 'livraison' ? 'block' : 'none';
-    recalculerTotal();
+  // Le logo enregistré dans les paramètres du restaurant devient
+  // automatiquement le logo de sa page web (en-tête et bannière).
+  function renderStoreVitrine(info){
+    const nom = info.nomRestaurant || 'Restaurant';
+    const logo = info.logo
+      ? `<img src="${info.logo}" alt="Logo ${nom}">`
+      : initiales(nom);
+
+    document.getElementById('sfLogoHeader').innerHTML = logo;
+    document.getElementById('sfLogoHero').innerHTML = logo;
+    document.getElementById('storeRestaurantName').textContent = nom;
+    document.getElementById('sfHeaderLieu').textContent = info.ville || '';
+    document.getElementById('storeHeroTitle').textContent = nom;
+    document.getElementById('storeHeroText').textContent =
+      storeSite.slogan || 'Découvrez notre carte et commandez en quelques secondes.';
+    document.title = nom + (info.ville ? ' — ' + info.ville : '');
+
+    // Bannière : photo d'accueil choisie par le restaurant
+    const images = Array.isArray(storeSite.images) ? storeSite.images : Object.values(storeSite.images || {});
+    const couverture = images[storeSite.couverture || 0] || images[0] || null;
+    const hero = document.getElementById('sfHero');
+    hero.style.backgroundImage = couverture ? `url("${couverture}")` : '';
+
+    // Identité de la page dans le navigateur (titre, icône, aperçu de partage)
+    appliquerIdentiteWeb(nom, info, couverture);
+
+    // Bandeaux d'information sous le titre
+    const badges = [];
+    const etat = etatOuverture(storeSite.ouvre, storeSite.ferme);
+    if(etat) badges.push(etat.ouvert
+      ? '🟢 Ouvert · ferme à ' + etat.ferme
+      : '🔴 Fermé · ouvre à ' + etat.ouvre);
+    if(info.ville) badges.push('📍 ' + info.ville);
+    if(storeSite.horaires) badges.push('🕒 ' + storeSite.horaires);
+    if(info.telephone) badges.push('📞 ' + info.telephone);
+    if(storeSite.whatsapp) badges.push('💬 Commande WhatsApp');
+    document.getElementById('sfBadges').innerHTML = badges.map(b => '<span>' + b + '</span>').join('');
+
+    // Présentation
+    document.getElementById('sfAboutTitre').textContent = 'Bienvenue chez ' + nom;
+    document.getElementById('sfAboutTexte').textContent = storeSite.description ||
+      'Ce restaurant vous accueille pour ses plats préparés sur place. Parcourez la carte ci-dessous et envoyez votre commande directement au service commercial.';
+
+    const cartes = [];
+    if(info.adresse || info.ville)
+      cartes.push({ ic:'📍', t:'Nous trouver', v:[info.adresse, info.ville].filter(Boolean).join('<br>') });
+    if(storeSite.horaires)
+      cartes.push({ ic:'🕒', t:'Horaires', v:storeSite.horaires });
+    if(info.telephone || storeSite.whatsapp)
+      cartes.push({ ic:'📞', t:'Nous joindre', v:[info.telephone, storeSite.whatsapp ? 'WhatsApp +' + storeSite.whatsapp : ''].filter(Boolean).join('<br>') });
+    document.getElementById('sfInfoCards').innerHTML = cartes.map(c =>
+      `<div class="sf-info-card"><div class="ic">${c.ic}</div><div class="t">${c.t}</div><div class="v">${c.v}</div></div>`
+    ).join('');
+
+    // Galerie photo
+    const gal = document.getElementById('storeGallery');
+    document.getElementById('sfGallery').style.display = images.length ? 'block' : 'none';
+    gal.innerHTML = images.map((src, i) =>
+      `<figure onclick="ouvrirLightbox(${i})"><img src="${src}" alt="Photo ${i+1} de ${nom}"></figure>`).join('');
+    storeImages = images;
+
+    // Panier et paiement
+    document.getElementById('storePaiementNote').textContent =
+      storeSite.paiement || 'Votre commande part sur le WhatsApp du service commercial, qui confirmera le paiement.';
+    const waBtn = document.getElementById('waBtn');
+    waBtn.disabled = !storeSite.whatsapp;
+    waBtn.textContent = storeSite.whatsapp ? 'Commander sur WhatsApp' : 'WhatsApp non configuré par le restaurant';
+    document.getElementById('waHeroBtn').textContent =
+      storeSite.whatsapp ? 'Commander sur WhatsApp' : 'Composer ma commande';
+
+    // Pied de page
+    document.getElementById('sfFootNom').textContent = nom;
+    document.getElementById('sfFootAdresse').innerHTML = [info.adresse, info.ville].filter(Boolean).join(', ') || '';
+    document.getElementById('sfFootHoraires').innerHTML = storeSite.horaires || '';
+    document.getElementById('sfFootCommande').innerHTML =
+      (storeSite.whatsapp ? `<a href="https://wa.me/${storeSite.whatsapp}" target="_blank">WhatsApp +${storeSite.whatsapp}</a>` : '') +
+      (info.telephone ? `<p>${info.telephone}</p>` : '') +
+      `<a onclick="ouvrirPanier()" style="cursor:pointer;">Composer ma commande</a>`;
+    const reseaux = [];
+    if(storeSite.facebook)  reseaux.push(`<a href="${storeSite.facebook}" target="_blank">Facebook</a>`);
+    if(storeSite.instagram) reseaux.push(`<a href="${storeSite.instagram}" target="_blank">Instagram</a>`);
+    document.getElementById('sfFootReseaux').innerHTML = reseaux.join('') || '<p>—</p>';
+  }
+
+  // Ouvert / fermé calculé en direct à partir des heures saisies par le
+  // restaurant (gère les services qui se terminent après minuit).
+  function etatOuverture(ouvre, ferme){
+    if(!ouvre || !ferme) return null;
+    const min = (h) => { const [a,b] = h.split(':').map(Number); return a*60 + b; };
+    const maintenant = new Date().getHours() * 60 + new Date().getMinutes();
+    const d = min(ouvre), f = min(ferme);
+    const ouvert = d <= f ? (maintenant >= d && maintenant < f)
+                          : (maintenant >= d || maintenant < f);
+    return { ouvert, ouvre, ferme };
+  }
+
+  // Titre de l'onglet, icône et balises de partage reprennent l'identité du
+  // restaurant. Note : les aperçus de lien WhatsApp/Facebook sont lus côté
+  // serveur, ils ne verront pas ces balises posées par le navigateur.
+  function appliquerIdentiteWeb(nom, info, couverture){
+    const desc = (storeSite.description || storeSite.slogan ||
+                  ('Découvrez la carte de ' + nom + ' et commandez en ligne.')).slice(0, 180);
+
+    document.title = nom + (info.ville ? ' — ' + info.ville : '');
+
+    const meta = (attr, cle, valeur) => {
+      let el = document.head.querySelector('meta[' + attr + '="' + cle + '"]');
+      if(!el){ el = document.createElement('meta'); el.setAttribute(attr, cle); document.head.appendChild(el); }
+      el.setAttribute('content', valeur);
+    };
+    meta('name', 'description', desc);
+    meta('property', 'og:type', 'website');
+    meta('property', 'og:title', nom);
+    meta('property', 'og:description', desc);
+    meta('property', 'og:url', location.href);
+    if(couverture || info.logo) meta('property', 'og:image', info.logo || couverture);
+
+    if(info.logo){
+      document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]')
+        .forEach(l => { l.href = info.logo; });
+    }
+  }
+
+  function partagerCettePage(){
+    const nom = document.getElementById('storeRestaurantName').textContent;
+    if(navigator.share){
+      navigator.share({ title: nom, text: 'Découvrez la carte de ' + nom + ' :', url: location.href }).catch(() => {});
+    } else if(navigator.clipboard){
+      navigator.clipboard.writeText(location.href).catch(() => {});
+    }
+  }
+
+  // ---- Carte : filtres par catégorie ----
+  function renderStoreCategories(){
+    const cats = Array.from(new Set(storeMenuItems.map(p => p.categorie || 'Autres')));
+    const el = document.getElementById('sfCats');
+    if(cats.length < 2){ el.innerHTML = ''; return; }
+    el.innerHTML = ['Tout'].concat(cats).map(c =>
+      `<div class="sf-chip ${c === storeCategorie ? 'on' : ''}" onclick="filtrerCategorie('${c.replace(/'/g, "\\'")}')">${c}</div>`
+    ).join('');
+  }
+
+  function filtrerCategorie(cat){
+    storeCategorie = cat;
+    renderStoreCategories();
+    renderStoreMenu();
   }
 
   function renderStoreMenu(){
     const grid = document.getElementById('storeMenuGrid');
     if(!grid) return;
-    if(storeMenuItems.length === 0){
-      grid.innerHTML = '<div style="color:var(--text-dim); font-size:13px; padding:20px;">Ce restaurant n\'a pas encore ajouté de plats à son menu.</div>';
+    const items = storeCategorie === 'Tout'
+      ? storeMenuItems
+      : storeMenuItems.filter(p => (p.categorie || 'Autres') === storeCategorie);
+
+    if(!items.length){
+      grid.innerHTML = '<div style="color:var(--text-dim); font-size:13px; padding:20px 0;">' +
+        (storeMenuItems.length ? 'Aucun plat dans cette catégorie.' : "Ce restaurant n'a pas encore publié sa carte.") + '</div>';
       return;
     }
-    grid.innerHTML = storeMenuItems.map(item => `
-      <div class="menu-item">
-        <div class="mcat">${item.categorie || 'Plat'}</div>
-        <div class="mname">${item.nom}</div>
-        <div class="mfoot">
-          <span class="mprice mono">${Number(item.prixVente || 0).toLocaleString('fr-FR')} GNF</span>
-          <button class="maddbtn" onclick="addToCart('${item.id}')">Ajouter</button>
+
+    grid.innerHTML = items.map(item => `
+      <article class="sf-dish">
+        <div class="cat">${item.categorie || 'Plat'}</div>
+        <div class="nom">${item.nom}</div>
+        <div class="desc">${item.description || ''}</div>
+        <div class="foot">
+          <span class="prix">${Number(item.prixVente || 0).toLocaleString('fr-FR')} GNF</span>
+          <button class="sf-add" onclick="addToCart('${item.id}')">Ajouter</button>
         </div>
-      </div>
-    `).join('');
+      </article>`).join('');
+  }
+
+  // ---- Panier en tiroir ----
+  function ouvrirPanier(){
+    document.getElementById('sfCart').classList.add('on');
+    document.getElementById('sfCartBackdrop').classList.add('on');
+    document.body.style.overflow = 'hidden';
+  }
+  function fermerPanier(){
+    document.getElementById('sfCart').classList.remove('on');
+    document.getElementById('sfCartBackdrop').classList.remove('on');
+    document.body.style.overflow = '';
   }
 
   function addToCart(itemId){
     cart[itemId] = (cart[itemId] || 0) + 1;
+    renderCart();
+    ouvrirPanier();
+  }
+  function retirerDuPanier(itemId){
+    cart[itemId] = (cart[itemId] || 0) - 1;
+    if(cart[itemId] <= 0) delete cart[itemId];
     renderCart();
   }
 
   function renderCart(){
     const linesEl = document.getElementById('cartLines');
     const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+    const nb = entries.reduce((s,[,q]) => s + q, 0);
+
+    document.getElementById('sfCartCount').textContent = nb;
+    document.getElementById('sfCartCountTop').textContent = nb;
+    document.getElementById('sfCartFab').classList.toggle('on', nb > 0);
 
     if(entries.length === 0){
       linesEl.innerHTML = '<div class="cart-empty">Votre panier est vide.</div>';
@@ -2422,9 +2898,34 @@
         const item = storeMenuItems.find(m => m.id === id);
         if(!item) return '';
         const lineTotal = (item.prixVente || 0) * qty;
-        return `<div class="cart-line"><span><span class="qty">${qty}×</span>${item.nom}</span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span></div>`;
+        return `<div class="cart-line">
+          <span><span class="qty">${qty}×</span>${item.nom}</span>
+          <span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span>
+          <button onclick="retirerDuPanier('${id}')" title="Retirer">−</button>
+          <button onclick="addToCart('${id}')" title="Ajouter">+</button></span>
+        </div>`;
       }).join('');
     }
+    recalculerTotal();
+  }
+
+  // ---- Visionneuse photo ----
+  function ouvrirLightbox(i){
+    document.getElementById('sfLightboxImg').src = storeImages[i];
+    document.getElementById('sfLightbox').classList.add('on');
+  }
+  function fermerLightbox(){
+    document.getElementById('sfLightbox').classList.remove('on');
+  }
+
+  function sfAller(id){
+    const el = document.getElementById(id);
+    if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  function toggleLivraisonFields(){
+    const mode = document.getElementById('storeMode').value;
+    document.getElementById('storeZoneWrap').style.display = mode === 'livraison' ? 'block' : 'none';
     recalculerTotal();
   }
 
@@ -2495,40 +2996,6 @@
   // Vitrine du restaurant — présentation, photos et consignes de paiement
   // alimentées par l'onglet « Page web du restaurant ».
   // ---------------------------------------------------------------
-  function renderStoreVitrine(info){
-    const images = Array.isArray(storeSite.images) ? storeSite.images : Object.values(storeSite.images || {});
-    document.getElementById('storeGallery').innerHTML =
-      images.map((src, i) => `<img src="${src}" alt="Photo ${i+1} du restaurant">`).join('');
-
-    const infosEl = document.getElementById('storeInfos');
-    const lignes = [];
-    if(storeSite.description) lignes.push('<p style="margin:0 0 10px;">' + storeSite.description + '</p>');
-    const details = [];
-    if(storeSite.horaires) details.push('🕒 ' + storeSite.horaires);
-    if(info.adresse || info.ville) details.push('📍 ' + [info.adresse, info.ville].filter(Boolean).join(', '));
-    if(info.telephone) details.push('📞 ' + info.telephone);
-    if(storeSite.whatsapp) details.push('💬 WhatsApp : +' + storeSite.whatsapp);
-    if(details.length) lignes.push('<p style="margin:0 0 8px;">' + details.join(' &nbsp;·&nbsp; ') + '</p>');
-
-    const reseaux = [];
-    if(storeSite.facebook)  reseaux.push('<a href="' + storeSite.facebook + '" target="_blank" style="color:var(--gold-soft);">Facebook</a>');
-    if(storeSite.instagram) reseaux.push('<a href="' + storeSite.instagram + '" target="_blank" style="color:var(--gold-soft);">Instagram</a>');
-    if(reseaux.length) lignes.push('<p style="margin:0;">' + reseaux.join(' · ') + '</p>');
-
-    infosEl.innerHTML = lignes.join('');
-    infosEl.style.display = lignes.length ? 'block' : 'none';
-
-    // Consignes de paiement affichées juste au-dessus du bouton de commande
-    document.getElementById('storePaiementNote').textContent =
-      storeSite.paiement || 'Votre commande part sur le WhatsApp du service commercial, qui vous confirmera le paiement.';
-
-    const waBtn = document.getElementById('waBtn');
-    waBtn.disabled = !storeSite.whatsapp;
-    waBtn.textContent = storeSite.whatsapp
-      ? 'Commander sur WhatsApp'
-      : 'WhatsApp non configuré par le restaurant';
-  }
-
   // Construit le récapitulatif texte envoyé au service commercial
   function messageWhatsapp(nomRestaurant, totaux, clientNom, clientTel, note){
     const lignes = Object.entries(cart).filter(([,q]) => q > 0).map(([id, q]) => {
@@ -2645,12 +3112,33 @@
   // Lien direct vers la page d'un restaurant : …/index.html#/r/CODE
   // C'est l'adresse que le restaurant partage à ses clients.
   // ---------------------------------------------------------------
-  function ouvrirDepuisLien(){
-    const m = (location.hash || '').match(/^#\/r\/([A-Za-z0-9_-]+)/);
-    if(!m) return false;
+  function ouvrirAnnuairePublic(){
+    location.hash = '';
     showView('storefront');
-    document.getElementById('storeCodeInput').value = m[1].toUpperCase();
-    chargerBoutique();
+    afficherAnnuaire();
+  }
+
+  // L'adresse publique ne contient plus le code de connexion : elle utilise
+  // le nom web du restaurant (#/le-gourmet), résolu via l'index agr_sites.
+  // L'ancien format #/r/CODE reste accepté pour les liens déjà partagés.
+  async function ouvrirDepuisLien(){
+    const hash = location.hash || '';
+    const ancien  = hash.match(/^#\/r\/([A-Za-z0-9_-]+)/);
+    const adresse = hash.match(/^#\/([A-Za-z0-9_-]+)/);
+    if(!ancien && !adresse) return false;
+
+    showView('storefront');
+    if(ancien){ chargerRestaurant(ancien[1].toUpperCase(), null); return true; }
+
+    const slug = adresse[1].toLowerCase();
+    try {
+      const site = await agrGet('agr_sites/' + slug);
+      if(site && site.code){ chargerRestaurant(site.code, slug); return true; }
+    } catch(e){ /* index injoignable : on retombe sur l'annuaire */ }
+
+    afficherAnnuaire();
+    document.getElementById('sfDirNote').textContent =
+      "Cette adresse ne correspond à aucun restaurant en ligne.";
     return true;
   }
 
@@ -2775,10 +3263,11 @@
       }
       const moyenne = (list.reduce((s,a) => s + (a.note||0), 0) / list.length).toFixed(1);
       summary.innerHTML = '★ ' + moyenne + '/5 — ' + list.length + ' avis';
-      liste.innerHTML = list.slice(0,5).map(a =>
-        `<div style="padding:8px 0; border-bottom:1px solid var(--line); font-size:12.5px;">
-          <strong>${'★'.repeat(a.note)}${'☆'.repeat(5-a.note)}</strong> — ${a.clientNom}<br>
-          <span style="color:var(--text-dim);">${a.commentaire || ''}</span>
+      liste.innerHTML = list.slice(0,6).map(a =>
+        `<div class="sf-avis-card">
+          <div class="etoiles">${'★'.repeat(a.note)}${'☆'.repeat(5-a.note)}</div>
+          <div class="txt">${a.commentaire || ''}</div>
+          <div class="qui">${a.clientNom || 'Client'}</div>
         </div>`
       ).join('');
     } catch(e){
@@ -4162,25 +4651,44 @@
   // par un lien direct contenant son code (…/index.html#/r/CODE).
   // ===============================================================
   let webImages = [];            // photos en base64
+  let webCouverture = 0;         // index de la photo d'accueil
+  let webLogoEnAttente = null;   // nouveau logo pas encore enregistré
   let webCommandes = [];         // commandes reçues en ligne
 
-  function lienPageWeb(code){
-    return location.origin + location.pathname + '#/r/' + code;
+  let webSlugActuel = null;   // adresse publique enregistrée
+  let webInfoRestaurant = {}; // identité reprise pour l'index public
+
+  function lienPageWeb(){
+    return location.origin + location.pathname + '#/' + (document.getElementById('webSlug').value || webSlugActuel || '');
+  }
+
+  // Transforme un nom en adresse web lisible : « Le Gourmet » → « le-gourmet »
+  function normaliserSlug(txt){
+    return (txt || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40);
   }
 
   async function loadPageWeb(){
     if(!currentTenantId) return;
     showBanner('webError', null);
     showBanner('webSuccess', null);
-    document.getElementById('webPublicUrl').textContent = lienPageWeb(currentTenantId);
 
     try {
       const base = 'agr_tenants/' + currentTenantId + '/';
-      const [site, cmds] = await Promise.all([
+      const [site, cmds, info] = await Promise.all([
         agrGet(base + 'siteweb'),
         agrGet(base + 'commandesEnLigne'),
+        agrGet(base + 'info'),
       ]);
       const s = site || {};
+      webInfoRestaurant = info || {};
+      webSlugActuel = s.slug || null;
+      document.getElementById('webSlug').value = webSlugActuel || normaliserSlug(webInfoRestaurant.nomRestaurant);
+      document.getElementById('webPublicUrl').textContent = lienPageWeb();
       document.getElementById('webActif').value = s.actif === false ? 'non' : 'oui';
       document.getElementById('webSlogan').value = s.slogan || '';
       document.getElementById('webDescription').value = s.description || '';
@@ -4190,7 +4698,14 @@
       document.getElementById('webInstagram').value = s.instagram || '';
       document.getElementById('webPaiement').value = s.paiement || '';
 
+      document.getElementById('webOuvre').value = s.ouvre || '';
+      document.getElementById('webFerme').value = s.ferme || '';
+
+      webLogoEnAttente = null;
+      renderWebLogo(webInfoRestaurant.logo);
+
       webImages = Array.isArray(s.images) ? s.images.slice() : Object.values(s.images || {});
+      webCouverture = Math.min(s.couverture || 0, Math.max(0, webImages.length - 1));
       renderWebGallery();
 
       webCommandes = Object.entries(cmds || {}).map(([id, c]) => ({ id, ...c }))
@@ -4203,12 +4718,46 @@
 
   function renderWebGallery(){
     const g = document.getElementById('webGallery');
-    document.getElementById('webImagesNote').textContent = webImages.length + ' photo(s) sur 8.';
+    document.getElementById('webImagesNote').textContent = webImages.length
+      ? webImages.length + ' photo(s) sur 8 — la photo d\'accueil est encadrée en doré.'
+      : 'Aucune photo pour l\'instant.';
     g.innerHTML = webImages.map((src, i) => `
-      <div class="web-thumb">
+      <div class="web-thumb" style="${i === webCouverture ? 'border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,162,39,0.35);' : ''}">
         <img src="${src}" alt="Photo ${i+1}">
         <button onclick="supprimerImageWeb(${i})" title="Supprimer">&times;</button>
+        ${i === webCouverture
+          ? '<span style="position:absolute;bottom:5px;left:5px;background:var(--gold);color:#181205;font-size:9.5px;font-weight:800;padding:2px 7px;border-radius:5px;">ACCUEIL</span>'
+          : `<button onclick="definirCouverture(${i})" title="Photo d'accueil" style="left:5px;right:auto;background:rgba(0,0,0,0.6);width:auto;padding:0 8px;font-size:10px;font-weight:700;">Accueil</button>`}
       </div>`).join('');
+  }
+
+  function definirCouverture(i){
+    webCouverture = i;
+    renderWebGallery();
+    showBanner('webSuccess', 'Photo d\'accueil choisie — enregistrez la page pour l\'appliquer.');
+  }
+
+  // ---- Logo : modifiable depuis cet onglet, sans passer par les Paramètres
+  function renderWebLogo(logo){
+    const el = document.getElementById('webLogoPreview');
+    el.innerHTML = logo ? `<img src="${logo}" alt="Logo">` : initiales(webInfoRestaurant.nomRestaurant);
+    document.getElementById('webLogoNote').textContent = logo
+      ? 'Logo actuel du restaurant.'
+      : 'Aucun logo : la page affiche les initiales du restaurant.';
+  }
+
+  async function changerLogoWeb(input){
+    const f = (input.files || [])[0];
+    if(!f) return;
+    try {
+      webLogoEnAttente = await fileToResizedBase64(f, 400);
+      renderWebLogo(webLogoEnAttente);
+      document.getElementById('webLogoNote').textContent =
+        'Nouveau logo prêt — cliquez sur « Enregistrer la page » pour l\'appliquer.';
+    } catch(e){
+      showBanner('webError', "Cette image n'a pas pu être lue.");
+    }
+    input.value = '';
   }
 
   // Les photos sont redimensionnées avant stockage pour ne pas alourdir
@@ -4232,6 +4781,8 @@
 
   function supprimerImageWeb(i){
     webImages.splice(i, 1);
+    if(webCouverture >= webImages.length) webCouverture = Math.max(0, webImages.length - 1);
+    else if(i < webCouverture) webCouverture--;
     renderWebGallery();
     showBanner('webSuccess', 'Photo retirée — enregistrez la page pour confirmer.');
   }
@@ -4240,15 +4791,42 @@
     showBanner('webError', null);
     showBanner('webSuccess', null);
     const whatsapp = document.getElementById('webWhatsapp').value.replace(/[^0-9]/g, '');
+    const actif = document.getElementById('webActif').value === 'oui';
+    const slug = normaliserSlug(document.getElementById('webSlug').value) ||
+                 normaliserSlug(webInfoRestaurant.nomRestaurant) ||
+                 ('restaurant-' + String(currentTenantId).toLowerCase());
 
-    if(document.getElementById('webActif').value === 'oui' && !whatsapp){
+    if(actif && !whatsapp){
       showBanner('webError', 'Indiquez le numéro WhatsApp du service commercial : il reçoit les commandes des clients.');
+      return;
+    }
+    if(slug.length < 3){
+      showBanner('webError', "L'adresse web doit compter au moins 3 caractères.");
       return;
     }
 
     try {
+      // Une adresse déjà prise par un autre restaurant est refusée
+      const occupe = await agrGet('agr_sites/' + slug);
+      if(occupe && occupe.code && occupe.code !== currentTenantId){
+        showBanner('webError', "L'adresse « " + slug + " » est déjà utilisée par un autre restaurant — choisissez-en une autre.");
+        return;
+      }
+
+      // Le logo vit dans info : il sert aussi bien à l'application qu'à la page
+      if(webLogoEnAttente){
+        await agrSet('agr_tenants/' + currentTenantId + '/info/logo', webLogoEnAttente);
+        webInfoRestaurant.logo = webLogoEnAttente;
+        webLogoEnAttente = null;
+        updateDashboardSeal(webInfoRestaurant.logo);
+      }
+
       await agrSet('agr_tenants/' + currentTenantId + '/siteweb', {
-        actif: document.getElementById('webActif').value === 'oui',
+        slug,
+        actif,
+        couverture: webCouverture,
+        ouvre: document.getElementById('webOuvre').value || '',
+        ferme: document.getElementById('webFerme').value || '',
         slogan: document.getElementById('webSlogan').value.trim(),
         description: document.getElementById('webDescription').value.trim(),
         whatsapp,
@@ -4259,15 +4837,34 @@
         images: webImages,
         misAJourLe: Date.now(),
       });
-      await recordAudit('Page web mise à jour', currentTenantId);
-      showBanner('webSuccess', 'Page web enregistrée. Elle est accessible via le lien ci-dessus.');
+
+      // Index public : c'est lui qui permet d'ouvrir la page sans connaître
+      // le code de connexion du restaurant.
+      await agrSet('agr_sites/' + slug, {
+        code: currentTenantId,
+        nom: webInfoRestaurant.nomRestaurant || currentTenantId,
+        ville: webInfoRestaurant.ville || '',
+        logo: webInfoRestaurant.logo || null,
+        slogan: document.getElementById('webSlogan').value.trim(),
+        actif,
+        misAJourLe: Date.now(),
+      });
+      if(webSlugActuel && webSlugActuel !== slug){
+        await agrSet('agr_sites/' + webSlugActuel, null); // l'ancienne adresse est libérée
+      }
+      webSlugActuel = slug;
+      document.getElementById('webSlug').value = slug;
+      document.getElementById('webPublicUrl').textContent = lienPageWeb();
+
+      await recordAudit('Page web mise à jour', slug);
+      showBanner('webSuccess', 'Page web enregistrée et publiée à l\'adresse ' + lienPageWeb());
     } catch(e){
       showBanner('webError', "Impossible d'enregistrer la page — les photos sont peut-être trop lourdes.");
     }
   }
 
   function copierLienWeb(){
-    const url = lienPageWeb(currentTenantId);
+    const url = lienPageWeb();
     const note = document.getElementById('webCopieNote');
     const succes = () => { note.textContent = 'Lien copié : ' + url; };
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -4277,8 +4874,20 @@
     }
   }
 
+  // Partage natif (WhatsApp, Facebook…) avec repli sur la copie du lien
+  function partagerPageWeb(){
+    const url = lienPageWeb();
+    const nom = webInfoRestaurant.nomRestaurant || 'notre restaurant';
+    if(navigator.share){
+      navigator.share({ title: nom, text: 'Découvrez la carte de ' + nom + ' et commandez en ligne :', url })
+        .catch(() => {});
+    } else {
+      copierLienWeb();
+    }
+  }
+
   function ouvrirPageWeb(){
-    window.open(lienPageWeb(currentTenantId), '_blank');
+    window.open(lienPageWeb(), '_blank');
   }
 
   function renderCommandesEnLigne(){
