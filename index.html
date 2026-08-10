@@ -2849,8 +2849,9 @@
 
   // Ouvre la page d'un restaurant à partir de son adresse publique
   function ouvrirRestaurant(slug){
-    location.hash = '#/' + slug;
-    ouvrirDepuisLien();
+    const cible = '#/' + slug;
+    if(location.hash === cible) ouvrirDepuisLien();  // hashchange ne se déclenchera pas
+    else location.hash = cible;                      // l'écouteur hashchange fait le reste
   }
 
   // ---------------------------------------------------------------
@@ -3328,15 +3329,47 @@
     if(ancien){ chargerRestaurant(ancien[1].toUpperCase(), null); return true; }
 
     const slug = adresse[1].toLowerCase();
-    try {
-      const site = await agrGet('agr_sites/' + slug);
-      if(site && site.code){ chargerRestaurant(site.code, slug); return true; }
-    } catch(e){ /* index injoignable : on retombe sur l'annuaire */ }
+    const code = await resoudreAdressePublique(slug);
+    if(code){ chargerRestaurant(code, slug); return true; }
 
     afficherAnnuaire();
     document.getElementById('sfDirNote').textContent =
       "Cette adresse ne correspond à aucun restaurant en ligne.";
     return true;
+  }
+
+  // Retrouve le restaurant derrière une adresse publique.
+  // L'index agr_sites répond en une lecture ; s'il est absent (page publiée
+  // avant sa création, ou écriture échouée), on cherche le restaurant dont
+  // le nom web correspond et on répare l'index au passage.
+  async function resoudreAdressePublique(slug){
+    try {
+      const site = await agrGet('agr_sites/' + slug);
+      if(site && site.code) return site.code;
+    } catch(e){ /* index injoignable : on tente le secours ci-dessous */ }
+
+    try {
+      const tenants = await agrGet('agr_tenants') || {};
+      for(const [code, t] of Object.entries(tenants)){
+        const web = (t && t.siteweb) || {};
+        if(web.slug !== slug) continue;
+        const info = (t && t.info) || {};
+        try {
+          await agrSet('agr_sites/' + slug, {
+            code,
+            nom: info.nomRestaurant || code,
+            ville: info.ville || '',
+            logo: info.logo || null,
+            slogan: web.slogan || '',
+            actif: web.actif !== false,
+            misAJourLe: Date.now(),
+          });
+        } catch(e){ /* la page s'ouvre quand même */ }
+        return code;
+      }
+    } catch(e){}
+
+    return null;
   }
 
   window.addEventListener('hashchange', ouvrirDepuisLien);
@@ -6581,15 +6614,32 @@
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
-  // Le script Firebase est un module : il s'exécute après ce script. On affiche
-  // donc l'accueil tout de suite, puis on ouvre la page du restaurant demandée
-  // par le lien dès que la base est prête.
-  showView('home');
-  (function routerQuandPret(){
-    if(!/^#\/r\//.test(location.hash || '')) return;
-    if(!window._agrReady){ setTimeout(routerQuandPret, 150); return; }
+  // Le script Firebase est un module : il s'exécute après ce script. Quand
+  // l'adresse désigne un restaurant (#/le-gourmet ou l'ancien #/r/CODE), on
+  // affiche tout de suite sa page web — jamais l'accueil avec les codes —
+  // puis on charge son contenu dès que la base est prête.
+  const adresseRestaurant = /^#\/.+/.test(location.hash || '');
+
+  if(adresseRestaurant){
+    showView('storefront');
+    document.getElementById('sfDirNote').textContent = 'Ouverture de la page du restaurant…';
+  } else {
+    showView('home');
+  }
+
+  (function routerQuandPret(essais){
+    if(!adresseRestaurant) return;
+    if(!window._agrReady){
+      if(essais > 60){   // ~9 s : la base reste injoignable
+        document.getElementById('sfDirNote').textContent =
+          "Impossible de joindre le serveur du restaurant. Vérifiez votre connexion, puis rechargez la page.";
+        return;
+      }
+      setTimeout(() => routerQuandPret(essais + 1), 150);
+      return;
+    }
     ouvrirDepuisLien();
-  })();
+  })(0);
 </script>
 
 </body>
