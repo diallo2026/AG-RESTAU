@@ -316,6 +316,158 @@
     color:var(--teal-soft); font-size:12.5px; border-radius:8px; padding:12px 14px; margin-bottom:14px; line-height:1.6;
   }
 
+  /* ---- Bandeau de points forts ---- */
+  .sf-highlights{
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+    background:var(--surface);
+  }
+  .sf-highlights-in{
+    max-width:1120px; margin:0 auto; padding:26px 32px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:20px;
+  }
+  .sf-hl{display:flex; align-items:flex-start; gap:12px;}
+  .sf-hl .ic{font-size:22px; line-height:1;}
+  .sf-hl .t{font-size:13.5px; font-weight:700; margin-bottom:3px;}
+  .sf-hl .d{font-size:12px; color:var(--text-dim); line-height:1.5;}
+
+  /* ---- Plats mis en avant ---- */
+  .sf-specials{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+  .sf-special{
+    position:relative; border-radius:14px; overflow:hidden;
+    background:linear-gradient(160deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line); padding:26px 22px 22px;
+  }
+  .sf-special .rang{
+    position:absolute; top:14px; right:16px; font-family:'Fraunces',serif;
+    font-size:38px; color:rgba(201,162,39,0.18); line-height:1;
+  }
+  .sf-special .cat{font-size:10px; color:var(--gold-soft); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:8px;}
+  .sf-special .nom{font-family:'Fraunces',serif; font-size:21px; margin-bottom:8px; line-height:1.25;}
+  .sf-special .desc{font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-bottom:16px; min-height:38px;}
+  .sf-special .prix{font-family:'IBM Plex Mono',monospace; font-size:17px; color:var(--gold-soft); display:block; margin-bottom:14px;}
+
+  /* ---- Bande d'appel à l'action ---- */
+  .sf-band{
+    background:linear-gradient(135deg, rgba(201,162,39,0.14), rgba(47,111,94,0.14));
+    border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .sf-band-in{
+    max-width:1120px; margin:0 auto; padding:44px 32px; text-align:center;
+  }
+  .sf-band h2{font-family:'Fraunces',serif; font-size:30px; margin:0 0 10px;}
+  .sf-band p{color:var(--text-dim); font-size:14px; margin:0 0 22px;}
+
+  /* ---- Note moyenne ---- */
+  .sf-note-globale{display:flex; align-items:center; gap:18px; margin-bottom:24px; flex-wrap:wrap;}
+  .sf-note-globale .chiffre{font-family:'Fraunces',serif; font-size:46px; color:var(--gold-soft); line-height:1;}
+  .sf-note-globale .etoiles{color:var(--gold-soft); font-size:17px; letter-spacing:3px;}
+  .sf-note-globale .nb{font-size:12.5px; color:var(--text-dim);}
+
+  /* ---- Indice de défilement dans la bannière ---- */
+  .sf-scroll{
+    position:absolute; bottom:18px; left:50%; transform:translateX(-50%);
+    z-index:2; color:var(--text-dim); font-size:11px; letter-spacing:0.14em;
+    text-transform:uppercase; cursor:pointer; text-align:center;
+  }
+  .sf-scroll span{display:block; font-size:17px; margin-top:2px; animation:sfDown 1.6s ease-in-out infinite;}
+  @keyframes sfDown{0%,100%{transform:translateY(0); opacity:0.5;} 50%{transform:translateY(5px); opacity:1;}}
+
+  /* ================= FICHE DE COMMANDE ================= */
+  .fiche-num{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    background:rgba(201,162,39,0.10); border:1px solid rgba(201,162,39,0.4);
+    border-radius:10px; padding:12px 14px; margin-bottom:18px;
+  }
+  .fiche-num .lbl{font-size:10.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.09em;}
+  .fiche-num .val{font-family:'IBM Plex Mono',monospace; font-size:17px; color:var(--gold-soft); font-weight:600;}
+  .fiche-num .date{font-size:11.5px; color:var(--text-dim); text-align:right;}
+
+  .fiche-bloc{margin-bottom:20px;}
+  .fiche-bloc > h4{
+    font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold-soft);
+    margin:0 0 12px; padding-bottom:7px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:8px;
+  }
+  .fiche-bloc > h4 i{
+    font-style:normal; width:19px; height:19px; border-radius:50%;
+    background:rgba(201,162,39,0.18); color:var(--gold-soft);
+    display:inline-flex; align-items:center; justify-content:center; font-size:10.5px;
+  }
+  .fiche-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  .fiche-add{display:grid; grid-template-columns:1fr 74px auto; gap:8px; margin-bottom:14px;}
+  .fiche-add select, .fiche-add input{
+    padding:10px 11px; background:var(--surface-2); border:1px solid var(--line);
+    border-radius:6px; color:var(--text); font-size:13px; font-family:'Inter',sans-serif; width:100%;
+  }
+  .fiche-add button{
+    padding:10px 15px; border:none; border-radius:6px; background:var(--gold);
+    color:#181205; font-size:12.5px; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+
+  .fiche-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .fiche-table th{
+    text-align:left; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--text-dim); font-weight:500; padding:7px 5px; border-bottom:1px solid var(--line);
+  }
+  .fiche-table td{padding:9px 5px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  .fiche-table td.num{font-family:'IBM Plex Mono',monospace; text-align:right; white-space:nowrap;}
+  .fiche-qte{display:inline-flex; align-items:center; gap:5px;}
+  .fiche-qte button{
+    width:23px; height:23px; line-height:1; border-radius:5px; cursor:pointer;
+    background:var(--surface-2); border:1px solid var(--line); color:var(--text); font-size:14px;
+  }
+  .fiche-qte span{min-width:17px; text-align:center; font-family:'IBM Plex Mono',monospace;}
+  .fiche-supp{background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:15px; line-height:1;}
+  .fiche-supp:hover{color:#E19488;}
+
+  .fiche-modes{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .fiche-mode{
+    display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+    background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:13px;
+  }
+  .fiche-mode.on{border-color:var(--gold); background:rgba(201,162,39,0.10);}
+  .fiche-mode input{margin-top:3px; accent-color:var(--gold);}
+  .fiche-mode .t{font-size:13px; font-weight:600;}
+  .fiche-mode .d{font-size:11px; color:var(--text-dim); line-height:1.45;}
+
+  .fiche-recap{
+    background:var(--surface-2); border:1px solid var(--line);
+    border-radius:10px; padding:16px; margin-bottom:16px;
+  }
+  .fiche-recap .l{display:flex; justify-content:space-between; font-size:13px; padding:6px 0; color:var(--text-dim);}
+  .fiche-recap .l b{color:var(--text); font-family:'IBM Plex Mono',monospace; font-weight:500;}
+  .fiche-grand{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin-top:12px; padding-top:13px; border-top:1px dashed var(--line);
+  }
+  .fiche-grand .t{font-family:'Fraunces',serif; font-size:16px;}
+  .fiche-grand .v{font-family:'Fraunces',serif; font-size:27px; color:var(--gold-soft);}
+
+  .fiche-valider{
+    width:100%; padding:15px; border:none; border-radius:9px; cursor:pointer;
+    background:linear-gradient(135deg,var(--gold),var(--gold-soft)); color:#181205;
+    font-size:15px; font-weight:800; font-family:'Inter',sans-serif;
+  }
+  .fiche-valider[disabled]{opacity:0.5; cursor:not-allowed;}
+  .fiche-err{
+    display:none; background:rgba(180,72,58,0.14); border:1px solid var(--brick);
+    color:#E7A79B; font-size:12.5px; border-radius:8px; padding:10px 12px; margin-bottom:12px;
+  }
+
+  .fiche-ok{text-align:center; padding:8px 0 0;}
+  .fiche-ok .coche{
+    width:60px; height:60px; margin:0 auto 16px; border-radius:50%;
+    background:rgba(47,111,94,0.16); border:1px solid var(--teal);
+    display:flex; align-items:center; justify-content:center; font-size:28px; color:var(--teal-soft);
+  }
+  .fiche-ok h3{font-family:'Fraunces',serif; font-size:21px; margin:0 0 6px;}
+  .fiche-ok .num{
+    font-family:'IBM Plex Mono',monospace; font-size:19px; color:var(--gold-soft);
+    background:rgba(201,162,39,0.10); border:1px dashed rgba(201,162,39,0.45);
+    border-radius:8px; padding:11px; margin:14px 0;
+  }
+
   @media (max-width: 900px){
     .sf-header{padding:10px 16px;}
     .sf-nav{display:none;}
@@ -330,6 +482,17 @@
     .sf-footer-in{grid-template-columns:1fr; padding:28px 18px 18px;}
     .sf-cart{width:100%; max-width:100%;}
     .sf-dir{padding:40px 18px 90px;}
+    .sf-highlights-in{grid-template-columns:1fr 1fr; padding:22px 18px; gap:16px;}
+    .sf-specials{grid-template-columns:1fr;}
+    .sf-band-in{padding:34px 18px;}
+    .sf-band h2{font-size:23px;}
+    .fiche-2{grid-template-columns:1fr;}
+    .fiche-modes{grid-template-columns:1fr;}
+    .fiche-add{grid-template-columns:1fr 64px auto;}
+  }
+
+  @media (max-width: 520px){
+    .sf-highlights-in{grid-template-columns:1fr;}
   }
 
 
@@ -1245,11 +1408,16 @@
         <div class="sf-badges" id="sfBadges"></div>
         <div class="sf-cta">
           <button class="sf-btn or" onclick="sfAller('sfMenu')">Voir la carte</button>
-          <button class="sf-btn wa" id="waHeroBtn" onclick="ouvrirPanier()">Commander sur WhatsApp</button>
+          <button class="sf-btn wa" id="waHeroBtn" onclick="ouvrirFiche()">Passer commande</button>
           <button class="sf-btn gh" onclick="partagerCettePage()">Partager</button>
         </div>
       </div>
+      <div class="sf-scroll" onclick="sfAller('sfAbout')">Découvrir<span>⌄</span></div>
     </section>
+
+    <div class="sf-highlights">
+      <div class="sf-highlights-in" id="sfHighlights"></div>
+    </div>
 
     <section class="sf-section" id="sfAbout">
       <div class="sf-eyebrow">Le restaurant</div>
@@ -1258,10 +1426,17 @@
       <div class="sf-infos" id="sfInfoCards"></div>
     </section>
 
+    <section class="sf-section" id="sfSpecials" style="display:none;">
+      <div class="sf-eyebrow">À ne pas manquer</div>
+      <h2>Nos spécialités</h2>
+      <p class="lead">Les plats que nos clients commandent le plus souvent.</p>
+      <div class="sf-specials" id="sfSpecialsGrid"></div>
+    </section>
+
     <section class="sf-section" id="sfMenu">
       <div class="sf-eyebrow">Notre carte</div>
       <h2>Les plats du restaurant</h2>
-      <p class="lead" id="sfMenuLead">Ajoutez les plats à votre commande, puis envoyez-la au restaurant.</p>
+      <p class="lead" id="sfMenuLead">Ajoutez les plats à votre fiche de commande, puis remplissez vos coordonnées.</p>
       <div class="sf-cats" id="sfCats"></div>
       <div class="sf-menu-grid" id="storeMenuGrid"></div>
     </section>
@@ -1276,7 +1451,7 @@
     <section class="sf-section" id="sfAvis">
       <div class="sf-eyebrow">Ils y sont allés</div>
       <h2>Avis des clients</h2>
-      <p class="lead" id="avisSummary">Aucun avis pour l'instant.</p>
+      <div class="sf-note-globale" id="avisSummary"></div>
       <div class="sf-avis-grid" id="avisListe"></div>
       <div class="sf-avis-form">
         <div class="field"><label>Votre note</label>
@@ -1292,6 +1467,16 @@
         <button class="sf-btn or" onclick="envoyerAvis()">Publier mon avis</button>
       </div>
     </section>
+
+    <div class="sf-band">
+      <div class="sf-band-in">
+        <h2 id="sfBandTitre">Prêt à commander ?</h2>
+        <p>Remplissez la fiche de commande en une minute : vous recevez un numéro de commande, le restaurant s'occupe du reste.</p>
+        <div class="sf-cta">
+          <button class="sf-btn or" onclick="ouvrirFiche()">Remplir ma fiche de commande</button>
+        </div>
+      </div>
+    </div>
 
     <footer class="sf-footer" id="sfContact">
       <div class="sf-footer-in">
@@ -1314,51 +1499,96 @@
       </div>
     </footer>
 
-    <!-- Panier -->
-    <button class="sf-fab" id="sfCartFab" onclick="ouvrirPanier()">🛒 Commander <span id="sfCartCount">0</span></button>
+    <!-- Fiche de commande -->
+    <button class="sf-fab" id="sfCartFab" onclick="ouvrirFiche()">🧾 Ma fiche <span id="sfCartCount">0</span></button>
     <div class="sf-cart-backdrop" id="sfCartBackdrop" onclick="fermerPanier()"></div>
 
     <aside class="sf-cart" id="sfCart">
       <button class="sf-cart-close" onclick="fermerPanier()" aria-label="Fermer">&times;</button>
-      <h3>Votre commande</h3>
-      <div class="sub" id="sfCartSub">Envoi direct au service commercial du restaurant</div>
+      <h3>Fiche de commande</h3>
+      <div class="sub" id="sfCartSub">Remplissez la fiche, le restaurant vous rappelle pour confirmer.</div>
       <div class="paid-banner" id="paidBanner"></div>
 
       <div id="cartOrderForm">
-        <div id="cartLines"><div class="cart-empty">Votre panier est vide.</div></div>
-
-        <div class="field" style="margin-top:14px;">
-          <label>Mode</label>
-          <select id="storeMode" onchange="toggleLivraisonFields()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
-            <option value="sur_place">Sur place / à emporter</option>
-            <option value="livraison">Livraison</option>
-          </select>
+        <div class="fiche-num">
+          <div>
+            <div class="lbl">Numéro de commande</div>
+            <div class="val" id="ficheNumero">—</div>
+          </div>
+          <div class="date" id="ficheDate"></div>
         </div>
-        <div id="storeZoneWrap" style="display:none;">
-          <div class="field"><label>Zone de livraison</label>
-            <select id="storeZone" onchange="recalculerTotal()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+
+        <div class="fiche-bloc">
+          <h4><i>1</i> Vos informations</h4>
+          <div class="fiche-2">
+            <div class="field"><label>Nom</label><input type="text" id="ficheNom" placeholder="Diallo"></div>
+            <div class="field"><label>Prénom</label><input type="text" id="fichePrenom" placeholder="Souleymane"></div>
+          </div>
+          <div class="fiche-2">
+            <div class="field"><label>Téléphone</label><input type="tel" id="ficheTelephone" placeholder="+224 6xx xx xx xx"></div>
+            <div class="field"><label>Quartier</label><input type="text" id="ficheQuartier" placeholder="Damakania"></div>
+          </div>
+          <div class="field"><label>Adresse</label><input type="text" id="ficheAdresse" placeholder="Rue, repère, immeuble…"></div>
+        </div>
+
+        <div class="fiche-bloc">
+          <h4><i>2</i> Votre commande</h4>
+          <div class="fiche-add">
+            <select id="ficheChoixPlat"></select>
+            <input type="number" id="ficheChoixQte" min="1" value="1">
+            <button onclick="ajouterDepuisFiche()">Ajouter</button>
+          </div>
+          <div id="cartLines"><div class="cart-empty">Aucun plat choisi pour l'instant.</div></div>
+        </div>
+
+        <div class="fiche-bloc">
+          <h4><i>3</i> Mode de réception</h4>
+          <div class="fiche-modes">
+            <label class="fiche-mode on" id="ficheModeSurPlaceLbl">
+              <input type="radio" name="ficheMode" id="ficheModeSurPlace" value="sur_place" checked onchange="changerModeFiche()">
+              <span><span class="t">Sur place / à emporter</span><span class="d">Vous venez chercher la commande au restaurant.</span></span>
+            </label>
+            <label class="fiche-mode" id="ficheModeLivraisonLbl">
+              <input type="radio" name="ficheMode" id="ficheModeLivraison" value="livraison" onchange="changerModeFiche()">
+              <span><span class="t">Livraison</span><span class="d" id="ficheModeLivraisonD">Le restaurant vous livre, des frais s'appliquent.</span></span>
+            </label>
+          </div>
+          <div id="storeZoneWrap" style="display:none; margin-top:12px;">
+            <div class="field"><label>Zone de livraison</label>
+              <select id="storeZone" onchange="recalculerTotal()" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+            </div>
           </div>
         </div>
 
-        <div id="feesBreakdown" style="font-size:12px; color:var(--text-dim); margin:10px 0;"></div>
-        <div class="cart-total"><span>Total</span><span class="val mono" id="cartTotal">0 GNF</span></div>
-
-        <div class="field"><label>Votre nom</label><input type="text" id="storeClientNom" placeholder="Nom"></div>
-        <div class="field"><label>Votre téléphone</label><input type="text" id="storeClientTelephone" placeholder="+224 6xx xx xx xx"></div>
-        <div class="field"><label>Précisions (facultatif)</label><input type="text" id="storeClientNote" placeholder="Adresse exacte, sans piment, heure souhaitée…"></div>
-        <div id="storePaiementNote" style="font-size:12px; color:var(--text-dim); margin-bottom:10px;"></div>
-        <button class="wa-btn" id="waBtn" onclick="envoyerCommandeWhatsapp()">Commander sur WhatsApp</button>
-        <button class="btn-outline" id="payBtn" style="color:var(--text); width:100%; margin-top:8px;" onclick="payOrder()">Envoyer sans WhatsApp</button>
+        <div class="fiche-bloc">
+          <h4><i>4</i> Récapitulatif</h4>
+          <div class="fiche-recap">
+            <div id="feesBreakdown"></div>
+            <div class="fiche-grand">
+              <span class="t">GRAND TOTAL</span>
+              <span class="v" id="cartTotal">0 GNF</span>
+            </div>
+          </div>
+          <div class="field"><label>Précisions (facultatif)</label><input type="text" id="storeClientNote" placeholder="Sans piment, heure souhaitée, repère…"></div>
+          <div id="storePaiementNote" style="font-size:12px; color:var(--text-dim); margin-bottom:12px;"></div>
+          <div class="fiche-err" id="ficheErreur"></div>
+          <button class="fiche-valider" id="ficheValiderBtn" onclick="validerFicheCommande()">Valider ma commande</button>
+        </div>
       </div>
 
       <div id="cartTrackerWrap" style="display:none;">
-        <h3 style="margin-top:0;">Suivi de votre commande</h3>
-        <div id="trackerStages" style="margin-bottom:14px;"></div>
-        <div style="text-align:center;">
-          <div style="font-family:'Fraunces',serif; font-size:28px; color:var(--gold-soft);" id="trackerChrono">--:--</div>
+        <div class="fiche-ok">
+          <div class="coche">✓</div>
+          <h3>Commande enregistrée</h3>
+          <div class="sub" id="ficheOkTexte">Le restaurant a reçu votre fiche.</div>
+          <div class="num" id="ficheOkNumero">—</div>
+          <div id="ficheOkRecap" style="font-size:12.5px; color:var(--text-dim); line-height:1.7; text-align:left;"></div>
+          <button class="wa-btn" id="waBtn" onclick="envoyerFicheWhatsapp()" style="margin-top:16px;">Envoyer la fiche sur WhatsApp</button>
+          <div id="trackerStages" style="margin:16px 0 8px;"></div>
+          <div style="font-family:'Fraunces',serif; font-size:26px; color:var(--gold-soft);" id="trackerChrono">--:--</div>
           <div style="font-size:11.5px; color:var(--text-dim);">Temps estimé restant</div>
+          <button class="btn-outline" id="payBtn" style="color:var(--text); width:100%; margin-top:16px;" onclick="nouvelleCommande()">Passer une nouvelle commande</button>
         </div>
-        <button class="btn-outline" style="color:var(--text); width:100%; margin-top:16px;" onclick="nouvelleCommande()">Passer une nouvelle commande</button>
       </div>
     </aside>
 
@@ -1681,9 +1911,9 @@
           </div>
           <div class="web-link">
             <span class="url" id="webPublicUrl">—</span>
-            <button class="btn-outline" style="color:var(--text);" onclick="copierLienWeb()">Copier</button>
-            <button class="btn-outline" style="color:var(--text);" onclick="ouvrirPageWeb()">Ouvrir</button>
-            <button class="btn-outline" style="color:var(--text);" onclick="partagerPageWeb()">Partager</button>
+            <button class="btn-outline" id="webBtnCopier" style="color:var(--text);" onclick="copierLienWeb()">Copier</button>
+            <button class="btn-outline" id="webBtnOuvrir" style="color:var(--text);" onclick="ouvrirPageWeb()">Ouvrir la page</button>
+            <button class="btn-outline" id="webBtnPartager" style="color:var(--text);" onclick="partagerPageWeb()">Partager</button>
           </div>
           <div id="webCopieNote" style="font-size:12px; color:var(--teal-soft);"></div>
           <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">
@@ -2661,22 +2891,35 @@
         .map(([id, p]) => ({ id, ...p }))
         .filter(p => p.disponible !== false);
       renderStoreCategories();
+      renderSpecialites();
       renderStoreMenu();
 
       storeFraisService = info.fraisService || 0;
       const zones = await agrGet(base + 'zonesLivraison') || {};
       storeZones = Object.entries(zones).map(([id,z]) => ({ id, ...z }));
-      const modeSelect = document.getElementById('storeMode');
-      const livraisonOpt = modeSelect.querySelector('option[value="livraison"]');
-      livraisonOpt.disabled = storeZones.length === 0;
-      livraisonOpt.textContent = storeZones.length === 0 ? 'Livraison (aucune zone desservie)' : 'Livraison';
+      // La livraison n'est proposée que si le restaurant dessert des zones
+      const radioLivraison = document.getElementById('ficheModeLivraison');
+      radioLivraison.disabled = storeZones.length === 0;
+      if(storeZones.length === 0){
+        document.getElementById('ficheModeSurPlace').checked = true;
+        document.getElementById('ficheModeLivraisonD').textContent = "Ce restaurant ne propose pas encore la livraison.";
+        document.getElementById('ficheModeLivraisonLbl').style.opacity = '0.5';
+      } else {
+        document.getElementById('ficheModeLivraisonD').textContent = 'Le restaurant vous livre, des frais s\'appliquent.';
+        document.getElementById('ficheModeLivraisonLbl').style.opacity = '';
+      }
       document.getElementById('storeZone').innerHTML = storeZones.map(z =>
         `<option value="${z.id}">${z.nom} — ${(z.fraisLivraison||0).toLocaleString('fr-FR')} GNF, ~${z.delaiMinutes} min</option>`
       ).join('');
 
+      document.getElementById('ficheChoixPlat').innerHTML = storeMenuItems.map(p =>
+        `<option value="${p.id}">${p.nom} — ${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</option>`
+      ).join('') || '<option value="">Aucun plat disponible</option>';
+
       document.getElementById('cartOrderForm').style.display = 'block';
       document.getElementById('cartTrackerWrap').style.display = 'none';
-      toggleLivraisonFields();
+      preparerNumeroFiche();
+      changerModeFiche();
       renderCart();
       loadAvis();
       window.scrollTo(0,0);
@@ -2756,6 +2999,21 @@
     document.getElementById('waHeroBtn').textContent =
       storeSite.whatsapp ? 'Commander sur WhatsApp' : 'Composer ma commande';
 
+    // Bandeau de points forts, construit à partir des données réelles
+    const forts = [];
+    if(etat) forts.push({ ic:'🕒', t: etat.ouvert ? 'Ouvert maintenant' : 'Actuellement fermé',
+                          d: storeSite.horaires || ('De ' + etat.ouvre + ' à ' + etat.ferme) });
+    else if(storeSite.horaires) forts.push({ ic:'🕒', t:'Horaires', d:storeSite.horaires });
+    if(storeZones.length) forts.push({ ic:'🛵', t:'Livraison à domicile', d:storeZones.length + ' zone(s) desservie(s)' });
+    else forts.push({ ic:'🥡', t:'À emporter', d:'Commandez et venez récupérer sur place' });
+    if(storeSite.whatsapp) forts.push({ ic:'💬', t:'Suivi sur WhatsApp', d:'Le service commercial vous confirme la commande' });
+    forts.push({ ic:'🧾', t:'Commande numérotée', d:'Chaque fiche reçoit un numéro de suivi' });
+    document.getElementById('sfHighlights').innerHTML = forts.slice(0,4).map(f =>
+      `<div class="sf-hl"><div class="ic">${f.ic}</div><div><div class="t">${f.t}</div><div class="d">${f.d}</div></div></div>`
+    ).join('');
+
+    document.getElementById('sfBandTitre').textContent = 'Prêt à commander chez ' + nom + ' ?';
+
     // Pied de page
     document.getElementById('sfFootNom').textContent = nom;
     document.getElementById('sfFootAdresse').innerHTML = [info.adresse, info.ville].filter(Boolean).join(', ') || '';
@@ -2834,6 +3092,25 @@
     renderStoreMenu();
   }
 
+  // Trois plats mis en avant en haut de page (les plus chers de la carte,
+  // à défaut d'un historique de ventes accessible publiquement)
+  function renderSpecialites(){
+    const section = document.getElementById('sfSpecials');
+    const grid = document.getElementById('sfSpecialsGrid');
+    const top = storeMenuItems.slice().sort((a,b) => (b.prixVente||0) - (a.prixVente||0)).slice(0,3);
+
+    section.style.display = storeMenuItems.length >= 3 ? 'block' : 'none';
+    grid.innerHTML = top.map((p, i) => `
+      <article class="sf-special">
+        <div class="rang">0${i+1}</div>
+        <div class="cat">${p.categorie || 'Spécialité'}</div>
+        <div class="nom">${p.nom}</div>
+        <div class="desc">${p.description || 'Préparé sur place par nos cuisiniers.'}</div>
+        <span class="prix">${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</span>
+        <button class="sf-btn or" onclick="addToCart('${p.id}')">Ajouter à ma commande</button>
+      </article>`).join('');
+  }
+
   function renderStoreMenu(){
     const grid = document.getElementById('storeMenuGrid');
     if(!grid) return;
@@ -2874,39 +3151,7 @@
   function addToCart(itemId){
     cart[itemId] = (cart[itemId] || 0) + 1;
     renderCart();
-    ouvrirPanier();
-  }
-  function retirerDuPanier(itemId){
-    cart[itemId] = (cart[itemId] || 0) - 1;
-    if(cart[itemId] <= 0) delete cart[itemId];
-    renderCart();
-  }
-
-  function renderCart(){
-    const linesEl = document.getElementById('cartLines');
-    const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
-    const nb = entries.reduce((s,[,q]) => s + q, 0);
-
-    document.getElementById('sfCartCount').textContent = nb;
-    document.getElementById('sfCartCountTop').textContent = nb;
-    document.getElementById('sfCartFab').classList.toggle('on', nb > 0);
-
-    if(entries.length === 0){
-      linesEl.innerHTML = '<div class="cart-empty">Votre panier est vide.</div>';
-    } else {
-      linesEl.innerHTML = entries.map(([id, qty]) => {
-        const item = storeMenuItems.find(m => m.id === id);
-        if(!item) return '';
-        const lineTotal = (item.prixVente || 0) * qty;
-        return `<div class="cart-line">
-          <span><span class="qty">${qty}×</span>${item.nom}</span>
-          <span><span class="mono">${lineTotal.toLocaleString('fr-FR')}</span>
-          <button onclick="retirerDuPanier('${id}')" title="Retirer">−</button>
-          <button onclick="addToCart('${id}')" title="Ajouter">+</button></span>
-        </div>`;
-      }).join('');
-    }
-    recalculerTotal();
+    ouvrirFiche();
   }
 
   // ---- Visionneuse photo ----
@@ -2923,9 +3168,15 @@
     if(el) el.scrollIntoView({ behavior:'smooth', block:'start' });
   }
 
-  function toggleLivraisonFields(){
-    const mode = document.getElementById('storeMode').value;
-    document.getElementById('storeZoneWrap').style.display = mode === 'livraison' ? 'block' : 'none';
+  function modeFiche(){
+    return document.getElementById('ficheModeLivraison').checked ? 'livraison' : 'sur_place';
+  }
+
+  function changerModeFiche(){
+    const livraison = modeFiche() === 'livraison';
+    document.getElementById('storeZoneWrap').style.display = livraison ? 'block' : 'none';
+    document.getElementById('ficheModeSurPlaceLbl').classList.toggle('on', !livraison);
+    document.getElementById('ficheModeLivraisonLbl').classList.toggle('on', livraison);
     recalculerTotal();
   }
 
@@ -2938,21 +3189,27 @@
 
   function recalculerTotal(){
     const sousTotal = sousTotalPanier();
-    const mode = document.getElementById('storeMode').value;
+    const mode = modeFiche();
+    const nbPlats = Object.values(cart).reduce((s,q) => s + q, 0);
     let fraisLivraison = 0, delaiMinutes = 0, zoneNom = '';
+
     if(mode === 'livraison'){
       const zoneId = document.getElementById('storeZone').value;
       const zone = storeZones.find(z => z.id === zoneId);
       if(zone){ fraisLivraison = zone.fraisLivraison||0; delaiMinutes = zone.delaiMinutes||0; zoneNom = zone.nom; }
     }
     const total = sousTotal + storeFraisService + fraisLivraison;
+    const gnf = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
 
     document.getElementById('feesBreakdown').innerHTML =
-      `<div>Sous-total plats : ${sousTotal.toLocaleString('fr-FR')} GNF</div>` +
-      (storeFraisService ? `<div>Frais de commande : ${storeFraisService.toLocaleString('fr-FR')} GNF</div>` : '') +
-      (mode === 'livraison' && zoneNom ? `<div>Livraison (${zoneNom}) : ${fraisLivraison.toLocaleString('fr-FR')} GNF — ~${delaiMinutes} min</div>` : '');
-    document.getElementById('cartTotal').textContent = total.toLocaleString('fr-FR') + ' GNF';
+      `<div class="l"><span>Sous-total (${nbPlats} plat${nbPlats>1?'s':''})</span><b>${gnf(sousTotal)}</b></div>` +
+      (storeFraisService ? `<div class="l"><span>Frais de commande</span><b>${gnf(storeFraisService)}</b></div>` : '') +
+      (mode === 'livraison'
+        ? `<div class="l"><span>Frais de livraison${zoneNom ? ' — ' + zoneNom : ''}</span><b>${gnf(fraisLivraison)}</b></div>` +
+          (delaiMinutes ? `<div class="l"><span>Délai estimé</span><b>~${delaiMinutes} min</b></div>` : '')
+        : `<div class="l"><span>Retrait sur place</span><b>0 GNF</b></div>`);
 
+    document.getElementById('cartTotal').textContent = gnf(total);
     return { sousTotal, fraisLivraison, delaiMinutes, total, mode, zoneNom };
   }
 
@@ -2996,72 +3253,6 @@
   // Vitrine du restaurant — présentation, photos et consignes de paiement
   // alimentées par l'onglet « Page web du restaurant ».
   // ---------------------------------------------------------------
-  // Construit le récapitulatif texte envoyé au service commercial
-  function messageWhatsapp(nomRestaurant, totaux, clientNom, clientTel, note){
-    const lignes = Object.entries(cart).filter(([,q]) => q > 0).map(([id, q]) => {
-      const item = storeMenuItems.find(m => m.id === id);
-      return item ? '• ' + q + ' × ' + item.nom + ' — ' + fmtGNF((item.prixVente||0) * q) : '';
-    }).filter(Boolean);
-
-    const txt = [
-      'Bonjour ' + nomRestaurant + ', je souhaite passer une commande :',
-      '',
-      lignes.join('\n'),
-      '',
-      'Mode : ' + (totaux.mode === 'livraison' ? 'Livraison' + (totaux.zoneNom ? ' (' + totaux.zoneNom + ')' : '') : 'Sur place / à emporter'),
-      'Total à payer : ' + fmtGNF(totaux.total),
-      '',
-      'Nom : ' + (clientNom || 'non précisé'),
-      'Téléphone : ' + (clientTel || 'non précisé'),
-    ];
-    if(note) txt.push('Précisions : ' + note);
-    return encodeURIComponent(txt.join('\n'));
-  }
-
-  // Enregistre la commande côté restaurant puis ouvre WhatsApp pré-rempli
-  async function envoyerCommandeWhatsapp(){
-    const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
-    const banner = document.getElementById('paidBanner');
-    if(entries.length === 0 || !storeTenantCode) return;
-
-    if(!storeSite.whatsapp){
-      banner.style.display = 'block';
-      banner.style.color = '#E19488';
-      banner.textContent = "Ce restaurant n'a pas encore renseigné son WhatsApp commercial.";
-      return;
-    }
-
-    const infoRestaurant = document.getElementById('storeRestaurantName').textContent;
-    const clientNom = document.getElementById('storeClientNom').value.trim();
-    const clientTel = document.getElementById('storeClientTelephone').value.trim();
-    const note = document.getElementById('storeClientNote').value.trim();
-    const totaux = recalculerTotal();
-
-    // La fenêtre WhatsApp est ouverte tout de suite : ouverte après l'appel
-    // réseau, elle serait bloquée par les navigateurs mobiles.
-    const url = 'https://wa.me/' + storeSite.whatsapp + '?text=' +
-                messageWhatsapp(infoRestaurant, totaux, clientNom, clientTel, note);
-    const fenetre = window.open(url, '_blank');
-
-    try {
-      await enregistrerCommandeClient({ origine: 'Commande WhatsApp', canal: 'whatsapp', note });
-      banner.style.display = 'block';
-      banner.style.color = '';
-      banner.textContent = 'Commande transmise au restaurant. Finalisez le paiement sur WhatsApp.';
-      cart = {};
-      document.getElementById('cartOrderForm').style.display = 'none';
-      document.getElementById('cartTrackerWrap').style.display = 'block';
-      demarrerChrono(totaux.mode === 'livraison' ? totaux.delaiMinutes : 20);
-    } catch(e){
-      banner.style.display = 'block';
-      banner.style.color = '#E19488';
-      banner.textContent = "La commande est partie sur WhatsApp mais n'a pas pu être enregistrée dans le restaurant.";
-    }
-    if(!fenetre){
-      banner.textContent += ' (Si WhatsApp ne s\'est pas ouvert, autorisez les fenêtres pop-up.)';
-    }
-  }
-
   // Écriture commune aux deux modes de commande : la commande alimente la
   // caisse du restaurant et la liste des commandes en ligne à traiter.
   async function enregistrerCommandeClient(extra){
@@ -3076,11 +3267,14 @@
     });
 
     const { fraisLivraison, total, mode, zoneNom } = recalculerTotal();
-    const clientNom = document.getElementById('storeClientNom').value.trim();
-    const clientTelephone = document.getElementById('storeClientTelephone').value.trim();
+    const nom = document.getElementById('ficheNom').value.trim();
+    const prenom = document.getElementById('fichePrenom').value.trim();
+    const clientNom = (prenom + ' ' + nom).trim();
+    const clientTelephone = document.getElementById('ficheTelephone').value.trim();
 
     const commande = {
-      origine: (extra && extra.origine) || 'Page web',
+      numero: ficheNumeroCourant,
+      origine: (extra && extra.origine) || 'Fiche de commande',
       plats: platsCommande,
       platsVendus: totalPlats,
       revenu: total,
@@ -3088,7 +3282,10 @@
       fraisService: storeFraisService, fraisLivraison,
       date: Date.now(),
       clientNom: clientNom || null,
+      clientPrenom: prenom || null,
       clientTelephone: clientTelephone || null,
+      quartier: document.getElementById('ficheQuartier').value.trim() || null,
+      adresse: document.getElementById('ficheAdresse').value.trim() || null,
     };
 
     const base = 'agr_tenants/' + storeTenantCode + '/';
@@ -3144,45 +3341,233 @@
 
   window.addEventListener('hashchange', ouvrirDepuisLien);
 
-  async function payOrder(){
-    const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
-    if(entries.length === 0 || !storeTenantCode) return;
+  // ---------------------------------------------------------------
+  // FICHE DE COMMANDE
+  // Le client remplit une vraie fiche : numéro attribué automatiquement,
+  // coordonnées, plats et quantités, mode de réception, grand total.
+  // Rien n'est envoyé sur WhatsApp tant que la fiche n'est pas validée.
+  // ---------------------------------------------------------------
+  let ficheNumeroCourant = null;   // numéro affiché sur la fiche en cours
+  let ficheDerniereCommande = null; // récapitulatif de la commande validée
 
-    let totalPlats = 0, sousTotal = 0;
-    const platsCommande = {};
-    entries.forEach(([id, qty]) => {
-      const item = storeMenuItems.find(m => m.id === id);
-      if(!item) return;
-      totalPlats += qty;
-      sousTotal += (item.prixVente || 0) * qty;
-      platsCommande[id] = { nom: item.nom, qty, prix: item.prixVente || 0 };
-    });
+  function formatNumeroCommande(n){
+    const d = new Date();
+    return 'CMD-' + d.getFullYear() +
+           String(d.getMonth()+1).padStart(2,'0') +
+           String(d.getDate()).padStart(2,'0') + '-' +
+           String(n).padStart(4,'0');
+  }
 
-    const { fraisLivraison, delaiMinutes, total, mode, zoneNom } = recalculerTotal();
-    const clientNom = document.getElementById('storeClientNom').value.trim();
-    const clientTelephone = document.getElementById('storeClientTelephone').value.trim();
+  // Le compteur vit dans un nœud dédié : il n'est jamais écrasé par
+  // l'enregistrement de la page web depuis l'application de gestion.
+  async function compteurCommandes(reserver){
+    const chemin = 'agr_tenants/' + storeTenantCode + '/compteurs/commandes';
+    let n = 0;
+    try { n = Number(await agrGet(chemin)) || 0; } catch(e){}
+    const suivant = n + 1;
+    if(reserver){ try { await agrSet(chemin, suivant); } catch(e){} }
+    return suivant;
+  }
 
-    const banner = document.getElementById('paidBanner');
+  // Numéro affiché dès l'ouverture de la fiche (confirmé à la validation)
+  async function preparerNumeroFiche(){
+    document.getElementById('ficheDate').textContent =
+      new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
     try {
+      ficheNumeroCourant = formatNumeroCommande(await compteurCommandes(false));
+    } catch(e){
+      ficheNumeroCourant = formatNumeroCommande(1);
+    }
+    document.getElementById('ficheNumero').textContent = ficheNumeroCourant;
+  }
+
+  function ouvrirFiche(){
+    ouvrirPanier();
+    if(!ficheNumeroCourant) preparerNumeroFiche();
+  }
+
+  // Ajout d'un plat depuis la fiche elle-même (nom + quantité)
+  function ajouterDepuisFiche(){
+    const id = document.getElementById('ficheChoixPlat').value;
+    const qte = parseInt(document.getElementById('ficheChoixQte').value, 10) || 1;
+    if(!id) return;
+    cart[id] = (cart[id] || 0) + Math.max(1, qte);
+    document.getElementById('ficheChoixQte').value = 1;
+    renderCart();
+  }
+
+  function changerQuantite(id, delta){
+    cart[id] = (cart[id] || 0) + delta;
+    if(cart[id] <= 0) delete cart[id];
+    renderCart();
+  }
+
+  function supprimerLigneFiche(id){
+    delete cart[id];
+    renderCart();
+  }
+
+  // Tableau des plats choisis : quantité, prix unitaire et montant par ligne
+  function renderCart(){
+    const linesEl = document.getElementById('cartLines');
+    const entries = Object.entries(cart).filter(([,qty]) => qty > 0);
+    const nb = entries.reduce((s,[,q]) => s + q, 0);
+
+    document.getElementById('sfCartCount').textContent = nb;
+    document.getElementById('sfCartCountTop').textContent = nb;
+    document.getElementById('sfCartFab').classList.toggle('on', nb > 0);
+
+    if(entries.length === 0){
+      linesEl.innerHTML = '<div class="cart-empty">Aucun plat choisi pour l\'instant.</div>';
+    } else {
+      const lignes = entries.map(([id, qty]) => {
+        const item = storeMenuItems.find(m => m.id === id);
+        if(!item) return '';
+        const pu = item.prixVente || 0;
+        return `<tr>
+          <td>${item.nom}</td>
+          <td><span class="fiche-qte">
+            <button onclick="changerQuantite('${id}',-1)">−</button>
+            <span>${qty}</span>
+            <button onclick="changerQuantite('${id}',1)">+</button>
+          </span></td>
+          <td class="num">${pu.toLocaleString('fr-FR')}</td>
+          <td class="num">${(pu*qty).toLocaleString('fr-FR')}</td>
+          <td><button class="fiche-supp" onclick="supprimerLigneFiche('${id}')" title="Retirer">&times;</button></td>
+        </tr>`;
+      }).join('');
+
+      linesEl.innerHTML = `<table class="fiche-table">
+        <thead><tr><th>Plat</th><th>Qté</th><th style="text-align:right;">P. unitaire</th><th style="text-align:right;">Montant</th><th></th></tr></thead>
+        <tbody>${lignes}</tbody>
+      </table>`;
+    }
+    recalculerTotal();
+  }
+
+  function ficheErreur(message){
+    const el = document.getElementById('ficheErreur');
+    if(!message){ el.style.display = 'none'; return; }
+    el.textContent = message;
+    el.style.display = 'block';
+  }
+
+  // Validation : contrôle des champs, réservation du numéro, enregistrement
+  async function validerFicheCommande(){
+    ficheErreur(null);
+    const entries = Object.entries(cart).filter(([,q]) => q > 0);
+    const nom = document.getElementById('ficheNom').value.trim();
+    const prenom = document.getElementById('fichePrenom').value.trim();
+    const tel = document.getElementById('ficheTelephone').value.trim();
+    const quartier = document.getElementById('ficheQuartier').value.trim();
+    const adresse = document.getElementById('ficheAdresse').value.trim();
+    const mode = modeFiche();
+
+    if(!entries.length) return ficheErreur('Choisissez au moins un plat avant de valider.');
+    if(!nom)    return ficheErreur('Indiquez votre nom.');
+    if(!prenom) return ficheErreur('Indiquez votre prénom.');
+    if(tel.replace(/[^0-9]/g, '').length < 8) return ficheErreur('Indiquez un numéro de téléphone valide.');
+    if(mode === 'livraison' && !quartier) return ficheErreur('Indiquez votre quartier pour la livraison.');
+    if(mode === 'livraison' && !adresse)  return ficheErreur("Indiquez votre adresse pour la livraison.");
+
+    const btn = document.getElementById('ficheValiderBtn');
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+
+    try {
+      // Le numéro définitif est réservé au moment de la validation
+      ficheNumeroCourant = formatNumeroCommande(await compteurCommandes(true));
+      document.getElementById('ficheNumero').textContent = ficheNumeroCourant;
+
+      const totaux = recalculerTotal();
       await enregistrerCommandeClient({
-        origine: 'Page web',
+        origine: 'Fiche de commande',
         canal: 'page_web',
         note: document.getElementById('storeClientNote').value.trim(),
       });
 
-      banner.style.display = 'block';
-      banner.style.color = '';
-      banner.textContent = 'Commande de ' + total.toLocaleString('fr-FR') + ' GNF enregistrée. Le restaurant vous rappellera pour le paiement.';
-      cart = {};
+      ficheDerniereCommande = {
+        numero: ficheNumeroCourant,
+        nom, prenom, tel, quartier, adresse,
+        totaux,
+        plats: entries.map(([id, q]) => {
+          const it = storeMenuItems.find(m => m.id === id) || {};
+          return { nom: it.nom, qty: q, prix: it.prixVente || 0 };
+        }),
+      };
 
-      document.getElementById('cartOrderForm').style.display = 'none';
-      document.getElementById('cartTrackerWrap').style.display = 'block';
-      demarrerChrono(mode === 'livraison' ? delaiMinutes : 20); // 20 min par défaut pour une commande sur place
+      afficherConfirmationFiche();
+      demarrerChrono(totaux.mode === 'livraison' ? (totaux.delaiMinutes || 30) : 20);
     } catch(e){
-      banner.style.display = 'block';
-      banner.style.color = '#E19488';
-      banner.textContent = "Impossible d'enregistrer la commande — vérifiez la connexion à Firebase.";
+      ficheErreur("La commande n'a pas pu être enregistrée — vérifiez votre connexion et réessayez.");
+    } finally {
+      btn.disabled = false; btn.textContent = 'Valider ma commande';
     }
+  }
+
+  function afficherConfirmationFiche(){
+    const c = ficheDerniereCommande;
+    document.getElementById('cartOrderForm').style.display = 'none';
+    document.getElementById('cartTrackerWrap').style.display = 'block';
+    document.getElementById('ficheOkNumero').textContent = c.numero;
+    document.getElementById('ficheOkTexte').textContent =
+      'Merci ' + c.prenom + ', le restaurant a reçu votre fiche et vous rappellera au ' + c.tel + '.';
+
+    const gnf = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
+    document.getElementById('ficheOkRecap').innerHTML =
+      c.plats.map(p => `<div>${p.qty} × ${p.nom} — ${gnf(p.prix * p.qty)}</div>`).join('') +
+      `<div style="margin-top:8px;">${c.totaux.mode === 'livraison'
+        ? 'Livraison' + (c.totaux.zoneNom ? ' — ' + c.totaux.zoneNom : '') + ' : ' + gnf(c.totaux.fraisLivraison)
+        : 'Retrait sur place'}</div>` +
+      `<div style="color:var(--gold-soft); font-weight:600; margin-top:6px;">Grand total : ${gnf(c.totaux.total)}</div>`;
+
+    const wa = document.getElementById('waBtn');
+    wa.style.display = storeSite.whatsapp ? 'flex' : 'none';
+    cart = {};
+  }
+
+  // Récapitulatif texte envoyé au service commercial, avec le numéro de commande
+  function messageWhatsapp(){
+    const c = ficheDerniereCommande;
+    if(!c) return '';
+    const gnf = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
+    const txt = [
+      'Bonjour, voici ma fiche de commande.',
+      '',
+      'N° ' + c.numero,
+      'Nom : ' + c.nom + ' ' + c.prenom,
+      'Téléphone : ' + c.tel,
+    ];
+    if(c.quartier) txt.push('Quartier : ' + c.quartier);
+    if(c.adresse)  txt.push('Adresse : ' + c.adresse);
+    txt.push('', 'Plats :');
+    c.plats.forEach(p => txt.push('• ' + p.qty + ' × ' + p.nom + ' — ' + gnf(p.prix * p.qty)));
+    txt.push('');
+    txt.push('Mode : ' + (c.totaux.mode === 'livraison'
+      ? 'Livraison' + (c.totaux.zoneNom ? ' (' + c.totaux.zoneNom + ')' : '') + ' — frais ' + gnf(c.totaux.fraisLivraison)
+      : 'Sur place / à emporter'));
+    txt.push('GRAND TOTAL : ' + gnf(c.totaux.total));
+    return encodeURIComponent(txt.join('\n'));
+  }
+
+  // Envoi volontaire, après validation : le client garde la main
+  function envoyerFicheWhatsapp(){
+    if(!storeSite.whatsapp || !ficheDerniereCommande) return;
+    window.open('https://wa.me/' + storeSite.whatsapp + '?text=' + messageWhatsapp(), '_blank');
+  }
+
+  function nouvelleCommande(){
+    if(trackerInterval) clearInterval(trackerInterval);
+    document.getElementById('cartOrderForm').style.display = 'block';
+    document.getElementById('cartTrackerWrap').style.display = 'none';
+    document.getElementById('paidBanner').style.display = 'none';
+    ['ficheNom','fichePrenom','ficheTelephone','ficheQuartier','ficheAdresse','storeClientNote']
+      .forEach(id => { document.getElementById(id).value = ''; });
+    ficheErreur(null);
+    ficheDerniereCommande = null;
+    ficheNumeroCourant = null;
+    cart = {};
+    preparerNumeroFiche();
+    renderCart();
   }
 
   function demarrerChrono(delaiMinutes){
@@ -3224,14 +3609,6 @@
     trackerInterval = setInterval(tick, 1000);
   }
 
-  function nouvelleCommande(){
-    if(trackerInterval) clearInterval(trackerInterval);
-    document.getElementById('cartOrderForm').style.display = 'block';
-    document.getElementById('cartTrackerWrap').style.display = 'none';
-    document.getElementById('paidBanner').style.display = 'none';
-    cart = {};
-    renderCart();
-  }
 
   // ---------------------------------------------------------------
   // Avis clients — publiés directement sur la page publicitaire du restaurant
@@ -3240,7 +3617,9 @@
     if(!storeTenantCode) return;
     const note = parseInt(document.getElementById('avisNote').value, 10);
     const commentaire = document.getElementById('avisCommentaire').value.trim();
-    const clientNom = document.getElementById('storeClientNom').value.trim();
+    // Le nom vient de la fiche de commande si elle a été remplie
+    const clientNom = (document.getElementById('fichePrenom').value.trim() + ' ' +
+                       document.getElementById('ficheNom').value.trim()).trim();
     try {
       const newRef = window._agrPush(agrRef('agr_tenants/' + storeTenantCode + '/avis'));
       await window._agrSet(newRef, { note, commentaire, clientNom: clientNom || 'Client', date: Date.now() });
@@ -3257,12 +3636,16 @@
       const avis = await agrGet('agr_tenants/' + storeTenantCode + '/avis') || {};
       const list = Object.values(avis).sort((a,b) => (b.date||0)-(a.date||0));
       if(list.length === 0){
-        summary.textContent = 'Aucun avis pour l\'instant — soyez le premier à donner votre avis.';
+        summary.innerHTML = '<div class="nb">Aucun avis pour l\'instant — soyez le premier à donner le vôtre.</div>';
         liste.innerHTML = '';
         return;
       }
-      const moyenne = (list.reduce((s,a) => s + (a.note||0), 0) / list.length).toFixed(1);
-      summary.innerHTML = '★ ' + moyenne + '/5 — ' + list.length + ' avis';
+      const moyenne = (list.reduce((s,a) => s + (a.note||0), 0) / list.length);
+      const pleines = Math.round(moyenne);
+      summary.innerHTML =
+        '<div class="chiffre">' + moyenne.toFixed(1) + '</div>' +
+        '<div><div class="etoiles">' + '★'.repeat(pleines) + '☆'.repeat(5-pleines) + '</div>' +
+        '<div class="nb">Moyenne sur ' + list.length + ' avis</div></div>';
       liste.innerHTML = list.slice(0,6).map(a =>
         `<div class="sf-avis-card">
           <div class="etoiles">${'★'.repeat(a.note)}${'☆'.repeat(5-a.note)}</div>
@@ -4658,8 +5041,25 @@
   let webSlugActuel = null;   // adresse publique enregistrée
   let webInfoRestaurant = {}; // identité reprise pour l'index public
 
+  // Adresse réellement fonctionnelle : elle n'existe qu'une fois la page
+  // enregistrée (c'est l'enregistrement qui publie l'adresse dans agr_sites).
   function lienPageWeb(){
-    return location.origin + location.pathname + '#/' + (document.getElementById('webSlug').value || webSlugActuel || '');
+    return webSlugActuel ? location.href.split('#')[0] + '#/' + webSlugActuel : '';
+  }
+
+  function afficherLienPageWeb(){
+    const url = lienPageWeb();
+    const el = document.getElementById('webPublicUrl');
+    const boutons = ['webBtnCopier','webBtnOuvrir','webBtnPartager']
+      .map(id => document.getElementById(id));
+
+    if(url){
+      el.innerHTML = '<a href="' + url + '" target="_blank" style="color:var(--gold-soft); text-decoration:none;">' + url + '</a>';
+      boutons.forEach(b => { b.disabled = false; b.style.opacity = ''; });
+    } else {
+      el.innerHTML = '<span style="color:var(--text-dim);">Adresse pas encore créée — renseignez le nom web ci-dessus puis cliquez sur « Enregistrer la page ».</span>';
+      boutons.forEach(b => { b.disabled = true; b.style.opacity = '0.45'; });
+    }
   }
 
   // Transforme un nom en adresse web lisible : « Le Gourmet » → « le-gourmet »
@@ -4688,7 +5088,7 @@
       webInfoRestaurant = info || {};
       webSlugActuel = s.slug || null;
       document.getElementById('webSlug').value = webSlugActuel || normaliserSlug(webInfoRestaurant.nomRestaurant);
-      document.getElementById('webPublicUrl').textContent = lienPageWeb();
+      afficherLienPageWeb();
       document.getElementById('webActif').value = s.actif === false ? 'non' : 'oui';
       document.getElementById('webSlogan').value = s.slogan || '';
       document.getElementById('webDescription').value = s.description || '';
@@ -4854,7 +5254,7 @@
       }
       webSlugActuel = slug;
       document.getElementById('webSlug').value = slug;
-      document.getElementById('webPublicUrl').textContent = lienPageWeb();
+      afficherLienPageWeb();
 
       await recordAudit('Page web mise à jour', slug);
       showBanner('webSuccess', 'Page web enregistrée et publiée à l\'adresse ' + lienPageWeb());
@@ -4865,6 +5265,7 @@
 
   function copierLienWeb(){
     const url = lienPageWeb();
+    if(!url) return;
     const note = document.getElementById('webCopieNote');
     const succes = () => { note.textContent = 'Lien copié : ' + url; };
     if(navigator.clipboard && navigator.clipboard.writeText){
@@ -4877,6 +5278,7 @@
   // Partage natif (WhatsApp, Facebook…) avec repli sur la copie du lien
   function partagerPageWeb(){
     const url = lienPageWeb();
+    if(!url) return;
     const nom = webInfoRestaurant.nomRestaurant || 'notre restaurant';
     if(navigator.share){
       navigator.share({ title: nom, text: 'Découvrez la carte de ' + nom + ' et commandez en ligne :', url })
@@ -4887,7 +5289,8 @@
   }
 
   function ouvrirPageWeb(){
-    window.open(lienPageWeb(), '_blank');
+    const url = lienPageWeb();
+    if(url) window.open(url, '_blank');
   }
 
   function renderCommandesEnLigne(){
