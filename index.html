@@ -1540,6 +1540,13 @@
   .offre-carte .nom{font-family:'Fraunces',serif; font-size:17px; margin-bottom:6px;}
   .offre-carte .prix{font-family:'IBM Plex Mono',monospace; font-size:18px; color:var(--gold-soft);}
   .offre-carte .duree{font-size:11.5px; color:var(--text-dim); margin-top:5px;}
+  .offre-carte{position:relative;}
+  .offre-carte .offre-permois{font-size:10.5px; color:var(--teal-soft); margin-top:4px;}
+  .offre-carte .offre-coche{
+    position:absolute; top:8px; right:9px; font-size:9.5px; font-weight:800;
+    letter-spacing:0.04em; color:#181205; background:var(--gold);
+    border-radius:999px; padding:2px 8px;
+  }
 
   .periode-bar{
     display:flex; align-items:center; gap:8px; flex-wrap:wrap;
@@ -1749,10 +1756,20 @@
           Ces montants n'apparaissent dans l'onglet Licence des restaurants qu'une fois publiés.
         </div>
 
-        <table class="cdb-table" style="min-width:0; margin-bottom:12px;">
-          <thead><tr><th>Formule</th><th>Durée (jours)</th><th>Prix (GNF)</th><th>Proposée</th></tr></thead>
+        <table class="cdb-table" style="min-width:0; margin-bottom:10px;">
+          <thead><tr><th>Carte de licence</th><th>Durée (jours)</th><th>Prix (GNF)</th><th>Proposée</th><th></th></tr></thead>
           <tbody id="cdbTarifsBody"></tbody>
         </table>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;">
+          <button class="cdb-btn ok" onclick="ajouterCarte()">+ Ajouter une carte</button>
+          <button class="cdb-btn" onclick="restaurerCartesDefaut()">Cartes par défaut (1, 2, 3, 6 mois, 1 an)</button>
+        </div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+          <label style="font-size:11.5px; color:#94a3b8;">Durée d'essai des nouveaux restaurants (jours)</label>
+          <input type="number" id="cdbEssaiJours" min="0" max="365" style="width:90px; padding:7px 9px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px;">
+          <span style="font-size:11px; color:#64748b;">La durée d'un restaurant déjà créé se modifie depuis l'onglet Restaurants.</span>
+        </div>
 
         <div class="cdb-toolbar" style="margin-bottom:6px;">
           <input type="text" id="cdbInstructions" placeholder="Instructions de paiement affichées au restaurant (Orange Money 6XX…, etc.)">
@@ -3337,7 +3354,7 @@
 
         <div class="panel" style="margin-top:16px;">
           <h3>J'ai reçu un code de déblocage</h3>
-          <div class="sub">Saisissez le code envoyé par le concepteur par email ou WhatsApp pour réactiver votre licence.</div>
+          <div class="sub">Saisissez le code envoyé par le concepteur par email ou WhatsApp : votre licence est réactivée pour la durée de la carte réglée.</div>
           <div class="grid-2">
             <div class="field"><label>Code de licence</label>
               <input type="text" id="licenceCodeInput" placeholder="XXXX-XXXX-XXXX-XXXX"
@@ -6397,8 +6414,9 @@
       const corps = [
         'Bonjour ' + d.nomRestaurant + ',',
         '',
-        'Votre paiement de licence a été confirmé.',
-        'Voici votre code de déblocage :',
+        'Votre paiement de licence a été confirmé' +
+          (d.joursAccordes ? ' pour ' + d.joursAccordes + ' jours.' : '.'),
+        'Voici votre code d\'activation :',
         '',
         '    ' + codeLicence,
         '',
@@ -6479,7 +6497,7 @@
       }
 
       // Code correct : déblocage effectif
-      const jours = d.joursAccordes || 30;
+      const jours = parseInt(d.joursAccordes, 10) || 30;
       const jusqu = await prolongerLicenceRestaurant(tenantCode, jours);
       await agrSet('agr_licences_demandes/' + id + '/statut', 'validee');
       await agrSet('agr_licences_demandes/' + id + '/valideeLe', Date.now());
@@ -6513,13 +6531,33 @@
   // ===============================================================
   // LICENCES — tarifs définis par le concepteur, réglés par les restaurants
   // ===============================================================
-  const OFFRES_LICENCE = [
-    { cle:'mensuelle',     libelle:'Mensuelle',    jours:30 },
-    { cle:'trimestrielle', libelle:'Trimestrielle', jours:90 },
-    { cle:'semestrielle',  libelle:'6 mois',        jours:180 },
-    { cle:'annuelle',      libelle:'Annuelle',      jours:365 },
+  // Cartes proposées par défaut. Le concepteur les modifie, en ajoute ou
+  // en retire librement : la liste réellement utilisée vit en base, sous
+  // agr_platform_licences.cartes.
+  const CARTES_PAR_DEFAUT = [
+    { cle:'m1',  libelle:'1 mois',   jours:30,  prix:0, proposee:true },
+    { cle:'m2',  libelle:'2 mois',   jours:60,  prix:0, proposee:true },
+    { cle:'m3',  libelle:'3 mois',   jours:90,  prix:0, proposee:true },
+    { cle:'m6',  libelle:'6 mois',   jours:180, prix:0, proposee:true },
+    { cle:'m12', libelle:'1 an',     jours:365, prix:0, proposee:true },
   ];
+  const ESSAI_PAR_DEFAUT = 14;   // jours offerts à la création d'un restaurant
+
   let tarifsLicence = null;
+  let cartesLicence = [];        // cartes en cours d'édition dans l'espace concepteur
+
+  // Anciennes clés (mensuelle, trimestrielle…) reprises telles quelles :
+  // les tarifs déjà saisis ne sont pas perdus.
+  function cartesDepuisBase(t){
+    if(Array.isArray(t.cartes) && t.cartes.length) return t.cartes.map(c => Object.assign({}, c));
+    if(t.offres && Object.keys(t.offres).length){
+      return Object.entries(t.offres).map(([cle, o]) => ({
+        cle, libelle: o.libelle || cle, jours: o.jours || 30,
+        prix: o.prix || 0, proposee: o.proposee !== false,
+      }));
+    }
+    return CARTES_PAR_DEFAUT.map(c => Object.assign({}, c));
+  }
 
   async function chargerTarifsLicences(){
     try {
@@ -6527,16 +6565,10 @@
     } catch(e){ tarifsLicence = {}; }
     const offres = tarifsLicence.offres || {};
 
-    document.getElementById('cdbTarifsBody').innerHTML = OFFRES_LICENCE.map(o => {
-      const v = offres[o.cle] || {};
-      return `<tr>
-        <td><strong>${o.libelle}</strong></td>
-        <td><input type="number" id="tarifJours-${o.cle}" min="1" value="${v.jours || o.jours}"></td>
-        <td><input type="number" id="tarifPrix-${o.cle}" min="0" value="${v.prix || 0}"></td>
-        <td style="text-align:center;"><input type="checkbox" id="tarifActif-${o.cle}" ${v.proposee !== false ? 'checked' : ''}></td>
-      </tr>`;
-    }).join('');
+    cartesLicence = cartesDepuisBase(tarifsLicence);
+    renderCartesLicence();
 
+    document.getElementById('cdbEssaiJours').value = tarifsLicence.essaiJours || ESSAI_PAR_DEFAUT;
     document.getElementById('cdbInstructions').value = tarifsLicence.instructions || '';
     document.getElementById('cdbPublie').checked = tarifsLicence.publie === true;
     document.getElementById('cdbDeblocageAuto').checked = tarifsLicence.deblocageAuto === true;
@@ -6547,20 +6579,72 @@
     chargerPaiements();
   }
 
+  // Le tableau des cartes est reconstruit à chaque modification : les
+  // valeurs saisies sont d'abord relues pour ne rien perdre.
+  function renderCartesLicence(){
+    document.getElementById('cdbTarifsBody').innerHTML = cartesLicence.map((c, i) => `
+      <tr>
+        <td><input type="text" value="${echapper(c.libelle)}" onchange="majCarte(${i},'libelle',this.value)"></td>
+        <td><input type="number" min="1" value="${c.jours}" onchange="majCarte(${i},'jours',this.value)"></td>
+        <td><input type="number" min="0" value="${c.prix}" onchange="majCarte(${i},'prix',this.value)"></td>
+        <td style="text-align:center;"><input type="checkbox" ${c.proposee !== false ? 'checked' : ''} onchange="majCarte(${i},'proposee',this.checked)"></td>
+        <td style="text-align:center;"><button class="cdb-btn danger" onclick="retirerCarte(${i})">Retirer</button></td>
+      </tr>`).join('') ||
+      '<tr><td colspan="5" class="cdb-empty">Aucune carte — ajoutez-en une ci-dessous.</td></tr>';
+  }
+
+  function majCarte(i, champ, valeur){
+    if(!cartesLicence[i]) return;
+    cartesLicence[i][champ] = (champ === 'jours' || champ === 'prix')
+      ? (parseInt(valeur, 10) || 0) : valeur;
+  }
+
+  function ajouterCarte(){
+    cartesLicence.push({
+      cle: 'c' + Date.now().toString(36),
+      libelle: 'Nouvelle carte', jours: 30, prix: 0, proposee: true,
+    });
+    renderCartesLicence();
+  }
+
+  function retirerCarte(i){
+    cartesLicence.splice(i, 1);
+    renderCartesLicence();
+  }
+
+  function restaurerCartesDefaut(){
+    if(!confirm('Remplacer les cartes actuelles par les cartes proposées par défaut (1, 2, 3, 6 mois et 1 an) ?')) return;
+    cartesLicence = CARTES_PAR_DEFAUT.map(c => Object.assign({}, c));
+    renderCartesLicence();
+  }
+
   async function enregistrerTarifs(){
     const note = document.getElementById('cdbTarifsNote');
+
+    // Contrôles : une carte sans nom, sans durée ou en double serait
+    // inutilisable côté restaurant.
+    const propres = cartesLicence
+      .map(c => Object.assign({}, c, {
+        libelle: (c.libelle || '').trim(),
+        jours: parseInt(c.jours, 10) || 0,
+        prix: parseInt(c.prix, 10) || 0,
+      }))
+      .filter(c => c.libelle && c.jours > 0);
+
+    if(cartesLicence.length && !propres.length){
+      note.style.color = '#f87171';
+      note.textContent = 'Chaque carte doit avoir un nom et une durée en jours.';
+      return;
+    }
+    // Compatibilité : on continue d'alimenter l'ancien format `offres`
     const offres = {};
-    OFFRES_LICENCE.forEach(o => {
-      offres[o.cle] = {
-        libelle: o.libelle,
-        jours: parseInt(document.getElementById('tarifJours-' + o.cle).value, 10) || o.jours,
-        prix: parseInt(document.getElementById('tarifPrix-' + o.cle).value, 10) || 0,
-        proposee: document.getElementById('tarifActif-' + o.cle).checked,
-      };
-    });
+    propres.forEach(c => { offres[c.cle] = { libelle:c.libelle, jours:c.jours, prix:c.prix, proposee:c.proposee !== false }; });
+
     try {
       await agrSet('agr_platform_licences', {
+        cartes: propres,
         offres,
+        essaiJours: parseInt(document.getElementById('cdbEssaiJours').value, 10) || ESSAI_PAR_DEFAUT,
         instructions: document.getElementById('cdbInstructions').value.trim(),
         publie: document.getElementById('cdbPublie').checked,
         deblocageAuto: document.getElementById('cdbDeblocageAuto').checked,
@@ -6609,18 +6693,46 @@
   }
 
   // Validation : la licence est prolongée et le restaurant débloqué
+  // Validation d'un paiement : un code d'activation est engendré et envoyé
+  // au restaurant, qui le saisit lui-même pour réactiver son accès.
   async function validerPaiement(id){
     const x = paiementsCourants.find(v => v.id === id);
+    const note = document.getElementById('cdbTarifsNote');
     if(!x) return;
-    if(!confirm('Valider le paiement de ' + x.code + ' et prolonger sa licence de ' + x.jours + ' jours ?')) return;
+    if(!confirm('Confirmer la réception du paiement de ' + x.code + ' (' + x.offreLibelle + ') ?\n' +
+                'Un code d\'activation de ' + x.jours + ' jours lui sera envoyé.')) return;
+
     try {
-      await prolongerLicenceRestaurant(x.code, x.jours);
       await agrSet('agr_paiements/' + id + '/statut', 'valide');
       await agrSet('agr_paiements/' + id + '/valideLe', Date.now());
+
+      // Demande de déblocage : c'est elle qui porte le code et sa durée
+      const info = await agrGet('agr_tenants/' + x.code + '/info') || {};
+      const toutes = await agrGet('agr_licences_demandes') || {};
+      const existante = Object.entries(toutes).find(([, d]) =>
+        d.code === x.code && !['validee','refusee'].includes(d.statut));
+
+      let idDemande;
+      if(existante){
+        idDemande = existante[0];
+      } else {
+        const d = await ouvrirDemandeLicence(x.code, info, 'Paiement reçu — ' + (x.offreLibelle || ''));
+        idDemande = d.id;
+      }
+      await agrSet('agr_licences_demandes/' + idDemande + '/joursAccordes', x.jours || 30);
+      await agrSet('agr_licences_demandes/' + idDemande + '/paiementId', id);
+
+      await chargerDemandesLicence();
+      await envoyerCodeAuRestaurant(idDemande, true);
+
+      cdbOnglet('mail');
+      note.style.color = '#4ade80';
+      note.textContent = 'Paiement validé. Le code d\'activation a été engendré pour ' + x.code + '.';
       chargerPaiements();
       loadConcepteurStats();
     } catch(e){
-      document.getElementById('cdbTarifsNote').textContent = 'La validation a échoué.';
+      note.style.color = '#f87171';
+      note.textContent = 'La validation a échoué.';
     }
   }
 
@@ -6804,6 +6916,7 @@
                 ${bloque ? 'Débloquer' : 'Bloquer'}
               </button>
               <button class="cdb-btn" onclick="declencherActivation('${r.code}')" title="Engendrer et envoyer un code d'activation">Code</button>
+              <button class="cdb-btn" onclick="modifierEssai('${r.code}')" title="Définir ou modifier la période d'essai">Essai</button>
             </div>
           </td>
         </tr>`;
@@ -6830,6 +6943,61 @@
     } catch (e) {
       document.getElementById('conceptStatsNote').textContent =
         'Échec de la mise à jour de la licence de ' + code + '.';
+    }
+  }
+
+  // Période d'essai d'un restaurant : le concepteur la fixe ou la modifie
+  // à tout moment ; la date d'expiration est recalculée depuis la création.
+  async function modifierEssai(code){
+    const r = cdbRestaurants.find(x => x.code === code);
+    const note = document.getElementById('conceptStatsNote');
+    if(!r) return;
+
+    const creation = r.info.dateCreation || Date.now();
+    const actuels = r.info.dateExpiration
+      ? Math.round((r.info.dateExpiration - creation) / (24*60*60*1000))
+      : ESSAI_PAR_DEFAUT;
+
+    const saisie = prompt(
+      'Période d\'essai de « ' + (r.info.nomRestaurant || code) + ' »\n' +
+      'Nombre de jours à compter de la création (' + new Date(creation).toLocaleDateString('fr-FR') + ') :',
+      String(actuels));
+    if(saisie === null) return;
+
+    const jours = parseInt(saisie, 10);
+    if(isNaN(jours) || jours < 0){
+      note.textContent = 'Durée invalide.';
+      return;
+    }
+
+    try {
+      const nouvelle = creation + jours * 24 * 60 * 60 * 1000;
+      await agrSet('agr_tenants/' + code + '/info/dateExpiration', nouvelle);
+      r.info.dateExpiration = nouvelle;
+
+      // Une prolongation qui redonne du temps réactive le restaurant
+      if(Date.now() < nouvelle && r.info.statut === 'bloque'){
+        await agrSet('agr_tenants/' + code + '/info/statut', 'essai');
+        await agrSet('agr_tenants/' + code + '/info/dateBlocage', null);
+        r.info.statut = 'essai';
+        r.info.dateBlocage = null;
+        try {
+          const site = await agrGet('agr_tenants/' + code + '/siteweb');
+          if(site && site.slug){
+            await agrSet('agr_sites/' + site.slug + '/bloque', false);
+            await agrSet('agr_sites/' + site.slug + '/actif', site.actif !== false);
+          }
+        } catch(e){}
+      }
+
+      renderConcepteurStats();
+      renderConcepteurList();
+      note.style.color = '#4ade80';
+      note.textContent = 'Essai de ' + (r.info.nomRestaurant || code) + ' fixé à ' + jours +
+                         ' jour(s) — expiration le ' + new Date(nouvelle).toLocaleDateString('fr-FR') + '.';
+    } catch(e){
+      note.style.color = '#f87171';
+      note.textContent = "La période d'essai n'a pas pu être modifiée.";
     }
   }
 
@@ -6985,7 +7153,9 @@
         document.getElementById('blockedText').textContent =
           "par suite du non-paiement de la licence. Réglez votre licence ci-dessous ou contactez le fournisseur.";
         // Le règlement n'est proposé qu'à qui prouve son identité sur ce restaurant
-        tenantBloque = matchEntry ? { code: tenantCode, nom: info.nomRestaurant || tenantCode } : null;
+        tenantBloque = matchEntry
+          ? { code: tenantCode, nom: info.nomRestaurant || tenantCode, formuleLicence: info.formuleLicence || null }
+          : null;
         offreChoisieBloc = null;
         document.getElementById('blockedFormPaiement').style.display = 'none';
         showView('blocked');
@@ -7038,6 +7208,13 @@
       const code = await generateUniqueCode(nomRestaurant);
       const now = Date.now();
 
+      // Durée d'essai fixée par le concepteur (14 jours à défaut)
+      let joursEssai = ESSAI_PAR_DEFAUT;
+      try {
+        const t = await agrGet('agr_platform_licences') || {};
+        if(t.essaiJours != null) joursEssai = parseInt(t.essaiJours, 10) || 0;
+      } catch(e){}
+
       let logo = null;
       const logoFile = document.getElementById('regLogo').files[0];
       if(logoFile){
@@ -7056,7 +7233,8 @@
         nombreTables, logo,
         statut: 'essai',
         dateCreation: now,
-        dateExpiration: now + 14 * 24 * 60 * 60 * 1000, // essai de 14 jours
+        dateExpiration: now + joursEssai * 24 * 60 * 60 * 1000,   // durée d'essai définie par le concepteur
+        joursEssai,
       });
       await agrSet('agr_tenants/' + code + '/users/dg', {
         role: 'dg', nom: dgNom || nomRestaurant, email: dgEmail, password: dgPassword,
@@ -10735,17 +10913,27 @@
     return offresPubliees;
   }
 
+  // Cartes réellement proposées, triées par durée croissante
   function listeOffres(t){
-    return Object.entries(t.offres || {})
-      .filter(([, o]) => o && o.proposee !== false && o.prix > 0)
-      .map(([cle, o]) => Object.assign({ cle }, o));
+    const source = Array.isArray(t.cartes) && t.cartes.length
+      ? t.cartes.map(c => Object.assign({}, c))
+      : Object.entries(t.offres || {}).map(([cle, o]) => Object.assign({ cle }, o));
+
+    return source
+      .filter(o => o && o.proposee !== false && o.prix > 0 && o.jours > 0)
+      .sort((a,b) => a.jours - b.jours);
   }
 
   function carteOffreHTML(o, prefixe, choisie){
+    // Prix ramené au mois : le restaurant compare les cartes d'un coup d'œil
+    const mois = o.jours / 30;
+    const parMois = mois >= 1.5 ? Math.round((o.prix || 0) / mois) : 0;
     return `<div class="offre-carte ${choisie === o.cle ? 'on' : ''}" onclick="${prefixe}('${o.cle}')">
+      ${choisie === o.cle ? '<div class="offre-coche">✓ Choisie</div>' : ''}
       <div class="nom">${echapper(o.libelle)}</div>
       <div class="prix">${Number(o.prix||0).toLocaleString('fr-FR')} GNF</div>
       <div class="duree">${o.jours} jours de licence</div>
+      ${parMois ? `<div class="offre-permois">soit ${parMois.toLocaleString('fr-FR')} GNF / mois</div>` : ''}
     </div>`;
   }
 
@@ -10763,15 +10951,30 @@
       return;
     }
 
-    sub.textContent = 'Choisissez votre formule, réglez-la, puis déclarez votre paiement.';
+    // Formule retenue la dernière fois : préchoisie, mais jamais imposée
+    const habituelle = (infoRestaurant || {}).formuleLicence;
+    if(!offreChoisie && habituelle && offres.some(o => o.cle === habituelle)) offreChoisie = habituelle;
+
+    const nomHabituelle = (offres.find(o => o.cle === habituelle) || {}).libelle;
+    sub.innerHTML = nomHabituelle
+      ? 'Votre formule habituelle est <strong>' + echapper(nomHabituelle) +
+        '</strong> — vous pouvez en changer à tout moment en cliquant sur une autre carte.'
+      : 'Choisissez votre formule, réglez-la, puis déclarez votre paiement.';
+
     grille.innerHTML = offres.map(o => carteOffreHTML(o, 'choisirOffre', offreChoisie)).join('');
     document.getElementById('licenceInstructions').textContent = t.instructions || '';
+    if(offreChoisie) document.getElementById('licenceFormPaiement').style.display = 'block';
     afficherHistoriquePaiements();
   }
 
-  function choisirOffre(cle){
+  // Le choix est mémorisé pour la prochaine échéance, et reste modifiable
+  async function choisirOffre(cle){
     offreChoisie = cle;
     document.getElementById('licenceFormPaiement').style.display = 'block';
+    try {
+      await agrSet('agr_tenants/' + currentTenantId + '/info/formuleLicence', cle);
+      if(infoRestaurant) infoRestaurant.formuleLicence = cle;
+    } catch(e){ /* le choix reste valable pour cette session */ }
     loadLicenceOffres();
   }
 
@@ -10866,16 +11069,27 @@
         "Aucune formule n'est proposée en ligne pour l'instant : contactez le concepteur aux coordonnées ci-dessus.";
       return;
     }
+    // Formule habituelle du restaurant, si elle est encore proposée
+    if(!offreChoisieBloc && tenantBloque.formuleLicence &&
+       offres.some(o => o.cle === tenantBloque.formuleLicence)){
+      offreChoisieBloc = tenantBloque.formuleLicence;
+      document.getElementById('blockedFormPaiement').style.display = 'block';
+    }
     document.getElementById('blockedOffresSub').textContent =
-      'Choisissez votre formule, effectuez le règlement, puis déclarez-le ici.';
+      'Choisissez votre carte de licence, effectuez le règlement, puis déclarez-le ici. ' +
+      'Le concepteur vous enverra un code d\'activation à saisir ci-dessous.';
     document.getElementById('blockedOffres').innerHTML =
       offres.map(o => carteOffreHTML(o, 'choisirOffreBloc', offreChoisieBloc)).join('');
     document.getElementById('blockedInstructions').textContent = t.instructions || '';
   }
 
-  function choisirOffreBloc(cle){
+  async function choisirOffreBloc(cle){
     offreChoisieBloc = cle;
     document.getElementById('blockedFormPaiement').style.display = 'block';
+    if(tenantBloque){
+      tenantBloque.formuleLicence = cle;
+      try { await agrSet('agr_tenants/' + tenantBloque.code + '/info/formuleLicence', cle); } catch(e){}
+    }
     preparerBlocagePaiement();
   }
 
