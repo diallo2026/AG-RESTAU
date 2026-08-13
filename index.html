@@ -1436,6 +1436,10 @@
   /* ================= IMPRESSION — rapports journaliers/mensuels/annuels =================
      S'applique quel que soit l'onglet ouvert : seule la section visible s'imprime,
      avec les couleurs de la charte (KPI, tableaux, statuts) conservées sur le papier. */
+  .sf-horsligne{
+    background:rgba(110,120,135,0.18); border-bottom:1px solid var(--line);
+    color:var(--text-dim); font-size:12px; text-align:center; padding:8px 16px;
+  }
   .sf-sursis{
     background:rgba(201,162,39,0.16); border-bottom:1px solid var(--gold);
     color:var(--gold-soft); font-size:12.5px; text-align:center; padding:9px 16px;
@@ -2006,6 +2010,7 @@
   <!-- Page du restaurant -->
   <div id="storePage" style="display:none;">
 
+    <div class="sf-horsligne" id="sfHorsLigne" style="display:none;"></div>
     <div class="sf-sursis" id="sfSursis" style="display:none;"></div>
 
     <header class="sf-header">
@@ -3853,12 +3858,48 @@
 
   // `code` reste interne : il n'est jamais affiché ni mis dans l'adresse.
   async function chargerRestaurant(code, slug){
+    const reference = slug || code;
+    let info = null, produits = null, zones = null, depuisCache = false;
+
+    // 1. On tente la base. 2. Si elle ne répond pas, on reprend la dernière
+    // version enregistrée sur cet appareil.
     try {
       const base = 'agr_tenants/' + code + '/';
-      const info = await agrGet(base + 'info');
+      info = await agrGetDelai(base + 'info');
       if(!info){ pageIntrouvable(); return; }
+      storeSite = await agrGetDelai(base + 'siteweb') || {};
+      produits = await agrGetDelai(base + 'produits') || {};
+      zones = await agrGetDelai(base + 'zonesLivraison') || {};
 
-      storeSite = await agrGet(base + 'siteweb') || {};
+      ecrireCachePage(reference, { code, slug: slug || null, info, site: storeSite, produits, zones });
+      modeHorsLigne = false;
+      dateContenu = Date.now();
+    } catch(e){
+      const cache = lireCachePage(reference);
+
+      // Sans contenu enregistré, il n'y a rien à montrer
+      if(!cache){
+        document.getElementById('sfDirNote').textContent =
+          'Impossible de joindre le restaurant — vérifiez votre connexion.';
+        afficherAnnuaire();
+        return;
+      }
+      // Au-delà de 48 heures, le contenu est trop ancien pour être servi
+      if(Date.now() - (cache.majLe || 0) > PEREMPTION_CACHE){
+        pageIntrouvable();
+        surveillerRetourReseau(reference);
+        return;
+      }
+      info = cache.info;
+      storeSite = cache.site || {};
+      produits = cache.produits || {};
+      zones = cache.zones || {};
+      modeHorsLigne = true;
+      dateContenu = cache.majLe;
+      depuisCache = true;
+    }
+
+    try {
 
       // Restaurant bloqué ou licence expirée : la page reste ouverte
       // 24 heures, puis se ferme. Une page volontairement mise hors ligne
@@ -3881,7 +3922,6 @@
       renderStoreVitrine(info);
       surveillerSursis();
 
-      const produits = await agrGet(base + 'produits') || {};
       storeMenuItems = Object.entries(produits)
         .map(([id, p]) => ({ id, ...p }))
         .filter(p => p.disponible !== false);
@@ -3892,7 +3932,6 @@
       analyserRestaurant();
 
       storeFraisService = info.fraisService || 0;
-      const zones = await agrGet(base + 'zonesLivraison') || {};
       storeZones = Object.entries(zones).map(([id,z]) => ({ id, ...z }));
       // La livraison est toujours proposée. Si le restaurant n'a pas
       // découpé de zones, on applique le forfait défini dans l'onglet
@@ -3922,11 +3961,131 @@
       changerModeFiche();
       renderCart();
       restaurerPanier();
-      loadAvis();
+      if(!depuisCache) loadAvis();
+      afficherBandeauHorsLigne();
+      surveillerRetourReseau(reference);
+      if(!depuisCache) envoyerCommandesEnAttente();
       window.scrollTo(0,0);
     } catch(e){
-      document.getElementById('sfDirNote').textContent = 'Impossible de joindre le restaurant.';
+      document.getElementById('sfDirNote').textContent = 'Impossible d\'afficher la page du restaurant.';
       afficherAnnuaire();
+    }
+  }
+
+  // ===============================================================
+  // PAGE WEB HORS LIGNE
+  //
+  // Une page web consultée par un client ne doit pas dépendre de la
+  // disponibilité de la base : le contenu (carte, photos, horaires,
+  // livraison) est conservé sur l'appareil du visiteur à chaque
+  // consultation réussie, puis réutilisé si la base est injoignable.
+  //
+  // Règle des 48 heures : au-delà de deux jours sans avoir pu joindre
+  // la base, le contenu est considéré comme trop ancien et la page se
+  // ferme. Dès que la base répond de nouveau, la page revient d'elle-même.
+  //
+  // Les commandes passées hors ligne ne sont pas perdues : elles sont
+  // mises en attente et envoyées dès le retour de la connexion.
+  // ===============================================================
+  const PEREMPTION_CACHE = 48 * 60 * 60 * 1000;
+  const DELAI_RESEAU = 7000;          // au-delà, on considère la base injoignable
+
+  let modeHorsLigne = false;
+  let dateContenu = null;             // date de la dernière consultation réussie
+  let surveillanceReseau = false;
+
+  function clePageCache(ref){ return 'agr_page_' + ref; }
+  function cleFileCommandes(){ return 'agr_cmd_attente'; }
+
+  // Lecture avec délai : sans réponse au bout de quelques secondes, la base
+  // est considérée injoignable — sinon la page resterait figée sur un écran
+  // blanc, ce qui est pire que d'afficher un contenu de la veille.
+  function agrGetDelai(chemin){
+    return Promise.race([
+      agrGet(chemin),
+      new Promise((_, rejet) => setTimeout(() => rejet(new Error('délai dépassé')), DELAI_RESEAU)),
+    ]);
+  }
+
+  function lireCachePage(ref){
+    const c = lireStockage(clePageCache(ref));
+    if(!c || !c.info) return null;
+    return c;
+  }
+
+  function ecrireCachePage(ref, donnees){
+    ecrireStockage(clePageCache(ref), Object.assign({ majLe: Date.now() }, donnees));
+  }
+
+  // Bandeau discret : le visiteur sait qu'il consulte un contenu enregistré
+  function afficherBandeauHorsLigne(){
+    const el = document.getElementById('sfHorsLigne');
+    if(!el) return;
+    if(!modeHorsLigne){ el.style.display = 'none'; return; }
+
+    const heures = Math.floor((Date.now() - (dateContenu || Date.now())) / 3600000);
+    el.innerHTML = 'Vous consultez une version enregistrée' +
+      (heures >= 1 ? ' (mise à jour il y a ' + (heures >= 24 ? Math.floor(heures/24) + ' jour(s)' : heures + ' h') + ')' : '') +
+      '. Votre commande sera transmise dès le retour de la connexion.';
+    el.style.display = 'block';
+  }
+
+  // Retour de la base : la page se recharge sans que le visiteur agisse
+  function surveillerRetourReseau(slugOuCode){
+    if(surveillanceReseau || !window._agrReady) {
+      if(!window._agrReady) setTimeout(() => surveillerRetourReseau(slugOuCode), 500);
+      return;
+    }
+    surveillanceReseau = true;
+    try {
+      window._agrOnValue(agrRef('.info/connected'), (snap) => {
+        if(snap.val() !== true) return;
+        envoyerCommandesEnAttente();
+        if(modeHorsLigne){
+          modeHorsLigne = false;
+          if(storeTenantCode) chargerRestaurant(storeTenantCode, storeSitePublicSlug);
+          else ouvrirDepuisLien();
+        }
+      });
+    } catch(e){ surveillanceReseau = false; }
+  }
+
+  // ---------------------------------------------------------------
+  // Commandes passées hors ligne
+  // ---------------------------------------------------------------
+  function mettreCommandeEnAttente(code, commande, complement){
+    const file = lireStockage(cleFileCommandes()) || [];
+    file.push({ code, commande, complement, date: Date.now() });
+    ecrireStockage(cleFileCommandes(), file.slice(-20));   // on ne garde que les plus récentes
+  }
+
+  // Rejoue les commandes en attente à l'identique : elles arrivent dans la
+  // zone de notification du restaurant comme si elles venaient d'être passées.
+  async function envoyerCommandesEnAttente(){
+    const file = lireStockage(cleFileCommandes()) || [];
+    if(!file.length) return;
+
+    const restantes = [];
+    let envoyees = 0;
+    for(const item of file){
+      // Une commande de plus de 48 heures n'a plus de sens à envoyer
+      if(Date.now() - (item.date || 0) > PEREMPTION_CACHE) continue;
+      try {
+        const chemin = 'agr_tenants/' + item.code + '/commandesEnLigne';
+        await window._agrSet(window._agrPush(agrRef(chemin)),
+          Object.assign({}, item.commande, item.complement || {}, { transmiseLe: Date.now() }));
+        envoyees++;
+      } catch(e){ restantes.push(item); }
+    }
+    ecrireStockage(cleFileCommandes(), restantes);
+
+    if(envoyees){
+      const banner = document.getElementById('paidBanner');
+      if(banner && banner.style.display === 'block'){
+        banner.textContent = envoyees > 1
+          ? 'Vos ' + envoyees + ' commandes viennent d\'être transmises au restaurant.'
+          : 'Votre commande vient d\'être transmise au restaurant.';
+      }
     }
   }
 
@@ -4441,13 +4600,24 @@
     // La commande est déposée en attente de validation : son montant
     // n'entre dans les recettes que lorsque le restaurant la valide
     // depuis sa zone de notification.
-    const base = 'agr_tenants/' + storeTenantCode + '/';
-    await window._agrSet(window._agrPush(agrRef(base + 'commandesEnLigne')), Object.assign({}, commande, {
+    const complement = {
       statut: 'nouvelle',
       canal: (extra && extra.canal) || 'page_web',
       total,
       note: (extra && extra.note) || null,
-    }));
+      horsLigne: modeHorsLigne || undefined,
+    };
+    const base = 'agr_tenants/' + storeTenantCode + '/';
+
+    try {
+      if(modeHorsLigne) throw new Error('hors ligne');
+      await window._agrSet(window._agrPush(agrRef(base + 'commandesEnLigne')),
+        Object.assign({}, commande, complement));
+    } catch(e){
+      // Base injoignable : la commande part dès le retour de la connexion
+      mettreCommandeEnAttente(storeTenantCode, commande, complement);
+      commande.enAttente = true;
+    }
     return commande;
   }
 
@@ -4491,9 +4661,13 @@
   // le nom web correspond et on répare l'index au passage.
   async function resoudreAdressePublique(slug){
     try {
-      const site = await agrGet('agr_sites/' + slug);
+      const site = await agrGetDelai('agr_sites/' + slug);
       if(site && site.code) return site.code;
-    } catch(e){ /* index injoignable : on tente le secours ci-dessous */ }
+    } catch(e){
+      // Index injoignable : la page a peut-être déjà été consultée ici
+      const cache = lireCachePage(slug);
+      if(cache && cache.code && Date.now() - (cache.majLe || 0) <= PEREMPTION_CACHE) return cache.code;
+    }
 
     try {
       const tenants = await agrGet('agr_tenants') || {};
@@ -5176,9 +5350,17 @@
   async function compteurCommandes(reserver){
     const chemin = 'agr_tenants/' + storeTenantCode + '/compteurs/commandes';
     let n = 0;
-    try { n = Number(await agrGet(chemin)) || 0; } catch(e){}
+    try { n = Number(await agrGetDelai(chemin)) || 0; }
+    catch(e){
+      // Hors ligne : on numérote localement pour que le client ait quand
+      // même une référence. Le restaurant retrouve la commande par ce numéro.
+      n = Number(lireStockage('agr_num_' + storeTenantCode)) || 0;
+    }
     const suivant = n + 1;
-    if(reserver){ try { await agrSet(chemin, suivant); } catch(e){} }
+    if(reserver){
+      try { await agrSet(chemin, suivant); } catch(e){}
+      ecrireStockage('agr_num_' + storeTenantCode, suivant);
+    }
     return suivant;
   }
 
@@ -5296,7 +5478,7 @@
       document.getElementById('ficheNumero').textContent = ficheNumeroCourant;
 
       const totaux = recalculerTotal();
-      await enregistrerCommandeClient({
+      const depot = await enregistrerCommandeClient({
         origine: 'Fiche de commande',
         canal: 'page_web',
         note: document.getElementById('storeClientNote').value.trim(),
@@ -5304,6 +5486,7 @@
 
       ficheDerniereCommande = {
         numero: ficheNumeroCourant,
+        enAttente: !!(depot && depot.enAttente),
         nom, prenom, tel, email, quartier, adresse,
         totaux,
         plats: entries.map(([id, q]) => {
@@ -5331,8 +5514,10 @@
     document.getElementById('cartOrderForm').style.display = 'none';
     document.getElementById('cartTrackerWrap').style.display = 'block';
     document.getElementById('ficheOkNumero').textContent = c.numero;
-    document.getElementById('ficheOkTexte').textContent =
-      'Merci ' + c.prenom + ', le restaurant a reçu votre fiche et vous rappellera au ' + c.tel + '.';
+    document.getElementById('ficheOkTexte').textContent = c.enAttente
+      ? 'Merci ' + c.prenom + '. La connexion est momentanément indisponible : votre commande ' +
+        'part automatiquement dès son rétablissement, puis le restaurant vous rappellera au ' + c.tel + '.'
+      : 'Merci ' + c.prenom + ', le restaurant a reçu votre fiche et vous rappellera au ' + c.tel + '.';
 
     const gnf = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
     document.getElementById('ficheOkRecap').innerHTML =
@@ -12109,6 +12294,8 @@
     if(!adresseRestaurant) return;
     if(!window._agrReady){
       if(essais > 60){   // ~9 s : la base reste injoignable
+        // Une page déjà consultée sur cet appareil s'ouvre quand même
+        if(ouvrirDepuisLien()) return;
         document.getElementById('sfDirNote').textContent =
           "Impossible de joindre le serveur du restaurant. Vérifiez votre connexion, puis rechargez la page.";
         return;
