@@ -1429,6 +1429,107 @@
   /* ================= IMPRESSION — rapports journaliers/mensuels/annuels =================
      S'applique quel que soit l'onglet ouvert : seule la section visible s'imprime,
      avec les couleurs de la charte (KPI, tableaux, statuts) conservées sur le papier. */
+  .sf-sursis{
+    background:rgba(201,162,39,0.16); border-bottom:1px solid var(--gold);
+    color:var(--gold-soft); font-size:12.5px; text-align:center; padding:9px 16px;
+  }
+
+  /* ===== Défilé de photos sur la page d'accueil ===== */
+  .h2-carrousel{
+    position:relative; margin:44px auto 30px; max-width:1180px; padding:0 24px;
+    overflow:hidden;
+  }
+  .h2-carrousel-titre{
+    text-align:center; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    letter-spacing:0.18em; text-transform:uppercase; color:#64748b; margin-bottom:16px;
+  }
+  .h2-piste{
+    display:flex; gap:14px; width:max-content;
+    animation:h2Defile 46s linear infinite;
+  }
+  .h2-carrousel:hover .h2-piste{animation-play-state:paused;}
+  @keyframes h2Defile{from{transform:translateX(0);} to{transform:translateX(-50%);}}
+
+  .h2-vignette{
+    position:relative; width:250px; height:168px; flex:0 0 auto;
+    border-radius:12px; overflow:hidden; cursor:pointer;
+    border:1px solid rgba(37,99,235,0.18); background:#0d1b33;
+  }
+  .h2-vignette img{width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.45s ease;}
+  .h2-vignette:hover img{transform:scale(1.07);}
+  .h2-vignette .voile{
+    position:absolute; inset:0; display:flex; align-items:flex-end; gap:9px; padding:11px;
+    background:linear-gradient(180deg, rgba(2,6,20,0) 45%, rgba(2,6,20,0.88) 100%);
+  }
+  .h2-vignette .rond{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0; overflow:hidden;
+    border:1.5px solid rgba(255,255,255,0.65); background:#0d1b33;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-size:12px; color:#fff;
+  }
+  .h2-vignette .rond img{width:100%; height:100%; object-fit:cover;}
+  .h2-vignette .nom{font-size:12.5px; font-weight:700; color:#fff; line-height:1.3;}
+  .h2-vignette .lieu{font-size:10px; color:rgba(255,255,255,0.7);}
+  .h2-carrousel-pied{
+    text-align:center; font-size:11.5px; color:#64748b; margin-top:14px;
+  }
+
+  @media (max-width: 640px){
+    .h2-vignette{width:190px; height:130px;}
+    .h2-piste{animation-duration:34s;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .h2-piste{animation:none; overflow-x:auto; padding-bottom:8px;}
+  }
+
+  /* ===== Écran cuisine (KDS) ===== */
+  .kds-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px;}
+  .kds-carte{
+    background:var(--surface-2); border:1px solid var(--line); border-left:4px solid var(--gold);
+    border-radius:10px; padding:14px; display:flex; flex-direction:column; gap:9px;
+  }
+  .kds-carte.preparation{border-left-color:var(--teal);}
+  .kds-carte.urgent{border-left-color:var(--brick);}
+  .kds-tete{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .kds-num{font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--gold-soft); font-weight:600;}
+  .kds-table{font-family:'Fraunces',serif; font-size:19px; line-height:1.2;}
+  .kds-chrono{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--text-dim); white-space:nowrap;}
+  .kds-chrono.urgent{color:#E19488; font-weight:700;}
+  .kds-plats{list-style:none; padding:0; margin:0; font-size:13.5px; line-height:1.9;}
+  .kds-plats li{display:flex; gap:9px;}
+  .kds-plats .q{font-family:'IBM Plex Mono',monospace; color:var(--gold-soft); min-width:26px;}
+  .kds-note{
+    font-size:12px; color:#E7A79B; background:rgba(180,72,58,0.12);
+    border:1px solid rgba(180,72,58,0.35); border-radius:6px; padding:7px 9px; line-height:1.5;
+  }
+  .kds-actions{display:flex; gap:7px; flex-wrap:wrap; margin-top:auto;}
+  .kds-btn{
+    flex:1; min-width:96px; padding:10px; border:none; border-radius:7px; cursor:pointer;
+    font-size:12.5px; font-weight:700; font-family:'Inter',sans-serif;
+  }
+  .kds-btn.start{background:rgba(47,111,94,0.2); border:1px solid var(--teal); color:var(--teal-soft);}
+  .kds-btn.done{background:linear-gradient(135deg,var(--gold),var(--gold-soft)); color:#181205;}
+  .kds-btn.ghost{background:none; border:1px solid var(--line); color:var(--text-dim); flex:0 0 auto; min-width:0;}
+  .kds-vide{
+    grid-column:1/-1; text-align:center; padding:38px 20px; color:var(--text-dim);
+    font-size:13.5px; border:1px dashed var(--line); border-radius:10px;
+  }
+  .kds-origine{
+    display:inline-block; padding:2px 8px; border-radius:999px; font-size:9.5px;
+    font-weight:800; text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .kds-origine.salle{background:rgba(201,162,39,0.16); color:var(--gold-soft);}
+  .kds-origine.enligne{background:rgba(47,111,94,0.18); color:var(--teal-soft);}
+
+  /* Bandeau « prêt à servir » */
+  .pret-carte{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    background:rgba(47,111,94,0.14); border:1px solid var(--teal);
+    border-radius:10px; padding:13px 15px; margin-bottom:10px;
+  }
+  .pret-carte .t{font-family:'Fraunces',serif; font-size:17px;}
+  .pret-carte .d{font-size:12px; color:var(--text-dim);}
+
   .offres-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px;}
   .offre-carte{
     background:var(--surface-2); border:1px solid var(--line); border-radius:11px;
@@ -1452,6 +1553,23 @@
   }
   .periode-libelle{font-size:12px; color:var(--gold-soft); margin-left:auto;}
   #printArea .doc-table tr.fort td{font-weight:700; border-top:1px solid #333;}
+
+  /* Bon de cuisine : lisible à distance, format ticket */
+  #printArea .ticket{max-width:78mm; margin:0 auto; font-family:'IBM Plex Mono',monospace; color:#000;}
+  #printArea .ticket-tete{text-align:center; border-bottom:2px dashed #000; padding-bottom:10px; margin-bottom:12px;}
+  #printArea .ticket-num{font-size:15px; font-weight:700; letter-spacing:0.05em;}
+  #printArea .ticket-table{font-size:30px; font-weight:800; line-height:1.1; margin:6px 0;}
+  #printArea .ticket-meta{font-size:11px; line-height:1.6;}
+  #printArea .ticket-plats{width:100%; border-collapse:collapse; margin-bottom:12px;}
+  #printArea .ticket-plats td{padding:7px 4px; border-bottom:1px dotted #999; vertical-align:top;}
+  #printArea .ticket-plats td.n{width:52px; font-weight:800; text-align:right; padding-right:10px;}
+  #printArea .ticket-note{
+    border:2px solid #000; padding:9px; font-size:14px; font-weight:700;
+    text-align:center; margin-bottom:12px;
+  }
+  #printArea .ticket-pied{
+    border-top:2px dashed #000; padding-top:9px; text-align:center; font-size:11px;
+  }
 
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
@@ -1528,6 +1646,13 @@
     <a class="h2-sublink" onclick="ouvrirAnnuairePublic()">Voir les pages web des restaurants</a>
   </div>
 
+  <!-- Défilé des photos publiées par les restaurants -->
+  <div class="h2-carrousel" id="h2Carrousel" style="display:none;">
+    <div class="h2-carrousel-titre">Ils utilisent AGR</div>
+    <div class="h2-piste" id="h2Piste"></div>
+    <div class="h2-carrousel-pied" id="h2CarrouselPied"></div>
+  </div>
+
   <div class="h2-concepteur-note" id="h2ConcepteurNote">
     <div id="conceptPasswordView">
       <div style="font-weight:700; color:#e2e8f0; margin-bottom:8px;">Espace Concepteur — Souleymane Diallo</div>
@@ -1576,7 +1701,45 @@
       <div class="cdb-onglets">
         <button class="cdb-onglet on" id="cdbOng-restaurants" onclick="cdbOnglet('restaurants')">Restaurants</button>
         <button class="cdb-onglet" id="cdbOng-licences" onclick="cdbOnglet('licences')">Licences &amp; paiements</button>
+        <button class="cdb-onglet" id="cdbOng-mail" onclick="cdbOnglet('mail')">Compte mail &amp; déblocages</button>
         <button class="cdb-onglet" id="cdbOng-securite" onclick="cdbOnglet('securite')">Sécurité</button>
+      </div>
+
+      <!-- ===== Onglet : compte mail et demandes de déblocage ===== -->
+      <div id="cdbVue-mail" style="display:none;">
+        <div style="font-weight:700; color:#e2e8f0; margin-bottom:4px;">Votre compte mail</div>
+        <div style="font-size:11.5px; color:#64748b; margin-bottom:12px; line-height:1.7;">
+          Chaque blocage de licence vous est signalé à cette adresse, avec un lien pour confirmer
+          si le restaurant a payé. Pour un envoi automatique, renseignez vos identifiants EmailJS
+          (service gratuit, à créer sur emailjs.com). Sans eux, les messages sont préparés dans
+          votre logiciel de messagerie et sur WhatsApp.
+        </div>
+
+        <input type="email" id="cdbMailAdresse" placeholder="Votre adresse email (celle qui reçoit les alertes)"
+          style="width:100%; padding:9px 11px; margin-bottom:7px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <input type="text" id="cdbMailExpediteur" placeholder="Nom affiché comme expéditeur (ex : AGR — Souleymane Diallo)"
+          style="width:100%; padding:9px 11px; margin-bottom:12px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+
+        <div style="font-size:11.5px; color:#94a3b8; margin-bottom:7px;">Envoi automatique (EmailJS) — facultatif</div>
+        <div class="cdb-toolbar">
+          <input type="text" id="cdbMailService" placeholder="service_id">
+          <input type="text" id="cdbMailTemplate" placeholder="template_id">
+          <input type="text" id="cdbMailCle" placeholder="public key">
+        </div>
+        <div style="display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <button class="cdb-btn ok" onclick="enregistrerCompteMail()">Enregistrer le compte mail</button>
+          <button class="cdb-btn" onclick="testerCompteMail()">Envoyer un email de test</button>
+        </div>
+        <div id="cdbMailNote" style="font-size:11.5px; color:#64748b; margin-bottom:18px; line-height:1.7;"></div>
+
+        <div style="font-weight:700; color:#e2e8f0; margin-bottom:8px;">Demandes de déblocage</div>
+        <div class="cdb-wrap" style="max-height:36vh;">
+          <table class="cdb-table">
+            <thead><tr><th>Date</th><th>Restaurant</th><th>Contacts</th><th>Motif</th><th>État</th><th>Actions</th></tr></thead>
+            <tbody id="cdbDemandesBody"><tr><td colspan="6" class="cdb-empty">Chargement…</td></tr></tbody>
+          </table>
+        </div>
+        <div id="cdbDemandesNote" style="font-size:11.5px; color:#64748b; margin-top:10px; line-height:1.7;"></div>
       </div>
 
       <!-- ===== Onglet : tarifs de licence et déclarations de paiement ===== -->
@@ -1749,6 +1912,8 @@
 
   <!-- Page du restaurant -->
   <div id="storePage" style="display:none;">
+
+    <div class="sf-sursis" id="sfSursis" style="display:none;"></div>
 
     <header class="sf-header">
       <div class="sf-brand">
@@ -2067,6 +2232,14 @@
         <label>Téléphone du restaurant</label>
         <input type="text" id="regTelephone" placeholder="+224 6xx xx xx xx">
       </div>
+        <div class="field">
+          <label>Email du restaurant (facturation et licence)</label>
+          <input type="email" id="regEmailFacturation" placeholder="restaurant@email.com">
+        </div>
+        <div class="field">
+          <label>WhatsApp du responsable (pour recevoir le code de licence)</label>
+          <input type="text" id="regWhatsapp" placeholder="224623030403 (indicatif sans +)">
+        </div>
       <div class="field">
         <label>Nombre de tables</label>
         <input type="number" id="regNombreTables" placeholder="10" min="0">
@@ -2107,6 +2280,19 @@
       <div class="banner error" id="blockedError"></div>
       <div class="banner info" id="blockedSuccess"></div>
       <div class="offres-grid" id="blockedOffres"></div>
+      <div style="margin-top:16px; padding-top:14px; border-top:1px solid var(--line);">
+        <div style="font-weight:700; margin-bottom:4px;">J'ai déjà reçu mon code de déblocage</div>
+        <div style="font-size:12.5px; color:var(--text-dim); margin-bottom:10px;">
+          Saisissez le code transmis par le concepteur pour réactiver immédiatement votre restaurant.
+        </div>
+        <div class="field">
+          <input type="text" id="blockedCodeInput" placeholder="XXXX-XXXX-XXXX-XXXX"
+            style="font-family:'IBM Plex Mono',monospace; letter-spacing:0.08em; text-transform:uppercase;"
+            onkeydown="if(event.key==='Enter')soumettreCodeBlocage()">
+        </div>
+        <button class="btn-primary" style="width:100%;" onclick="soumettreCodeBlocage()">Valider le code</button>
+      </div>
+
       <div id="blockedFormPaiement" style="display:none; margin-top:14px;">
         <div class="field"><label>Mode de paiement utilisé</label>
           <select id="blockedMode" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;">
@@ -2144,7 +2330,9 @@
         <div class="navlink active" data-section="overview" onclick="showSection('overview')"><span class="ic">◆</span> Tableau de bord</div>
         <div class="navlink" data-section="notifications" onclick="showSection('notifications')"><span class="ic">🔔</span> Notifications <span class="nav-badge" id="navBadgeNotif">0</span></div>
         <div class="navlink" data-section="commandes" onclick="showSection('commandes')"><span class="ic">▤</span> Commandes</div>
-        <div class="navlink" data-section="service" onclick="showSection('service')"><span class="ic">🍽</span> Service en salle</div>
+        <div class="navlink" data-section="salle" onclick="showSection('salle')"><span class="ic">📝</span> Prise de commande</div>
+        <div class="navlink" data-section="cuisine" onclick="showSection('cuisine')"><span class="ic">👨‍🍳</span> Cuisine <span class="nav-badge" id="badgeCuisine" style="display:none;">0</span></div>
+        <div class="navlink" data-section="service" onclick="showSection('service')"><span class="ic">🍽</span> Service en salle <span class="nav-badge" id="badgeService" style="display:none;">0</span></div>
         <div class="navlink" data-section="encaissement" onclick="showSection('encaissement')"><span class="ic">💵</span> Encaissement</div>
         <div class="navlink" data-section="tables" onclick="showSection('tables')"><span class="ic">▦</span> Tables</div>
       </div>
@@ -2289,9 +2477,88 @@
         </div>
       </div>
 
+      <!-- ===== Section : Prise de commande en salle ===== -->
+      <div class="dash-section" id="section-salle" style="display:none;">
+        <div class="panel">
+          <h3>Nouvelle commande à table</h3>
+          <div class="sub">Le serveur saisit la table et les plats. Nom et prénom du client sont facultatifs.</div>
+          <div class="banner error" id="salleError"></div>
+          <div class="banner info" id="salleSuccess"></div>
+
+          <div class="grid-2">
+            <div class="field"><label>Table</label>
+              <select id="salleTable" style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:14px;"></select>
+            </div>
+            <div class="field"><label>Couverts (facultatif)</label><input type="number" id="salleCouverts" min="1" placeholder="2"></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label>Nom du client (facultatif)</label><input type="text" id="salleNom" placeholder="—"></div>
+            <div class="field"><label>Prénom (facultatif)</label><input type="text" id="sallePrenom" placeholder="—"></div>
+          </div>
+
+          <div class="fiche-add" style="margin-top:6px;">
+            <select id="salleChoixPlat"></select>
+            <input type="number" id="salleChoixQte" min="1" value="1">
+            <button onclick="ajouterPlatSalle()">Ajouter</button>
+          </div>
+          <div id="salleLignes"><div class="cart-empty">Aucun plat choisi pour l'instant.</div></div>
+
+          <div class="field" style="margin-top:12px;"><label>Précisions pour la cuisine (facultatif)</label><input type="text" id="salleNote" placeholder="Sans piment, cuisson à point, allergie…"></div>
+
+          <div class="fiche-recap" style="margin-top:12px;">
+            <div class="fiche-grand"><span class="t">TOTAL</span><span class="v" id="salleTotal">0 GNF</span></div>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="envoyerCommandeCuisine()">Envoyer en cuisine</button>
+            <button class="btn-outline" style="color:var(--text);" onclick="viderCommandeSalle()">Vider</button>
+            <label style="display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-dim);">
+              <input type="checkbox" id="salleImpressionAuto" checked> Imprimer le ticket cuisine automatiquement
+            </label>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Commandes en salle en cours</h3>
+          <div class="sub" id="salleEnCoursSub">Aucune commande en cours.</div>
+          <div id="salleEnCours"></div>
+        </div>
+      </div>
+
+      <!-- ===== Section : Cuisine (écran de préparation) ===== -->
+      <div class="dash-section" id="section-cuisine" style="display:none;">
+        <div class="panel">
+          <h3>Écran cuisine</h3>
+          <div class="sub" id="cuisineSub">Les commandes arrivent ici dès qu'elles sont envoyées.</div>
+          <div class="banner error" id="cuisineError"></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+            <button class="mini-btn" onclick="loadCuisine()">Actualiser</button>
+            <label style="display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-dim);">
+              <input type="checkbox" id="cuisineSon" checked> Signal sonore à chaque nouvelle commande
+            </label>
+          </div>
+          <div class="kds-grid" id="cuisineFile"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>Préparations terminées aujourd'hui</h3>
+          <div class="sub" id="cuisineFinisSub">Aucune préparation terminée.</div>
+          <table class="commandes-table">
+            <thead><tr><th>Ticket</th><th>Origine</th><th>Plats</th><th>Reçue</th><th>Prête</th><th>Durée</th></tr></thead>
+            <tbody id="cuisineFinisBody"></tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- ===== Section : Service en salle (serveurs) ===== -->
       <div class="dash-section" id="section-service" style="display:none;">
         <div class="panel">
+          <h3>Commandes prêtes à servir</h3>
+          <div class="sub" id="servicePretsSub">Aucune commande prête pour le moment.</div>
+          <div id="servicePrets"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
           <h3>Déclarer les plats servis</h3>
           <div class="sub">Le serveur indique, table par table, le nombre de plats réellement servis.</div>
           <div class="banner error" id="serviceError"></div>
@@ -2325,6 +2592,12 @@
       <!-- ===== Section : Encaissement (caissiers) ===== -->
       <div class="dash-section" id="section-encaissement" style="display:none;">
         <div class="panel">
+          <h3>Commandes à encaisser</h3>
+          <div class="sub" id="encTicketsSub">Aucune commande en attente d'encaissement.</div>
+          <div id="encTickets"></div>
+        </div>
+
+        <div class="panel" style="margin-top:16px;">
           <h3>Encaisser des plats</h3>
           <div class="sub">Le caissier indique combien de plats ont été payés et à quel prix chaque plat a été payé.</div>
           <div class="banner error" id="encaissementError"></div>
@@ -2454,7 +2727,7 @@
 
         <div class="panel" style="margin-top:16px;">
           <h3>Photos du restaurant</h3>
-          <div class="sub">Jusqu'à 8 photos (salle, plats, terrasse…), réduites automatiquement. Choisissez celle qui sert de grande photo d'accueil.</div>
+          <div class="sub">Jusqu'à 30 photos (salle, plats, terrasse, équipe…), réduites automatiquement. Choisissez celle qui sert de grande photo d'accueil ; les autres alimentent la galerie et le défilé de la page d'accueil.</div>
           <input type="file" id="webImagesInput" accept="image/*" multiple onchange="ajouterImagesWeb(this)"
             style="width:100%; padding:11px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
           <div id="webImagesNote" style="font-size:12px; color:var(--text-dim); margin-top:8px;"></div>
@@ -3061,6 +3334,21 @@
           </div>
           <div id="licenceHistorique" style="margin-top:18px;"></div>
         </div>
+
+        <div class="panel" style="margin-top:16px;">
+          <h3>J'ai reçu un code de déblocage</h3>
+          <div class="sub">Saisissez le code envoyé par le concepteur par email ou WhatsApp pour réactiver votre licence.</div>
+          <div class="grid-2">
+            <div class="field"><label>Code de licence</label>
+              <input type="text" id="licenceCodeInput" placeholder="XXXX-XXXX-XXXX-XXXX"
+                style="font-family:'IBM Plex Mono',monospace; letter-spacing:0.08em; text-transform:uppercase;"
+                onkeydown="if(event.key==='Enter')soumettreCodeLicence()">
+            </div>
+            <div class="field" style="display:flex; align-items:flex-end;">
+              <button class="btn-primary" style="width:100%;" onclick="soumettreCodeLicence()">Valider le code</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3465,12 +3753,15 @@
 
       storeSite = await agrGet(base + 'siteweb') || {};
 
-      // Restaurant bloqué par le concepteur ou licence expirée : la page
-      // publique est suspendue immédiatement — aucune carte, aucune commande.
-      if(restaurantSuspendu(info) || storeSite.actif === false){
+      // Restaurant bloqué ou licence expirée : la page reste ouverte
+      // 24 heures, puis se ferme. Une page volontairement mise hors ligne
+      // par le restaurant, elle, se ferme immédiatement.
+      const etatWeb = etatPageWeb(info);
+      if(etatWeb.suspendu || storeSite.actif === false){
         pageIntrouvable();
         return;
       }
+      sursisPageWeb = etatWeb.sursis ? etatWeb.finSursis : null;
 
       storeTenantCode = code;
       storeSitePublicSlug = slug || storeSite.slug || null;
@@ -3481,6 +3772,7 @@
       document.getElementById('storePage').style.display = 'block';
 
       renderStoreVitrine(info);
+      surveillerSursis();
 
       const produits = await agrGet(base + 'produits') || {};
       storeMenuItems = Object.entries(produits)
@@ -3490,6 +3782,7 @@
       renderSpecialites();
       renderStoreMenu();
       appliquerIdentiteWeb(info.nomRestaurant || 'Restaurant', info, storeCouverture);
+      analyserRestaurant();
 
       storeFraisService = info.fraisService || 0;
       const zones = await agrGet(base + 'zonesLivraison') || {};
@@ -3532,15 +3825,39 @@
 
   // Un restaurant bloqué par le concepteur, ou dont la licence est
   // dépassée, ne doit plus rien exposer publiquement.
+  // La page web ne dépend pas de la présence en ligne du restaurant :
+  // tant que la licence est valable, elle reste consultable. Quand la
+  // licence expire ou que le restaurant est bloqué, la page continue de
+  // fonctionner pendant 24 heures, puis se ferme d'elle-même.
+  const SURSIS_PAGE_WEB = 24 * 60 * 60 * 1000;
+
+  // Renvoie { suspendu, sursis, finSursis } : « sursis » signale les
+  // 24 heures pendant lesquelles la page reste ouverte malgré le blocage.
+  function etatPageWeb(info){
+    if(!info) return { suspendu: true, sursis: false };
+
+    // Point de départ du décompte : le blocage, sinon l'expiration
+    let debut = null;
+    if(info.statut === 'bloque') debut = info.dateBlocage || info.dateExpiration || 0;
+    else if(info.dateExpiration && Date.now() > info.dateExpiration) debut = info.dateExpiration;
+
+    if(debut === null) return { suspendu: false, sursis: false };
+
+    // Blocage sans date connue : on ferme tout de suite, faute de repère
+    if(!debut) return { suspendu: true, sursis: false };
+
+    const fin = debut + SURSIS_PAGE_WEB;
+    if(Date.now() < fin) return { suspendu: false, sursis: true, finSursis: fin };
+    return { suspendu: true, sursis: false, finSursis: fin };
+  }
+
   function restaurantSuspendu(info){
-    if(!info) return true;
-    if(info.statut === 'bloque') return true;
-    if(info.dateExpiration && Date.now() > info.dateExpiration) return true;
-    return false;
+    return etatPageWeb(info).suspendu;
   }
 
   // Écran 404 : toute action de la page est coupée
   function pageIntrouvable(){
+    sursisPageWeb = null;
     storeTenantCode = null;
     storeSite = {};
     storeMenuItems = [];
@@ -3554,6 +3871,29 @@
     document.getElementById('storeIntrouvable').style.display = 'flex';
     document.title = 'Page web not found';
     window.scrollTo(0,0);
+  }
+
+  // Pendant le sursis, la page se contrôle elle-même : à l'échéance elle
+  // se ferme sans qu'il faille recharger, et un rappel discret prévient
+  // le visiteur que la commande en ligne va s'interrompre.
+  function surveillerSursis(){
+    if(!sursisPageWeb) return;
+    const bandeau = document.getElementById('sfSursis');
+
+    const verifier = () => {
+      if(!sursisPageWeb) return;
+      const restant = sursisPageWeb - Date.now();
+      if(restant <= 0){ pageIntrouvable(); return; }
+      if(bandeau){
+        const h = Math.floor(restant / 3600000);
+        const m = Math.floor((restant % 3600000) / 60000);
+        bandeau.textContent = 'Les commandes en ligne de ce restaurant s\'interrompent dans ' +
+          (h > 0 ? h + ' h ' + m + ' min.' : m + ' min.');
+        bandeau.style.display = 'block';
+      }
+      setTimeout(verifier, 60000);
+    };
+    verifier();
   }
 
   function masquerIntrouvable(){
@@ -4019,6 +4359,10 @@
   // L'ancien format #/r/CODE reste accepté pour les liens déjà partagés.
   async function ouvrirDepuisLien(){
     const hash = location.hash || '';
+
+    // Lien reçu par email : ouvre l'espace concepteur sur la demande visée
+    if(/^#\/licence\//.test(hash)) return traiterLienLicence(hash);
+
     const ancien  = hash.match(/^#\/r\/([A-Za-z0-9_-]+)/);
     const adresse = hash.match(/^#\/([A-Za-z0-9_-]+)/);
     if(!ancien && !adresse) return false;
@@ -4128,96 +4472,345 @@
       }
     } catch(e){ reponse = null; }
 
-    if(!reponse){
-      reponse = "Je n'ai pas la réponse à cette question. Je la transmets au restaurant : " +
-                'un conseiller vous répondra' +
-                (storeSite.whatsapp ? ' — vous pouvez aussi écrire directement sur WhatsApp.' : '.');
-    }
+    if(!reponse) reponse = repliUtile(question);
     chatEnAttente(false);
     repondreChat('assistant', reponse);
     enregistrerConversation(question, reponse);
   }
 
-  // ---- Réponses construites sur les données du restaurant ----
-  function reponseLocale(q){
-    const t = normaliserReponse(q);
-    const gnf = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
-    const a = (...mots) => mots.some(m => t.includes(m));
+  // ===============================================================
+  // TÉLÉCONSEILLER — moteur d'analyse
+  // Plutôt qu'une liste de mots-clés figée, on construit à la volée une
+  // « connaissance » du restaurant (carte, catégories, prix, horaires,
+  // livraison, délais réels de préparation) et on rapproche la question
+  // du client de ces éléments. Le conseiller propose toujours une suite :
+  // il ne reste jamais sans réponse.
+  // ===============================================================
+  let profilRestaurant = null;
 
-    if(a('bonjour','bonsoir','salut','coucou'))
-      return 'Bonjour ! Que puis-je faire pour vous : la carte, les horaires, la livraison ou une commande ?';
+  // Construit une vue synthétique du restaurant, recalculée à chaque page
+  function analyserRestaurant(){
+    const plats = storeMenuItems.map(p => ({
+      nom: p.nom || '',
+      prix: p.prixVente || 0,
+      categorie: p.categorie || 'Autres',
+      description: p.description || '',
+      mots: motsCles((p.nom || '') + ' ' + (p.description || '') + ' ' + (p.categorie || '')),
+    }));
+    const prix = plats.map(p => p.prix).filter(Boolean);
+    const categories = {};
+    plats.forEach(p => { (categories[p.categorie] = categories[p.categorie] || []).push(p); });
 
-    if(a('horaire','ouvert','ferme','fermez','ouvrez','heure'))
-      return storeSite.horaires
-        ? 'Nos horaires : ' + storeSite.horaires + '.'
-        : "Nos horaires ne sont pas encore publiés, le restaurant vous les confirmera.";
+    profilRestaurant = {
+      nom: storeInfoCourante.nomRestaurant || 'notre restaurant',
+      ville: storeInfoCourante.ville || '',
+      adresse: storeInfoCourante.adresse || '',
+      telephone: storeInfoCourante.telephone || '',
+      horaires: storeSite.horaires || '',
+      ouvre: storeSite.ouvre || '', ferme: storeSite.ferme || '',
+      paiement: storeSite.paiement || '',
+      whatsapp: storeSite.whatsapp || '',
+      description: storeSite.description || '',
+      plats, categories,
+      prixMin: prix.length ? Math.min(...prix) : 0,
+      prixMax: prix.length ? Math.max(...prix) : 0,
+      prixMoyen: prix.length ? Math.round(prix.reduce((a,b) => a+b, 0) / prix.length) : 0,
+      zones: storeZones.map(z => ({ nom: z.nom, frais: z.fraisLivraison || 0, delai: z.delaiMinutes || 0 })),
+      livraisonForfait: storeLivraisonDefaut.frais || 0,
+      livraisonDelai: storeLivraisonDefaut.delai || 0,
+      fraisService: storeFraisService || 0,
+    };
+    return profilRestaurant;
+  }
 
-    if(a('adresse','ou etes','etes ou','ou se trouve','ou vous','vous situez','localisation','situe','emplacement','comment venir','quel quartier'))
-      return [storeInfoCourante.adresse, storeInfoCourante.ville].filter(Boolean).join(', ') ||
-             "L'adresse n'est pas encore renseignée.";
+  const MOTS_VIDES = new Set(('le la les un une des du de de la au aux et ou a à est sont pour avec sur dans par ' +
+    'je tu il elle nous vous ils elles me te se ce cet cette ces mon ma mes votre vos que qui quoi quel quelle ' +
+    'est-ce que qu combien comment pourquoi quand ou est ai as avez avoir etre suis sera serait plus moins ' +
+    'bien tres pas ne non oui s il y en d l m t c').split(/\s+/));
 
-    if(a('livraison','livrer','livrez','domicile')){
-      if(storeZones.length){
-        return 'Nous livrons dans ' + storeZones.length + ' zone(s) : ' +
-               storeZones.map(z => z.nom + ' (' + gnf(z.fraisLivraison) + ')').join(', ') + '.';
-      }
-      return storeLivraisonDefaut.frais
-        ? 'Oui, nous livrons. Les frais sont de ' + gnf(storeLivraisonDefaut.frais) +
-          (storeLivraisonDefaut.delai ? ', environ ' + storeLivraisonDefaut.delai + ' minutes.' : '.')
-        : 'Oui, nous livrons. Les frais vous seront confirmés lors de l\'appel de confirmation.';
+  function motsCles(texte){
+    return normaliserReponse(texte).split(/[^a-z0-9]+/)
+      .filter(m => m.length > 2 && !MOTS_VIDES.has(m));
+  }
+
+  // Un plat est reconnu même si le client n'écrit qu'une partie du nom
+  function chercherPlats(question){
+    const mots = motsCles(question);
+    if(!mots.length) return [];
+    return (profilRestaurant.plats || []).map(p => {
+      let score = 0;
+      const nomNorm = normaliserReponse(p.nom);
+      if(normaliserReponse(question).includes(nomNorm)) score += 10;
+      mots.forEach(m => {
+        if(nomNorm.includes(m)) score += 3;
+        else if(p.mots.some(x => x.startsWith(m) || m.startsWith(x))) score += 1;
+      });
+      return { plat: p, score };
+    }).filter(x => x.score > 0).sort((a,b) => b.score - a.score).map(x => x.plat);
+  }
+
+  function chercherCategorie(question){
+    const q = normaliserReponse(question);
+    return Object.keys(profilRestaurant.categories || {})
+                 .find(c => q.includes(normaliserReponse(c)));
+  }
+
+  // Détection d'intention pondérée : plusieurs indices valent mieux qu'un mot
+  const INTENTIONS = [
+    // `poids` départage les intentions qui partagent un vocabulaire proche
+    { cle:'regime',     poids:3, mots:['vegetarien','vegetarienne','vegan','sans viande','porc','halal','allergie',
+                                       'allergique','arachide','gluten','piment','epice','epices','enfant','regime'] },
+    { cle:'groupe',     poids:3, mots:['groupe','anniversaire','evenement','fete','reunion','personnes','couverts',
+                                       'privatiser','mariage','bapteme','seminaire'] },
+    { cle:'salutation', poids:1, mots:['bonjour','bonsoir','salut','coucou','hello','allo'] },
+    { cle:'horaires',   poids:2, mots:['horaire','horaires','ouvert','ouverts','ouverte','ferme','fermes','fermez',
+                                       'ouvrez','heure','heures','ce soir','dimanche','samedi','matin','minuit','tard'] },
+    { cle:'adresse',    poids:2, mots:['adresse','ou etes vous','vous etes ou','ou se trouve','ou vous trouvez',
+                                       'vous situez','localisation','situes','emplacement','venir','quartier',
+                                       'plan','itineraire','trouver'] },
+    { cle:'livraison',  poids:2, mots:['livraison','livrez','livrer','livre','livrent','domicile','apporter',
+                                       'deplacer','zone','zones'] },
+    { cle:'paiement',   poids:2, mots:['paiement','payer','paye','regler','reglement','orange money','momo',
+                                       'mobile money','carte bancaire','especes','cash','virement','acompte'] },
+    { cle:'contact',    poids:2, mots:['telephone','numero','appeler','joindre','contact','contacter','whatsapp',
+                                       'parler','conseiller','quelqu un','humain','responsable'] },
+    { cle:'commander',  poids:2, mots:['commander','commande','reserver','reservation','comment faire',
+                                       'comment ca marche','emporter'] },
+    { cle:'carte',      poids:2, mots:['carte','menu','plat','plats','manger','proposez','servez','specialite',
+                                       'specialites','choix','disponible','disponibles','recommandez','conseillez',
+                                       'suggestion','meilleur','populaire'] },
+    { cle:'prix',       poids:2, mots:['prix','combien','coute','coutent','tarif','tarifs','cher','budget',
+                                       'montant','moins cher','pas cher'] },
+    { cle:'delai',      poids:2, mots:['delai','delais','temps','attendre','attente','rapide','vite','minutes','pret'] },
+    { cle:'remerciement', poids:1, mots:['merci','au revoir','bonne journee','bonne soiree','a bientot','parfait'] },
+  ];
+
+  // Comparaison par mots entiers : « alloco » ne déclenche plus « allo »,
+  // et « carte » du menu ne se confond plus avec « carte bancaire ».
+  function detecterIntentions(question){
+    const q = ' ' + normaliserReponse(question).replace(/[^a-z0-9]+/g, ' ') + ' ';
+    return INTENTIONS.map(i => {
+      let score = 0;
+      i.mots.forEach(m => {
+        const cible = ' ' + m + ' ';
+        if(q.includes(cible)) score += (m.includes(' ') ? 4 : 2) * (i.poids || 2);
+      });
+      return { cle: i.cle, score };
+    }).filter(x => x.score > 0).sort((a,b) => b.score - a.score);
+  }
+
+  const gnfCourt = v => Number(v||0).toLocaleString('fr-FR') + ' GNF';
+
+  // ---- Réponses construites à partir du profil ----
+  function repondreCarte(cat){
+    const p = profilRestaurant;
+    if(!p.plats.length) return "Notre carte n'est pas encore publiée en ligne. Appelez-nous, nous vous dirons ce qui est disponible aujourd'hui.";
+
+    if(cat){
+      const liste = p.categories[cat] || [];
+      return 'En ' + cat.toLowerCase() + ', nous proposons : ' +
+             liste.map(x => x.nom + ' (' + gnfCourt(x.prix) + ')').join(', ') + '.';
+    }
+    const cats = Object.keys(p.categories);
+    const vedettes = p.plats.slice().sort((a,b) => b.prix - a.prix).slice(0, 3);
+    return 'Notre carte compte ' + p.plats.length + ' plats' +
+           (cats.length > 1 ? ' répartis en ' + cats.length + ' catégories (' + cats.join(', ') + ')' : '') +
+           '. Parmi nos spécialités : ' + vedettes.map(x => x.nom + ' à ' + gnfCourt(x.prix)).join(', ') +
+           '. Dites-moi une catégorie ou un plat, je vous donne le détail.';
+  }
+
+  function repondrePrix(question){
+    const p = profilRestaurant;
+    const trouves = chercherPlats(question);
+    if(trouves.length === 1)
+      return trouves[0].nom + ' : ' + gnfCourt(trouves[0].prix) +
+             (trouves[0].description ? '. ' + trouves[0].description : '.');
+    if(trouves.length > 1)
+      return 'Voici les prix : ' + trouves.slice(0,4).map(x => x.nom + ' ' + gnfCourt(x.prix)).join(', ') + '.';
+
+    const cat = chercherCategorie(question);
+    if(cat) return repondreCarte(cat);
+
+    // Question de budget : on répond avec la fourchette réelle
+    const q = normaliserReponse(question);
+    if(q.includes('moins cher') || q.includes('pas cher') || q.includes('petit budget')){
+      const eco = p.plats.slice().sort((a,b) => a.prix - b.prix).slice(0, 3);
+      return 'Nos plats les plus accessibles : ' + eco.map(x => x.nom + ' à ' + gnfCourt(x.prix)).join(', ') + '.';
+    }
+    if(!p.plats.length) return "Nos tarifs ne sont pas encore publiés — appelez-nous, nous vous renseignons.";
+    return 'Nos plats vont de ' + gnfCourt(p.prixMin) + ' à ' + gnfCourt(p.prixMax) +
+           ', pour une moyenne de ' + gnfCourt(p.prixMoyen) +
+           '. Donnez-moi le nom d\'un plat et je vous dis son prix exact.';
+  }
+
+  function repondreLivraison(){
+    const p = profilRestaurant;
+    if(p.zones.length){
+      const zones = p.zones.map(z => z.nom + ' à ' + gnfCourt(z.frais) + (z.delai ? ' (~' + z.delai + ' min)' : ''));
+      return 'Oui, nous livrons dans ' + p.zones.length + ' zone(s) : ' + zones.join(', ') +
+             '. Choisissez votre zone au moment de la commande, les frais s\'ajoutent automatiquement.';
+    }
+    if(p.livraisonForfait)
+      return 'Oui, nous livrons. Les frais sont de ' + gnfCourt(p.livraisonForfait) +
+             (p.livraisonDelai ? ', pour un délai d\'environ ' + p.livraisonDelai + ' minutes.' : '.');
+    return 'Nous assurons la livraison. Les frais dépendent de votre quartier et vous seront confirmés ' +
+           'lors de l\'appel qui suit votre commande.';
+  }
+
+  function repondreHoraires(){
+    const p = profilRestaurant;
+    const etat = etatOuverture(p.ouvre, p.ferme);
+    if(etat)
+      return (etat.ouvert
+        ? 'Nous sommes ouverts en ce moment, jusqu\'à ' + etat.ferme + '.'
+        : 'Nous sommes fermés actuellement ; nous ouvrons à ' + etat.ouvre + '.') +
+        (p.horaires ? ' Nos horaires : ' + p.horaires + '.' : '');
+    if(p.horaires) return 'Nos horaires : ' + p.horaires + '.';
+    return "Nos horaires ne sont pas encore publiés. Appelez-nous" +
+           (p.telephone ? ' au ' + p.telephone : '') + ", nous vous les confirmons.";
+  }
+
+  function repondreDelai(){
+    const p = profilRestaurant;
+    const livraison = p.zones.length
+      ? Math.round(p.zones.reduce((s,z) => s + z.delai, 0) / p.zones.length)
+      : p.livraisonDelai;
+    return 'Comptez environ 20 à 30 minutes de préparation' +
+           (livraison ? ', et ' + livraison + ' minutes de plus pour la livraison' : '') +
+           '. Votre commande reçoit un numéro de suivi dès sa validation.';
+  }
+
+  function repondreRegime(question){
+    const p = profilRestaurant;
+    const q = normaliserReponse(question);
+
+    if(q.includes('piment') || q.includes('epice'))
+      return 'Vous pouvez préciser « sans piment » dans le champ Précisions de votre commande : ' +
+             'la cuisine reçoit la consigne avec le ticket.';
+    if(q.includes('allergie') || q.includes('gluten') || q.includes('arachide'))
+      return 'Indiquez votre allergie dans le champ Précisions de la commande, elle est transmise directement ' +
+             'en cuisine. Pour une allergie sévère, appelez-nous' + (p.telephone ? ' au ' + p.telephone : '') +
+             ' afin que nous vérifions la préparation avec vous.';
+
+    // Recherche réelle dans la carte
+    const motsRegime = q.includes('vegetarien') || q.includes('vegan') || q.includes('sans viande')
+      ? ['legume','salade','riz','haricot','attieke','vegetal','frite','plantain']
+      : (q.includes('porc') || q.includes('halal') ? ['poulet','poisson','boeuf','mouton','agneau'] : []);
+
+    if(motsRegime.length){
+      const candidats = p.plats.filter(x => motsRegime.some(m => normaliserReponse(x.nom).includes(m)));
+      if(candidats.length)
+        return 'Ces plats devraient vous convenir : ' +
+               candidats.slice(0,5).map(x => x.nom + ' (' + gnfCourt(x.prix) + ')').join(', ') +
+               '. Précisez votre demande dans la commande, la cuisine en tiendra compte.';
+    }
+    return 'Indiquez votre contrainte dans le champ Précisions de la commande : la cuisine la reçoit ' +
+           'avec le ticket et adapte la préparation. Vous pouvez aussi nous appeler' +
+           (p.telephone ? ' au ' + p.telephone : '') + ' pour en discuter.';
+  }
+
+  function repondreGroupe(question){
+    const p = profilRestaurant;
+    const nb = (question.match(/\d+/) || [])[0];
+    return (nb ? 'Pour ' + nb + ' personnes, ' : 'Pour un groupe, ') +
+           'appelez-nous' + (p.telephone ? ' au ' + p.telephone : '') +
+           (p.whatsapp ? ' ou sur WhatsApp au +' + p.whatsapp : '') +
+           ' : nous organisons la table et pouvons préparer les plats à l\'avance. ' +
+           'Je transmets déjà votre demande au restaurant.';
+  }
+
+  function repondreCommander(){
+    const p = profilRestaurant;
+    return 'C\'est simple : cliquez sur « Passer commande », ajoutez vos plats et les quantités, ' +
+           'remplissez vos coordonnées, choisissez sur place ou livraison, puis validez. ' +
+           'Vous recevez un numéro de commande' +
+           (p.telephone ? ' et nous vous rappelons au numéro que vous laissez.' : '.');
+  }
+
+  // Réponse principale : intention dominante, puis repli utile
+  function reponseLocale(question){
+    analyserRestaurant();
+    const p = profilRestaurant;
+    const intentions = detecterIntentions(question);
+    const principale = intentions.length ? intentions[0].cle : null;
+    const platsTrouves = chercherPlats(question);
+    const categorie = chercherCategorie(question);
+
+    // Un plat nommé l'emporte : c'est la question la plus concrète du client
+    const intentionForte = intentions.length && intentions[0].score >= 4;
+    if(platsTrouves.length === 1 &&
+       (!intentionForte || ['prix','carte'].includes(principale)) && principale !== 'carte'){
+      const x = platsTrouves[0];
+      return x.nom + ' : ' + gnfCourt(x.prix) + (x.description ? '. ' + x.description : '.') +
+             ' Souhaitez-vous l\'ajouter à votre commande ?';
     }
 
-    if(a('paiement','payer','paye','orange money','momo','carte bancaire','especes'))
-      return storeSite.paiement || 'Le règlement se fait à la confirmation de la commande, avec le service commercial.';
-
-    if(a('telephone','numero','appeler','contact','whatsapp'))
-      return [storeInfoCourante.telephone ? 'Téléphone : ' + storeInfoCourante.telephone : '',
-              storeSite.whatsapp ? 'WhatsApp : +' + storeSite.whatsapp : '']
-             .filter(Boolean).join(' · ') || 'Le restaurant vous rappellera après votre commande.';
-
-    if(a('commander','commande','comment faire','passer commande'))
-      return 'Cliquez sur « Passer commande », choisissez vos plats et la quantité, remplissez vos coordonnées, ' +
-             'puis validez : vous recevez un numéro de commande et le restaurant vous rappelle.';
-
-    if(a('carte','menu','plats','manger','proposez','specialite')){
-      if(!storeMenuItems.length) return "La carte n'est pas encore publiée.";
-      const apercu = storeMenuItems.slice(0, 8).map(p => p.nom + ' (' + gnf(p.prixVente) + ')').join(', ');
-      return 'Voici un aperçu de notre carte : ' + apercu +
-             (storeMenuItems.length > 8 ? ', et ' + (storeMenuItems.length - 8) + ' autres plats.' : '.') +
-             ' La carte complète est affichée sur la page.';
+    switch(principale){
+      case 'salutation':
+        return 'Bonjour et bienvenue chez ' + p.nom + ' ! ' +
+               (p.plats.length ? 'Nous proposons ' + p.plats.length + ' plats. ' : '') +
+               'Je peux vous renseigner sur la carte, les prix, les horaires, la livraison, ou vous guider pour commander.';
+      case 'horaires':   return repondreHoraires();
+      case 'adresse':
+        return ([p.adresse, p.ville].filter(Boolean).join(', ') ||
+                'Notre adresse exacte n\'est pas encore publiée') +
+               (p.telephone ? '. Appelez-nous au ' + p.telephone + ' si vous avez du mal à nous trouver.' : '.');
+      case 'livraison':  return repondreLivraison();
+      case 'paiement':
+        return p.paiement ||
+               ('Le règlement se fait à la confirmation de la commande' +
+                (p.whatsapp ? ', avec notre service commercial sur WhatsApp (+' + p.whatsapp + ').' : '.'));
+      case 'contact':
+        return [p.telephone ? 'Téléphone : ' + p.telephone : '',
+                p.whatsapp ? 'WhatsApp : +' + p.whatsapp : ''].filter(Boolean).join(' · ') ||
+               'Laissez votre numéro dans la commande, nous vous rappelons rapidement.';
+      case 'commander':  return repondreCommander();
+      case 'carte':      return repondreCarte(categorie);
+      case 'prix':       return repondrePrix(question);
+      case 'delai':      return repondreDelai();
+      case 'regime':     return repondreRegime(question);
+      case 'groupe':     return repondreGroupe(question);
+      case 'remerciement': return 'Avec plaisir ! À très bientôt chez ' + p.nom + '.';
     }
 
-    if(a('prix','combien','coute','tarif')){
-      // Recherche du plat cité dans la question
-      const trouve = storeMenuItems.find(p => t.includes(normaliserReponse(p.nom)));
-      if(trouve) return trouve.nom + ' : ' + gnf(trouve.prixVente) + '.';
-      if(storeMenuItems.length){
-        const prix = storeMenuItems.map(p => p.prixVente || 0).filter(Boolean);
-        return 'Nos plats vont de ' + gnf(Math.min(...prix)) + ' à ' + gnf(Math.max(...prix)) +
-               '. Dites-moi quel plat vous intéresse.';
-      }
-    }
+    if(categorie) return repondreCarte(categorie);
+    if(platsTrouves.length) return repondrePrix(question);
+    return null;   // aucune intention : repli en aval
+  }
 
-    // Un plat cité sans mot-clé de prix
-    const plat = storeMenuItems.find(p => t.includes(normaliserReponse(p.nom)));
-    if(plat) return plat.nom + ' : ' + gnf(plat.prixVente) +
-                    (plat.description ? '. ' + plat.description : '.');
+  // Repli : on ne laisse jamais le client sans suite concrète
+  function repliUtile(question){
+    const p = profilRestaurant || analyserRestaurant();
+    const pistes = [];
+    if(p.plats.length) pistes.push('voir la carte et les prix');
+    if(p.zones.length || p.livraisonForfait) pistes.push('connaître les frais de livraison');
+    if(p.horaires || p.ouvre) pistes.push('vérifier nos horaires');
+    pistes.push('passer commande');
 
-    if(a('merci','au revoir','bonne journee'))
-      return 'Avec plaisir ! À très bientôt.';
-
-    return null;   // hors de portée : on relaie au restaurant
+    return "Je n'ai pas la réponse exacte à cette question, et je la transmets au restaurant : " +
+           'un conseiller vous répondra' +
+           (p.whatsapp ? ' — vous pouvez aussi écrire au +' + p.whatsapp + ' sur WhatsApp' : '') +
+           '. En attendant, je peux vous aider à ' + pistes.join(', ') + '.';
   }
 
   // ---- Réponse par Gemini, si le restaurant a fourni sa propre clé ----
   async function reponseGemini(question){
+    const p = profilRestaurant || analyserRestaurant();
     const contexte = [
-      'Tu es le téléconseiller du restaurant ' + (storeInfoCourante.nomRestaurant || '') + '.',
-      'Adresse : ' + [storeInfoCourante.adresse, storeInfoCourante.ville].filter(Boolean).join(', '),
-      'Horaires : ' + (storeSite.horaires || 'non précisés'),
-      'Carte : ' + storeMenuItems.map(p => p.nom + ' à ' + (p.prixVente||0) + ' GNF').join('; '),
-      'Réponds brièvement, en français, uniquement sur ce restaurant.',
-      "Si tu ne sais pas, dis que tu transmets la question au restaurant.",
+      'Tu es le téléconseiller du restaurant ' + p.nom + ', à ' + (p.ville || 'sa ville') + '.',
+      'Adresse : ' + [p.adresse, p.ville].filter(Boolean).join(', '),
+      'Téléphone : ' + (p.telephone || 'non communiqué'),
+      'Horaires : ' + (p.horaires || 'non précisés'),
+      'Paiement : ' + (p.paiement || 'à la confirmation de la commande'),
+      'Livraison : ' + (p.zones.length
+        ? p.zones.map(z => z.nom + ' ' + z.frais + ' GNF (' + z.delai + ' min)').join('; ')
+        : (p.livraisonForfait ? 'forfait ' + p.livraisonForfait + ' GNF' : 'frais confirmés à l\'appel')),
+      'Carte (' + p.plats.length + ' plats) : ' +
+        p.plats.map(x => x.nom + ' [' + x.categorie + '] ' + x.prix + ' GNF').join('; '),
+      'Fourchette de prix : ' + p.prixMin + ' à ' + p.prixMax + ' GNF.',
+      'Réponds en français, en 3 phrases maximum, uniquement sur ce restaurant et à partir de ces données.',
+      "N'invente jamais un plat, un prix ou un horaire absent de cette liste.",
+      "Si l'information manque, propose d'appeler le restaurant et dis que tu transmets la question.",
     ].join('\n');
 
     const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' +
@@ -4861,6 +5454,7 @@
   const sectionTitles = {
     overview: 'Tableau de bord', notifications: 'Notifications — commandes en ligne',
     commandes: 'Commandes', tables: 'Tables',
+    salle: 'Prise de commande', cuisine: 'Cuisine',
     service: 'Service en salle', encaissement: 'Encaissement',
     pageweb: 'Page web du restaurant',
     menu: 'Menu & Catégories', stocks: 'Stocks', clients: 'Clients & Fidélité',
@@ -4911,11 +5505,11 @@
     dg:          '*',
     fondateur:   '*',
     super_admin: '*',
-    gerant:      ['overview','notifications','commandes','service','encaissement','tables','menu','pageweb',
+    gerant:      ['overview','notifications','salle','cuisine','commandes','service','encaissement','tables','menu','pageweb',
                   'stocks','clients','depenses','rh','pointage','evaluation','audit'],
-    cuisinier:   ['menu','stocks','commandes'],
-    serveur:     ['service','tables','commandes'],
-    caissier:    ['encaissement','commandes','notifications'],
+    cuisinier:   ['cuisine','menu','stocks','commandes'],
+    serveur:     ['salle','service','tables','commandes'],
+    caissier:    ['encaissement','commandes','notifications','salle'],
     comptable:   ['comptabilite','depenses','banque','rh'],
     rh:          ['rh','pointage','evaluation'],
     employe:     ['pointage'],
@@ -4979,10 +5573,65 @@
     if(name === 'pointage') loadPointage();
     if(name === 'evaluation') loadEvaluation();
     if(name === 'comptabilite') loadComptabilite();
+    if(name === 'salle') loadSalleSection();
+    if(name === 'cuisine') loadCuisine();
     if(name === 'service') loadServiceSection();
     if(name === 'encaissement') loadEncaissementSection();
     if(name === 'pageweb') loadPageWeb();
     if(name === 'notifications') loadNotifications();
+  }
+
+  // ---------------------------------------------------------------
+  // Défilé des photos publiées, sur la page d'accueil
+  // Alimenté par l'index public agr_sites : chaque restaurant y dépose
+  // quelques photos au moment où il enregistre sa page web.
+  // ---------------------------------------------------------------
+  async function chargerCarrouselAccueil(){
+    const zone = document.getElementById('h2Carrousel');
+    const piste = document.getElementById('h2Piste');
+    if(!zone || !piste) return;
+
+    try {
+      const sites = await agrGet('agr_sites') || {};
+      const vignettes = [];
+
+      Object.entries(sites).forEach(([slug, v]) => {
+        if(!v || v.actif === false || v.bloque === true) return;
+        const photos = Array.isArray(v.photos) ? v.photos : Object.values(v.photos || {});
+        photos.filter(Boolean).forEach(src => {
+          vignettes.push({ slug, src, nom: v.nom || 'Restaurant', ville: v.ville || '', logo: v.logo || null });
+        });
+      });
+
+      if(vignettes.length < 3){ zone.style.display = 'none'; return; }
+
+      // Mélange pour ne pas toujours mettre les mêmes en tête
+      for(let i = vignettes.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [vignettes[i], vignettes[j]] = [vignettes[j], vignettes[i]];
+      }
+
+      // La piste est doublée : le défilé boucle sans saut visible
+      const html = vignettes.map(v => `
+        <div class="h2-vignette" onclick="ouvrirRestaurant('${v.slug}')" title="${echapper(v.nom)}">
+          <img src="${v.src}" alt="${echapper(v.nom)}" loading="lazy">
+          <div class="voile">
+            <div class="rond">${v.logo ? `<img src="${v.logo}" alt="">` : echapper(initiales(v.nom))}</div>
+            <div>
+              <div class="nom">${echapper(v.nom)}</div>
+              <div class="lieu">${echapper(v.ville)}</div>
+            </div>
+          </div>
+        </div>`).join('');
+
+      piste.innerHTML = html + html;
+      const nbRestaurants = new Set(vignettes.map(v => v.slug)).size;
+      document.getElementById('h2CarrouselPied').textContent =
+        nbRestaurants + ' restaurant(s) en ligne — cliquez sur une photo pour ouvrir sa page.';
+      zone.style.display = 'block';
+    } catch(e){
+      zone.style.display = 'none';
+    }
   }
 
   // ---------------------------------------------------------------
@@ -5159,6 +5808,7 @@
       cdbOnglet('restaurants');
       cdbSetFilter('tous');
       loadConcepteurStats();
+      if(actionLicenceEnAttente) executerActionEnAttente();
     } catch (e) {
       err.textContent = 'Impossible de joindre Firebase — vérifiez la configuration (firebaseConfig).';
       err.style.display = 'block';
@@ -5213,11 +5863,12 @@
   }
 
   function cdbOnglet(nom){
-    ['restaurants','licences','securite'].forEach(o => {
+    ['restaurants','licences','mail','securite'].forEach(o => {
       document.getElementById('cdbVue-' + o).style.display = o === nom ? 'block' : 'none';
       document.getElementById('cdbOng-' + o).classList.toggle('on', o === nom);
     });
     if(nom === 'licences') chargerTarifsLicences();
+    if(nom === 'mail') chargerVueMail();
     if(nom === 'securite') afficherQuestionSecurite();
   }
 
@@ -5305,6 +5956,558 @@
     } catch(e){
       dire('Enregistrement impossible.', false);
     }
+  }
+
+  // ===============================================================
+  // COMPTE MAIL DU CONCEPTEUR ET CIRCUIT DE DÉBLOCAGE
+  //
+  // Une page HTML ne peut pas envoyer d'email par elle-même, et elle ne
+  // peut pas non plus lire une boîte de réception. On utilise donc EmailJS,
+  // un service d'envoi appelable depuis le navigateur : le concepteur y
+  // colle ses identifiants une fois, et l'application envoie les messages
+  // en son nom. Sans EmailJS configuré, tout continue de fonctionner :
+  // les messages sont préparés et ouverts dans le logiciel de messagerie
+  // ou sur WhatsApp, et la demande reste visible dans l'espace concepteur.
+  //
+  // Circuit : blocage d'un restaurant → code de licence engendré →
+  // email au concepteur → il confirme « payée » ou « non payée » →
+  // si payée, le code part au restaurant (email + WhatsApp) → le
+  // restaurant saisit le code → vérification → déblocage.
+  // ===============================================================
+  let compteMailConcepteur = null;
+
+  async function chargerCompteMail(){
+    try { compteMailConcepteur = await agrGet('agr_platform_mail') || {}; }
+    catch(e){ compteMailConcepteur = {}; }
+    return compteMailConcepteur;
+  }
+
+  function mailConfigure(){
+    const m = compteMailConcepteur || {};
+    return !!(m.emailjsService && m.emailjsTemplate && m.emailjsCle);
+  }
+
+  // Envoi réel via EmailJS ; repli sur l'ouverture du logiciel de messagerie
+  async function envoyerMail(destinataire, sujet, corps){
+    const m = compteMailConcepteur || {};
+    if(mailConfigure()){
+      try {
+        const r = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            service_id: m.emailjsService,
+            template_id: m.emailjsTemplate,
+            user_id: m.emailjsCle,
+            template_params: {
+              to_email: destinataire,
+              from_name: m.expediteur || 'AGR — Espace Concepteur',
+              reply_to: m.email || '',
+              subject: sujet,
+              message: corps,
+            },
+          }),
+        });
+        if(r.ok) return { envoye: true };
+      } catch(e){ /* on retombe sur le repli ci-dessous */ }
+    }
+    // Repli : préparer le message dans le logiciel de messagerie
+    const lien = 'mailto:' + encodeURIComponent(destinataire) +
+                 '?subject=' + encodeURIComponent(sujet) +
+                 '&body=' + encodeURIComponent(corps);
+    window.open(lien, '_blank');
+    return { envoye: false, prepare: true };
+  }
+
+  // Code de licence : 4 groupes de 4 caractères, sans lettres ambiguës
+  function engendrerCodeLicence(){
+    const alphabet = 'ACDEFGHJKLMNPQRTUVWXY3467869';
+    const groupe = () => Array.from({ length: 4 },
+      () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+    return [groupe(), groupe(), groupe(), groupe()].join('-');
+  }
+
+  function normaliserCode(c){
+    return (c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  }
+
+  // ===============================================================
+  // PILOTAGE DES LICENCES PAR EMAIL
+  //
+  // Toute demande de renouvellement vous est signalée par email, et chaque
+  // message contient des liens d'action signés. Un lien ouvre l'application
+  // sur la demande concernée et prépare l'action (activer, envoyer le code,
+  // refuser) ; elle ne s'exécute qu'après votre connexion concepteur.
+  // Un email ne peut donc pas, à lui seul, débloquer un restaurant : la
+  // signature prouve que le lien vient bien de vous, le mot de passe prouve
+  // que c'est bien vous qui cliquez.
+  // ===============================================================
+
+  // Signature courte liée au compte concepteur : un lien fabriqué de toutes
+  // pièces par un tiers ne passe pas la vérification.
+  async function signerAction(idDemande, action){
+    const secret = (compteMailConcepteur || {}).email || 'agr';
+    const h = await empreinte(idDemande + '|' + action + '|' + secret);
+    return h.slice(0, 16);
+  }
+
+  async function lienAction(idDemande, action){
+    const jeton = await signerAction(idDemande, action);
+    return location.href.split('#')[0] + '#/licence/' + idDemande + '/' + action + '/' + jeton;
+  }
+
+  // Action demandée par un lien, mise en attente jusqu'à la connexion
+  let actionLicenceEnAttente = null;
+
+  async function traiterLienLicence(hash){
+    const m = hash.match(/^#\/licence\/([A-Za-z0-9_-]+)(?:\/(activer|code|refuser)\/([a-f0-9]+))?/);
+    if(!m) return false;
+
+    actionLicenceEnAttente = { id: m[1], action: m[2] || null, jeton: m[3] || null };
+
+    showView('home');
+    const note = document.getElementById('h2ConcepteurNote');
+    if(note) note.style.display = 'block';
+    const err = document.getElementById('conceptPasswordErr');
+    if(err){
+      err.textContent = m[2]
+        ? 'Connectez-vous pour confirmer cette action sur la licence.'
+        : 'Connectez-vous pour traiter la demande de déblocage.';
+      err.style.display = 'block';
+      err.style.color = '#93c5fd';
+    }
+    return true;
+  }
+
+  // Exécutée après une connexion concepteur réussie
+  async function executerActionEnAttente(){
+    const a = actionLicenceEnAttente;
+    if(!a) return;
+    actionLicenceEnAttente = null;
+
+    cdbOnglet('mail');
+    await chargerDemandesLicence();
+    const note = document.getElementById('cdbDemandesNote');
+
+    if(!a.action){
+      note.style.color = '#93c5fd';
+      note.textContent = 'Demande ouverte depuis votre email : confirmez si la licence a été payée.';
+      return;
+    }
+    // Vérification de la signature avant toute exécution
+    await chargerCompteMail();
+    if(a.jeton !== await signerAction(a.id, a.action)){
+      note.style.color = '#f87171';
+      note.textContent = 'Ce lien n\'est pas valide (signature incorrecte). Aucune action n\'a été effectuée.';
+      return;
+    }
+    const d = demandesLicence.find(x => x.id === a.id);
+    if(!d){
+      note.style.color = '#f87171';
+      note.textContent = 'Cette demande n\'existe plus.';
+      return;
+    }
+
+    if(a.action === 'refuser'){ await refuserDemandeLicence(a.id); return; }
+    await envoyerCodeAuRestaurant(a.id, a.action === 'activer');
+  }
+
+  // ---------------------------------------------------------------
+  // Alertes envoyées au concepteur
+  // ---------------------------------------------------------------
+
+  // Le restaurant demande un renouvellement : vous êtes prévenu, et le
+  // message porte les liens d'action pour répondre en un clic.
+  async function alerterRenouvellement(code, info, offre, mode, reference, auto){
+    await chargerCompteMail();
+    const m = compteMailConcepteur || {};
+    if(!m.email) return { envoye: false, sansCompte: true };
+
+    const nom = (info || {}).nomRestaurant || code;
+
+    // Une demande est ouverte (ou reprise) pour porter les liens d'action
+    let id = null;
+    try {
+      const toutes = await agrGet('agr_licences_demandes') || {};
+      const existante = Object.entries(toutes).find(([, d]) =>
+        d.code === code && !['validee','refusee'].includes(d.statut));
+
+      if(existante){
+        id = existante[0];
+        await agrSet('agr_licences_demandes/' + id + '/statut', 'attente_confirmation');
+        await agrSet('agr_licences_demandes/' + id + '/motif', 'Renouvellement demandé par le restaurant');
+      } else {
+        const ref = window._agrPush(agrRef('agr_licences_demandes'));
+        await window._agrSet(ref, {
+          code, nomRestaurant: nom,
+          emailRestaurant: (info || {}).emailFacturation || (info || {}).email || null,
+          whatsappRestaurant: (info || {}).whatsapp || (info || {}).telephone || null,
+          motif: 'Renouvellement demandé par le restaurant',
+          statut: 'attente_confirmation',
+          joursAccordes: offre.jours,
+          tentatives: 0,
+          dateOuverture: Date.now(),
+        });
+        id = ref.key;
+      }
+      await agrSet('agr_licences_demandes/' + id + '/joursAccordes', offre.jours);
+    } catch(e){}
+
+    const liens = id ? [
+      '',
+      'Répondre en un clic :',
+      '  • Paiement confirmé, envoyer le code : ' + await lienAction(id, 'activer'),
+      '  • Paiement non constaté, refuser : ' + await lienAction(id, 'refuser'),
+    ] : [];
+
+    const corps = [
+      'Demande de renouvellement de licence',
+      '',
+      'Restaurant : ' + nom + ' (identifiant ' + code + ')',
+      'Formule choisie : ' + offre.libelle + ' — ' + Number(offre.prix||0).toLocaleString('fr-FR') + ' GNF (' + offre.jours + ' jours)',
+      'Mode de paiement déclaré : ' + mode,
+      'Référence : ' + (reference || 'non communiquée'),
+      'Contact : ' + ((info || {}).emailFacturation || (info || {}).email || '—') +
+        ' · ' + ((info || {}).whatsapp || (info || {}).telephone || '—'),
+      '',
+      auto
+        ? 'Le déblocage automatique étant actif, la licence a déjà été prolongée.'
+        : 'La licence est en attente de votre confirmation.',
+    ].concat(liens).concat(['', '— AGR, espace concepteur']).join('\n');
+
+    const r = await envoyerMail(m.email, 'AGR — renouvellement demandé : ' + nom, corps);
+    return Object.assign({ id }, r);
+  }
+
+  // Le concepteur déclenche lui-même l'envoi d'un code, sans demande préalable
+  async function declencherActivation(code){
+    const r = cdbRestaurants.find(x => x.code === code);
+    const note = document.getElementById('conceptStatsNote');
+    if(!r) return;
+
+    const nom = r.info.nomRestaurant || code;
+    if(!confirm('Engendrer un code d\'activation pour « ' + nom + ' » et le lui envoyer ?')) return;
+
+    try {
+      await chargerCompteMail();
+      // On réutilise une demande en cours si elle existe, sinon on en ouvre une
+      const toutes = await agrGet('agr_licences_demandes') || {};
+      const existante = Object.entries(toutes).find(([, d]) =>
+        d.code === code && !['validee','refusee'].includes(d.statut));
+
+      let id;
+      if(existante){
+        id = existante[0];
+      } else {
+        const d = await ouvrirDemandeLicence(code, r.info, 'Activation décidée par le concepteur');
+        id = d.id;
+      }
+
+      await chargerDemandesLicence();
+      await envoyerCodeAuRestaurant(id, true);
+
+      cdbOnglet('mail');
+      note.textContent = 'Code d\'activation engendré pour ' + nom + ' — voir l\'onglet Compte mail & déblocages.';
+    } catch(e){
+      note.textContent = "L'envoi du code d'activation a échoué.";
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Blocage d'un restaurant : une demande est ouverte et le concepteur
+  // est prévenu par email.
+  // ---------------------------------------------------------------
+  async function ouvrirDemandeLicence(code, info, motif){
+    await chargerCompteMail();
+    const codeLicence = engendrerCodeLicence();
+    const nom = (info || {}).nomRestaurant || code;
+
+    const demande = {
+      code, nomRestaurant: nom,
+      emailRestaurant: (info || {}).emailFacturation || (info || {}).email || null,
+      whatsappRestaurant: (info || {}).whatsapp || (info || {}).telephone || null,
+      motif: motif || 'Licence expirée ou non réglée',
+      statut: 'attente_confirmation',      // → paiement_confirme → code_envoye → validee
+      codeHash: await empreinte(normaliserCode(codeLicence)),
+      tentatives: 0,
+      dateOuverture: Date.now(),
+    };
+
+    const ref = window._agrPush(agrRef('agr_licences_demandes'));
+    await window._agrSet(ref, demande);
+
+    // Le lien ramène le concepteur directement sur la demande
+    const corps = [
+      'Restaurant bloqué : ' + nom + ' (identifiant ' + code + ')',
+      'Motif : ' + demande.motif,
+      '',
+      'La licence de ce restaurant a-t-elle été payée ?',
+      '',
+      'Répondre en un clic :',
+      '  • Oui, envoyer le code d\'activation : ' + await lienAction(ref.key, 'activer'),
+      '  • Non, refuser la demande : ' + await lienAction(ref.key, 'refuser'),
+      '',
+      'Ou ouvrir simplement la demande : ' + location.href.split('#')[0] + '#/licence/' + ref.key,
+      '',
+      'Chaque lien demande votre mot de passe concepteur avant d\'agir :',
+      'la page web du restaurant reste consultable 24 heures, puis se ferme.',
+      '',
+      '— AGR, espace concepteur',
+    ].join('\n');
+
+    let resultat = { envoye: false };
+    if((compteMailConcepteur || {}).email){
+      resultat = await envoyerMail(compteMailConcepteur.email,
+        'AGR — licence bloquée : ' + nom, corps);
+    }
+    await agrSet('agr_licences_demandes/' + ref.key + '/mailConcepteur',
+                 resultat.envoye ? 'envoye' : 'a_envoyer');
+    return { id: ref.key, codeLicence, resultat };
+  }
+
+  // ---------------------------------------------------------------
+  // Confirmation par le concepteur
+  // ---------------------------------------------------------------
+  let demandesLicence = [];
+
+  async function chargerVueMail(){
+    await chargerCompteMail();
+    const m = compteMailConcepteur || {};
+    document.getElementById('cdbMailAdresse').value = m.email || (concepteurConnecte || {}).email || '';
+    document.getElementById('cdbMailExpediteur').value = m.expediteur || '';
+    document.getElementById('cdbMailService').value = m.emailjsService || '';
+    document.getElementById('cdbMailTemplate').value = m.emailjsTemplate || '';
+    document.getElementById('cdbMailCle').value = m.emailjsCle || '';
+
+    const note = document.getElementById('cdbMailNote');
+    note.style.color = '#64748b';
+    note.textContent = mailConfigure()
+      ? 'Envoi automatique actif : les alertes et les codes partent sans intervention.'
+      : "Envoi automatique inactif : les messages s'ouvrent dans votre logiciel de messagerie et sur WhatsApp.";
+    chargerDemandesLicence();
+  }
+
+  async function enregistrerCompteMail(){
+    const note = document.getElementById('cdbMailNote');
+    const email = document.getElementById('cdbMailAdresse').value.trim();
+    if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+      note.style.color = '#f87171';
+      note.textContent = 'Indiquez une adresse email valide.';
+      return;
+    }
+    try {
+      await agrSet('agr_platform_mail', {
+        email,
+        expediteur: document.getElementById('cdbMailExpediteur').value.trim(),
+        emailjsService: document.getElementById('cdbMailService').value.trim(),
+        emailjsTemplate: document.getElementById('cdbMailTemplate').value.trim(),
+        emailjsCle: document.getElementById('cdbMailCle').value.trim(),
+        majLe: Date.now(),
+      });
+      compteMailConcepteur = null;
+      await chargerVueMail();
+      const note2 = document.getElementById('cdbMailNote');
+      note2.style.color = '#4ade80';
+      note2.textContent = 'Compte mail enregistré. Les alertes de licence partiront vers ' + email + '.';
+    } catch(e){
+      note.style.color = '#f87171';
+      note.textContent = "Enregistrement impossible.";
+    }
+  }
+
+  async function testerCompteMail(){
+    const note = document.getElementById('cdbMailNote');
+    await chargerCompteMail();
+    const m = compteMailConcepteur || {};
+    if(!m.email){ note.style.color = '#f87171'; note.textContent = 'Enregistrez d\'abord votre adresse email.'; return; }
+
+    const r = await envoyerMail(m.email, 'AGR — test de configuration',
+      'Ceci est un message de test envoyé depuis votre espace concepteur AGR.\n' +
+      'Si vous le recevez, les alertes de licence vous parviendront bien.');
+    note.style.color = r.envoye ? '#4ade80' : '#fbbf24';
+    note.textContent = r.envoye
+      ? 'Email de test envoyé à ' + m.email + '.'
+      : "Envoi automatique indisponible : le message a été ouvert dans votre logiciel de messagerie.";
+  }
+
+  async function chargerDemandesLicence(){
+    const body = document.getElementById('cdbDemandesBody');
+    if(!body) return;
+    try {
+      const d = await agrGet('agr_licences_demandes') || {};
+      demandesLicence = Object.entries(d).map(([id, v]) => Object.assign({ id }, v))
+                              .sort((a,b) => (b.dateOuverture||0) - (a.dateOuverture||0));
+      if(!demandesLicence.length){
+        body.innerHTML = '<tr><td colspan="6" class="cdb-empty">Aucune demande de déblocage.</td></tr>';
+        return;
+      }
+      const etats = {
+        attente_confirmation:'Paiement à confirmer', paiement_confirme:'Paiement confirmé',
+        code_envoye:'Code envoyé', validee:'Débloqué', refusee:'Refusée',
+      };
+      body.innerHTML = demandesLicence.map(x => `
+        <tr>
+          <td>${new Date(x.dateOuverture||0).toLocaleDateString('fr-FR')}</td>
+          <td><span class="cdb-code">${echapper(x.code || '')}</span><div class="cdb-sub">${echapper(x.nomRestaurant || '')}</div></td>
+          <td>${echapper(x.emailRestaurant || '—')}<div class="cdb-sub">${echapper(x.whatsappRestaurant || '')}</div></td>
+          <td>${echapper(x.motif || '')}</td>
+          <td><span class="cdb-badge ${x.statut === 'validee' ? 'actif' : (x.statut === 'refusee' ? 'bloque' : 'essai')}">${etats[x.statut] || x.statut}</span>
+            ${x.tentatives ? `<div class="cdb-sub">${x.tentatives} tentative(s)</div>` : ''}</td>
+          <td><div class="cdb-act">
+            ${x.statut === 'attente_confirmation'
+              ? `<button class="cdb-btn ok" onclick="confirmerPaiementLicence('${x.id}')">Payée</button>
+                 <button class="cdb-btn danger" onclick="refuserDemandeLicence('${x.id}')">Non payée</button>`
+              : (['paiement_confirme','code_envoye'].includes(x.statut)
+                  ? `<button class="cdb-btn" onclick="renvoyerCodeLicence('${x.id}')">Renvoyer le code</button>`
+                  : '<span class="cdb-sub">Traitée</span>')}
+          </div></td>
+        </tr>`).join('');
+    } catch(e){
+      body.innerHTML = '<tr><td colspan="6" class="cdb-empty">Impossible de charger les demandes.</td></tr>';
+    }
+  }
+
+  // Le concepteur confirme le paiement : le code part au restaurant
+  async function confirmerPaiementLicence(id){
+    const d = demandesLicence.find(x => x.id === id);
+    if(!d) return;
+    if(!confirm('Confirmer que ' + d.nomRestaurant + ' a bien réglé sa licence ?\n' +
+                'Le code de déblocage lui sera envoyé.')) return;
+    await envoyerCodeAuRestaurant(id, true);
+  }
+
+  async function renvoyerCodeLicence(id){ await envoyerCodeAuRestaurant(id, false); }
+
+  // Un nouveau code est engendré à chaque envoi : un ancien code
+  // intercepté ne sert plus à rien.
+  async function envoyerCodeAuRestaurant(id, premierEnvoi){
+    const d = demandesLicence.find(x => x.id === id);
+    const note = document.getElementById('cdbDemandesNote');
+    if(!d) return;
+    await chargerCompteMail();
+
+    try {
+      const codeLicence = engendrerCodeLicence();
+      await agrSet('agr_licences_demandes/' + id + '/codeHash', await empreinte(normaliserCode(codeLicence)));
+      await agrSet('agr_licences_demandes/' + id + '/statut', 'code_envoye');
+      await agrSet('agr_licences_demandes/' + id + '/tentatives', 0);
+      await agrSet('agr_licences_demandes/' + id + '/dateCode', Date.now());
+      if(premierEnvoi) await agrSet('agr_licences_demandes/' + id + '/paiementConfirmeLe', Date.now());
+
+      const corps = [
+        'Bonjour ' + d.nomRestaurant + ',',
+        '',
+        'Votre paiement de licence a été confirmé.',
+        'Voici votre code de déblocage :',
+        '',
+        '    ' + codeLicence,
+        '',
+        'Saisissez-le dans votre application, onglet Licence (ou sur l\'écran de blocage)',
+        'pour réactiver votre restaurant. Ce code est à usage unique.',
+        '',
+        '— AGR, espace concepteur',
+      ].join('\n');
+
+      let etatMail = 'non_envoye';
+      if(d.emailRestaurant){
+        const r = await envoyerMail(d.emailRestaurant, 'AGR — votre code de licence', corps);
+        etatMail = r.envoye ? 'envoye' : 'prepare';
+      }
+      await agrSet('agr_licences_demandes/' + id + '/mailRestaurant', etatMail);
+
+      // WhatsApp : ouverture de la conversation pré-remplie
+      const tel = String(d.whatsappRestaurant || '').replace(/[^0-9]/g, '');
+      if(tel) window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(corps), '_blank');
+
+      d.statut = 'code_envoye';
+      chargerDemandesLicence();
+
+      note.style.color = '#4ade80';
+      note.innerHTML = 'Code engendré : <strong>' + codeLicence + '</strong>' +
+        (etatMail === 'envoye' ? ' — envoyé par email au restaurant.'
+          : (etatMail === 'prepare' ? ' — message email préparé dans votre logiciel de messagerie.'
+             : ' — aucun email connu pour ce restaurant, transmettez-le vous-même.')) +
+        '<br>Notez-le : il n\'est plus réaffiché ensuite.';
+    } catch(e){
+      note.style.color = '#f87171';
+      note.textContent = "L'envoi du code a échoué.";
+    }
+  }
+
+  async function refuserDemandeLicence(id){
+    const d = demandesLicence.find(x => x.id === id);
+    if(!d) return;
+    const motif = prompt('Motif du refus (transmis au restaurant) :', 'Paiement non constaté');
+    if(motif === null) return;
+    try {
+      await agrSet('agr_licences_demandes/' + id + '/statut', 'refusee');
+      await agrSet('agr_licences_demandes/' + id + '/motifRefus', motif || null);
+      d.statut = 'refusee';
+      chargerDemandesLicence();
+    } catch(e){}
+  }
+
+  // ---------------------------------------------------------------
+  // Côté restaurant : saisie du code reçu
+  // ---------------------------------------------------------------
+  const MAX_TENTATIVES_CODE = 5;
+
+  async function validerCodeLicence(codeSaisi, tenantCode, afficher){
+    const saisi = normaliserCode(codeSaisi);
+    if(saisi.length < 8) return afficher('Le code saisi est incomplet.', false);
+
+    try {
+      const toutes = await agrGet('agr_licences_demandes') || {};
+      const entree = Object.entries(toutes)
+        .filter(([, d]) => d.code === tenantCode && ['code_envoye','paiement_confirme'].includes(d.statut))
+        .sort((a,b) => (b[1].dateCode||0) - (a[1].dateCode||0))[0];
+
+      if(!entree)
+        return afficher("Aucun code n'est actif pour ce restaurant. Déclarez d'abord votre paiement, " +
+                        'le concepteur vous enverra un code.', false);
+
+      const [id, d] = entree;
+      if((d.tentatives || 0) >= MAX_TENTATIVES_CODE)
+        return afficher('Trop de tentatives incorrectes. Contactez le concepteur pour obtenir un nouveau code.', false);
+
+      // Vérification par empreinte : le code n'est jamais stocké en clair
+      if(d.codeHash !== await empreinte(saisi)){
+        const n = (d.tentatives || 0) + 1;
+        await agrSet('agr_licences_demandes/' + id + '/tentatives', n);
+        return afficher('Code incorrect — la licence n\'est pas validée. ' +
+                        'Tentative ' + n + ' sur ' + MAX_TENTATIVES_CODE + '.', false);
+      }
+
+      // Code correct : déblocage effectif
+      const jours = d.joursAccordes || 30;
+      const jusqu = await prolongerLicenceRestaurant(tenantCode, jours);
+      await agrSet('agr_licences_demandes/' + id + '/statut', 'validee');
+      await agrSet('agr_licences_demandes/' + id + '/valideeLe', Date.now());
+      await agrSet('agr_licences_demandes/' + id + '/codeHash', null);   // code consommé
+
+      afficher('Code accepté. Votre restaurant est réactivé jusqu\'au ' +
+               new Date(jusqu).toLocaleDateString('fr-FR') + '.', true);
+      return true;
+    } catch(e){
+      afficher('Vérification impossible — vérifiez votre connexion.', false);
+    }
+  }
+
+  async function soumettreCodeLicence(){
+    const saisi = document.getElementById('licenceCodeInput').value;
+    await validerCodeLicence(saisi, currentTenantId, (msg, ok) => {
+      showBanner(ok ? 'licenceSuccess' : 'licenceError', msg);
+      if(ok){ document.getElementById('licenceCodeInput').value = ''; loadLicenceInfo(); }
+    });
+  }
+
+  async function soumettreCodeBlocage(){
+    if(!tenantBloque) return showBanner('blockedError', 'Session expirée — reconnectez-vous.');
+    const saisi = document.getElementById('blockedCodeInput').value;
+    await validerCodeLicence(saisi, tenantBloque.code, (msg, ok) => {
+      showBanner(ok ? 'blockedSuccess' : 'blockedError', msg);
+      if(ok) document.getElementById('blockedCodeInput').value = '';
+    });
   }
 
   // ===============================================================
@@ -5438,6 +6641,7 @@
     const nouvelle = base + (jours || 30) * 24 * 60 * 60 * 1000;
     await agrSet('agr_tenants/' + code + '/info/dateExpiration', nouvelle);
     await agrSet('agr_tenants/' + code + '/info/statut', 'actif');
+    await agrSet('agr_tenants/' + code + '/info/dateBlocage', null);
 
     // La page web publique redevient accessible
     try {
@@ -5599,6 +6803,7 @@
               <button class="cdb-btn ${bloque ? 'ok' : 'danger'}" onclick="cdbToggleBloc('${r.code}')">
                 ${bloque ? 'Débloquer' : 'Bloquer'}
               </button>
+              <button class="cdb-btn" onclick="declencherActivation('${r.code}')" title="Engendrer et envoyer un code d'activation">Code</button>
             </div>
           </td>
         </tr>`;
@@ -5642,6 +6847,23 @@
     try {
       await agrSet('agr_tenants/' + code + '/info/statut', statut);
       r.info.statut = statut;
+      // Horodatage du blocage : c'est lui qui fait courir le sursis de 24 h
+      // pendant lequel la page web reste consultable.
+      await agrSet('agr_tenants/' + code + '/info/dateBlocage', statut === 'bloque' ? Date.now() : null);
+      r.info.dateBlocage = statut === 'bloque' ? Date.now() : null;
+
+      // Le blocage ouvre une demande de déblocage et prévient le concepteur
+      if(statut === 'bloque'){
+        try {
+          const demande = await ouvrirDemandeLicence(code, r.info,
+                            'Blocage décidé depuis l\'espace concepteur');
+          document.getElementById('conceptStatsNote').innerHTML =
+            'Demande de déblocage ouverte pour ' + code + '. ' +
+            (demande.resultat.envoye
+              ? 'Un email vous a été envoyé pour confirmer le paiement.'
+              : 'Le message de confirmation a été préparé dans votre messagerie.');
+        } catch(e){}
+      }
 
       // La page web publique suit immédiatement le statut du restaurant
       try {
@@ -5743,7 +6965,17 @@
       // Blocage automatique si la date d'expiration est dépassée
       if(info.statut !== 'bloque' && info.dateExpiration && Date.now() > info.dateExpiration){
         await agrSet('agr_tenants/' + tenantCode + '/info/statut', 'bloque');
+        // Le sursis part de l'expiration, pas du moment où l'on s'en aperçoit
+        await agrSet('agr_tenants/' + tenantCode + '/info/dateBlocage', info.dateExpiration);
         info.statut = 'bloque';
+        info.dateBlocage = info.dateExpiration;
+        // Le concepteur est prévenu, sauf si une demande est déjà ouverte
+        try {
+          const toutes = await agrGet('agr_licences_demandes') || {};
+          const dejaOuverte = Object.values(toutes).some(d =>
+            d.code === tenantCode && !['validee','refusee'].includes(d.statut));
+          if(!dejaOuverte) await ouvrirDemandeLicence(tenantCode, info, 'Licence expirée');
+        } catch(e){}
       }
 
       const users = await agrGet('agr_tenants/' + tenantCode + '/users') || {};
@@ -5817,7 +7049,11 @@
       // pré-rempli avec des données de démonstration.
       await agrSet('agr_tenants/' + code + '/info', {
         nomRestaurant, ville, adresse, telephone,
-        email: dgEmail, nombreTables, logo,
+        email: dgEmail,
+        // Adresse de facturation : c'est elle qui recevra les codes de licence
+        emailFacturation: document.getElementById('regEmailFacturation').value.trim() || dgEmail,
+        whatsapp: document.getElementById('regWhatsapp').value.replace(/[^0-9]/g, '') || null,
+        nombreTables, logo,
         statut: 'essai',
         dateCreation: now,
         dateExpiration: now + 14 * 24 * 60 * 60 * 1000, // essai de 14 jours
@@ -6417,6 +7653,8 @@
         : '<option value="">Aucun plat au menu</option>';
 
       renderServiceDuJour();
+      ecouterTickets();
+      renderPretsAServir();
     } catch(e){
       showBanner('serviceError', 'Impossible de charger les données du service.');
     }
@@ -6516,6 +7754,8 @@
         : '<option value="">Aucun plat au menu</option>';
       encPrixParDefaut();
       renderEncaissementsDuJour();
+      ecouterTickets();
+      renderTicketsAEncaisser();
     } catch(e){
       showBanner('encaissementError', 'Impossible de charger le menu.');
     }
@@ -6628,6 +7868,7 @@
   // Chaque restaurant dispose de sa propre page publique, accessible
   // par un lien direct contenant son code (…/index.html#/r/CODE).
   // ===============================================================
+  const MAX_PHOTOS_WEB = 30;     // galerie de la page web
   let webImages = [];            // photos en base64
   let webCouverture = 0;         // index de la photo d'accueil
   let webLogoEnAttente = null;   // nouveau logo pas encore enregistré
@@ -6658,6 +7899,15 @@
   }
 
   // Transforme un nom en adresse web lisible : « Le Gourmet » → « le-gourmet »
+  // Sélection des photos envoyées à l'index public (jamais toute la galerie :
+  // l'index doit rester léger, il est lu à chaque ouverture de l'accueil).
+  function photosVitrineAccueil(){
+    if(!webImages.length) return [];
+    const couverture = webImages[webCouverture] || webImages[0];
+    const autres = webImages.filter(x => x !== couverture);
+    return [couverture].concat(autres.slice(0, 2));
+  }
+
   function normaliserSlug(txt){
     return (txt || '')
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -6718,7 +7968,7 @@
   function renderWebGallery(){
     const g = document.getElementById('webGallery');
     document.getElementById('webImagesNote').textContent = webImages.length
-      ? webImages.length + ' photo(s) sur 8 — la photo d\'accueil est encadrée en doré.'
+      ? webImages.length + ' photo(s) sur ' + MAX_PHOTOS_WEB + ' — la photo d\'accueil est encadrée en doré.'
       : 'Aucune photo pour l\'instant.';
     g.innerHTML = webImages.map((src, i) => `
       <div class="web-thumb" style="${i === webCouverture ? 'border-color:var(--gold); box-shadow:0 0 0 2px rgba(201,162,39,0.35);' : ''}">
@@ -6767,8 +8017,8 @@
     showBanner('webError', null);
 
     for(const f of fichiers){
-      if(webImages.length >= 8){
-        showBanner('webError', 'Limite de 8 photos atteinte — supprimez-en une avant d\'en ajouter.');
+      if(webImages.length >= MAX_PHOTOS_WEB){
+        showBanner('webError', 'Limite de ' + MAX_PHOTOS_WEB + ' photos atteinte — supprimez-en une avant d\'en ajouter.');
         break;
       }
       try { webImages.push(await fileToResizedBase64(f, 900)); } catch(e){ /* image ignorée */ }
@@ -6850,6 +8100,9 @@
         logo: webInfoRestaurant.logo || null,
         slogan: document.getElementById('webSlogan').value.trim(),
         motsCles: document.getElementById('webMotsCles').value.trim(),
+        // Quelques photos alimentent le défilé de la page d'accueil :
+        // la photo d'accueil d'abord, puis deux autres au hasard.
+        photos: photosVitrineAccueil(),
         actif,
         bloque: webInfoRestaurant.statut === 'bloque',
         misAJourLe: Date.now(),
@@ -7305,6 +8558,540 @@
     setTimeout(() => el.remove(), 12000);
   }
 
+  // ===============================================================
+  // CIRCUIT DE COMMANDE : salle → cuisine → service → caisse
+  // Un « ticket » suit la commande de bout en bout. Les états :
+  //   recue → preparation → prete → servie (ou livree) → encaissee
+  // Les commandes en ligne validées rejoignent la même file.
+  // ===============================================================
+  const ETATS_TICKET = {
+    recue:      { libelle:'Reçue',           suivant:'preparation' },
+    preparation:{ libelle:'En préparation',  suivant:'prete' },
+    prete:      { libelle:'Prête',           suivant:'servie' },
+    servie:     { libelle:'Servie',          suivant:'encaissee' },
+    livree:     { libelle:'Livrée',          suivant:'encaissee' },
+    encaissee:  { libelle:'Encaissée',       suivant:null },
+    annulee:    { libelle:'Annulée',         suivant:null },
+  };
+
+  let panierSalle = {};        // { produitId: quantité }
+  let ticketsCourants = [];    // tickets chargés
+  let ecouteTickets = null;    // abonnement temps réel
+  let derniersTicketsVus = 0;
+
+  function cheminTickets(){ return 'agr_tenants/' + currentTenantId + '/tickets'; }
+
+  async function numeroTicket(){
+    const chemin = 'agr_tenants/' + currentTenantId + '/compteurs/tickets';
+    let n = 0;
+    try { n = Number(await agrGet(chemin)) || 0; } catch(e){}
+    const suivant = n + 1;
+    try { await agrSet(chemin, suivant); } catch(e){}
+    const d = new Date();
+    return 'T' + String(d.getDate()).padStart(2,'0') +
+           String(d.getMonth()+1).padStart(2,'0') + '-' + String(suivant).padStart(3,'0');
+  }
+
+  // ---------------------------------------------------------------
+  // Prise de commande en salle
+  // ---------------------------------------------------------------
+  async function loadSalleSection(){
+    if(!currentTenantId) return;
+    showBanner('salleError', null);
+    showBanner('salleSuccess', null);
+    try {
+      const base = 'agr_tenants/' + currentTenantId + '/';
+      const [info, produits] = await Promise.all([agrGet(base + 'info'), agrGet(base + 'produits')]);
+
+      const nbTables = (info || {}).nombreTables || 0;
+      const options = [];
+      for(let i = 1; i <= nbTables; i++) options.push('<option value="Table ' + i + '">Table ' + i + '</option>');
+      options.push('<option value="À emporter">À emporter</option>', '<option value="Comptoir">Comptoir</option>');
+      document.getElementById('salleTable').innerHTML = options.join('');
+
+      menuSalle = Object.entries(produits || {})
+        .map(([id, p]) => Object.assign({ id }, p))
+        .filter(p => p.disponible !== false);
+      document.getElementById('salleChoixPlat').innerHTML = menuSalle.length
+        ? menuSalle.map(p => `<option value="${p.id}">${echapper(p.nom)} — ${Number(p.prixVente||0).toLocaleString('fr-FR')} GNF</option>`).join('')
+        : '<option value="">Aucun plat au menu</option>';
+
+      renderPanierSalle();
+      ecouterTickets();
+    } catch(e){
+      showBanner('salleError', 'Impossible de charger le menu et les tables.');
+    }
+  }
+
+  let menuSalle = [];
+
+  function ajouterPlatSalle(){
+    const id = document.getElementById('salleChoixPlat').value;
+    const q = parseInt(document.getElementById('salleChoixQte').value, 10) || 1;
+    if(!id) return;
+    panierSalle[id] = (panierSalle[id] || 0) + Math.max(1, q);
+    document.getElementById('salleChoixQte').value = 1;
+    renderPanierSalle();
+  }
+
+  function changerQuantiteSalle(id, delta){
+    panierSalle[id] = (panierSalle[id] || 0) + delta;
+    if(panierSalle[id] <= 0) delete panierSalle[id];
+    renderPanierSalle();
+  }
+
+  function viderCommandeSalle(){
+    panierSalle = {};
+    document.getElementById('salleNote').value = '';
+    document.getElementById('salleNom').value = '';
+    document.getElementById('sallePrenom').value = '';
+    document.getElementById('salleCouverts').value = '';
+    renderPanierSalle();
+  }
+
+  function totalPanierSalle(){
+    return Object.entries(panierSalle).reduce((s,[id,q]) => {
+      const p = menuSalle.find(m => m.id === id);
+      return s + (p ? (p.prixVente || 0) * q : 0);
+    }, 0);
+  }
+
+  function renderPanierSalle(){
+    const el = document.getElementById('salleLignes');
+    const lignes = Object.entries(panierSalle).filter(([,q]) => q > 0);
+
+    if(!lignes.length){
+      el.innerHTML = '<div class="cart-empty">Aucun plat choisi pour l\'instant.</div>';
+    } else {
+      el.innerHTML = `<table class="fiche-table">
+        <thead><tr><th>Plat</th><th>Qté</th><th style="text-align:right;">P. unitaire</th><th style="text-align:right;">Montant</th><th></th></tr></thead>
+        <tbody>${lignes.map(([id,q]) => {
+          const p = menuSalle.find(m => m.id === id) || {};
+          const pu = p.prixVente || 0;
+          return `<tr>
+            <td>${echapper(p.nom || '—')}</td>
+            <td><span class="fiche-qte">
+              <button onclick="changerQuantiteSalle('${id}',-1)">−</button><span>${q}</span>
+              <button onclick="changerQuantiteSalle('${id}',1)">+</button></span></td>
+            <td class="num">${pu.toLocaleString('fr-FR')}</td>
+            <td class="num">${(pu*q).toLocaleString('fr-FR')}</td>
+            <td><button class="fiche-supp" onclick="changerQuantiteSalle('${id}',-999)">&times;</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`;
+    }
+    document.getElementById('salleTotal').textContent = fmtGNF(totalPanierSalle());
+  }
+
+  // Envoi en cuisine : le ticket est créé puis imprimé
+  async function envoyerCommandeCuisine(){
+    showBanner('salleError', null);
+    showBanner('salleSuccess', null);
+    const lignes = Object.entries(panierSalle).filter(([,q]) => q > 0);
+    if(!lignes.length) return showBanner('salleError', 'Ajoutez au moins un plat avant d\'envoyer en cuisine.');
+
+    const plats = {};
+    let nbPlats = 0;
+    lignes.forEach(([id, q]) => {
+      const p = menuSalle.find(m => m.id === id);
+      if(!p) return;
+      nbPlats += q;
+      plats[id] = { nom: p.nom, qty: q, prix: p.prixVente || 0 };
+    });
+
+    const nom = document.getElementById('salleNom').value.trim();
+    const prenom = document.getElementById('sallePrenom').value.trim();
+
+    try {
+      const numero = await numeroTicket();
+      const ticket = {
+        numero,
+        source: 'salle',
+        table: document.getElementById('salleTable').value,
+        couverts: parseInt(document.getElementById('salleCouverts').value, 10) || null,
+        clientNom: [prenom, nom].filter(Boolean).join(' ') || null,
+        plats, platsVendus: nbPlats,
+        total: totalPanierSalle(),
+        note: document.getElementById('salleNote').value.trim() || null,
+        statut: 'recue',
+        parServeur: nomUtilisateurCourant(),
+        dateRecue: Date.now(),
+      };
+
+      const ref = window._agrPush(agrRef(cheminTickets()));
+      await window._agrSet(ref, ticket);
+      await recordAudit('Commande envoyée en cuisine', numero + ' — ' + ticket.table);
+
+      if(document.getElementById('salleImpressionAuto').checked){
+        imprimerTicketCuisine(Object.assign({ id: ref.key }, ticket));
+      }
+      showBanner('salleSuccess', 'Commande ' + numero + ' envoyée en cuisine pour ' + ticket.table + '.');
+      viderCommandeSalle();
+    } catch(e){
+      showBanner('salleError', "La commande n'a pas pu être envoyée — vérifiez la connexion.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Suivi temps réel des tickets (cuisine, service, salle, caisse)
+  // ---------------------------------------------------------------
+  function ecouterTickets(){
+    if(ecouteTickets || !currentTenantId || !window._agrReady) {
+      if(!window._agrReady) setTimeout(ecouterTickets, 400);
+      return;
+    }
+    ecouteTickets = true;
+    window._agrOnValue(agrRef(cheminTickets()), (snap) => {
+      const v = snap.val() || {};
+      ticketsCourants = Object.entries(v).map(([id, t]) => Object.assign({ id }, t))
+                              .sort((a,b) => (a.dateRecue||0) - (b.dateRecue||0));
+      majBadgesTickets();
+      rafraichirVuesTickets();
+    });
+  }
+
+  function ticketsActifs(){
+    return ticketsCourants.filter(t => ['recue','preparation'].includes(t.statut));
+  }
+  function ticketsPrets(){
+    return ticketsCourants.filter(t => t.statut === 'prete');
+  }
+
+  function majBadgesTickets(){
+    const cuisine = ticketsActifs().length;
+    const prets = ticketsPrets().length;
+    const bc = document.getElementById('badgeCuisine');
+    const bs = document.getElementById('badgeService');
+    if(bc){ bc.textContent = cuisine; bc.style.display = cuisine ? 'inline-block' : 'none'; }
+    if(bs){ bs.textContent = prets; bs.style.display = prets ? 'inline-block' : 'none'; }
+
+    // Signal sonore et notification quand une commande arrive en cuisine
+    const son = document.getElementById('cuisineSon');
+    if(cuisine > derniersTicketsVus && derniersTicketsVus !== 0 && son && son.checked) signalSonore();
+    derniersTicketsVus = cuisine;
+  }
+
+  // Bip court généré sans fichier audio
+  function signalSonore(){
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 880; o.type = 'sine';
+      g.gain.setValueAtTime(0.15, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+      o.start(); o.stop(ctx.currentTime + 0.45);
+    } catch(e){}
+  }
+
+  function rafraichirVuesTickets(){
+    if(document.getElementById('section-cuisine').style.display === 'block') renderCuisine();
+    if(document.getElementById('section-service').style.display === 'block') renderPretsAServir();
+    if(document.getElementById('section-salle').style.display === 'block') renderSalleEnCours();
+    if(document.getElementById('section-encaissement').style.display === 'block') renderTicketsAEncaisser();
+  }
+
+  function minutesDepuis(ts){
+    return Math.floor((Date.now() - (ts || Date.now())) / 60000);
+  }
+
+  function resumePlats(t){
+    return Object.values(t.plats || {}).map(p => p.qty + '× ' + p.nom).join(', ');
+  }
+
+  // ---------------------------------------------------------------
+  // Écran cuisine
+  // ---------------------------------------------------------------
+  async function loadCuisine(){
+    if(!currentTenantId) return;
+    showBanner('cuisineError', null);
+    ecouterTickets();
+    renderCuisine();
+    if(!window._agrReady) setTimeout(renderCuisine, 800);
+  }
+
+  function renderCuisine(){
+    const file = document.getElementById('cuisineFile');
+    const actifs = ticketsActifs();
+    document.getElementById('cuisineSub').textContent = actifs.length
+      ? actifs.length + ' commande(s) à préparer.'
+      : 'Aucune commande en attente — la file est vide.';
+
+    if(!actifs.length){
+      file.innerHTML = '<div class="kds-vide">Aucune commande en attente.<br>Les nouvelles commandes apparaissent ici automatiquement.</div>';
+    } else {
+      file.innerHTML = actifs.map(t => {
+        const min = minutesDepuis(t.dateRecue);
+        const urgent = min >= 20;
+        const enCours = t.statut === 'preparation';
+        return `<div class="kds-carte ${enCours ? 'preparation' : ''} ${urgent ? 'urgent' : ''}">
+          <div class="kds-tete">
+            <div>
+              <div class="kds-num">${echapper(t.numero || '')} <span class="kds-origine ${t.source === 'salle' ? 'salle' : 'enligne'}">${t.source === 'salle' ? 'Salle' : 'En ligne'}</span></div>
+              <div class="kds-table">${echapper(t.table || (t.source === 'salle' ? 'Table' : 'Livraison'))}</div>
+              ${t.clientNom ? `<div style="font-size:11.5px; color:var(--text-dim);">${echapper(t.clientNom)}</div>` : ''}
+            </div>
+            <div class="kds-chrono ${urgent ? 'urgent' : ''}">${min} min</div>
+          </div>
+          <ul class="kds-plats">
+            ${Object.values(t.plats || {}).map(p => `<li><span class="q">${p.qty}×</span><span>${echapper(p.nom)}</span></li>`).join('')}
+          </ul>
+          ${t.note ? `<div class="kds-note">⚠ ${echapper(t.note)}</div>` : ''}
+          <div class="kds-actions">
+            ${enCours
+              ? `<button class="kds-btn done" onclick="marquerTicket('${t.id}','prete')">Préparation terminée</button>`
+              : `<button class="kds-btn start" onclick="marquerTicket('${t.id}','preparation')">Démarrer</button>
+                 <button class="kds-btn done" onclick="marquerTicket('${t.id}','prete')">Prête</button>`}
+            <button class="kds-btn ghost" onclick="imprimerTicketParId('${t.id}')" title="Réimprimer">🖨</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+    renderCuisineFinis();
+  }
+
+  function renderCuisineFinis(){
+    const body = document.getElementById('cuisineFinisBody');
+    const sub = document.getElementById('cuisineFinisSub');
+    if(!body) return;
+    const finis = ticketsCourants
+      .filter(t => t.datePrete && estAujourdhui(t.datePrete))
+      .sort((a,b) => (b.datePrete||0) - (a.datePrete||0));
+
+    if(!finis.length){
+      body.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);">Aucune préparation terminée aujourd\'hui.</td></tr>';
+      sub.textContent = 'Aucune préparation terminée.';
+      return;
+    }
+    const moyenne = Math.round(finis.reduce((s,t) => s + ((t.datePrete - t.dateRecue) / 60000), 0) / finis.length);
+    sub.textContent = finis.length + ' préparation(s) terminée(s) — durée moyenne ' + moyenne + ' min.';
+    body.innerHTML = finis.map(t => `
+      <tr>
+        <td>${echapper(t.numero || '')}</td>
+        <td>${t.source === 'salle' ? echapper(t.table || 'Salle') : 'En ligne'}</td>
+        <td>${echapper(resumePlats(t))}</td>
+        <td>${heureCourte(t.dateRecue)}</td>
+        <td>${heureCourte(t.datePrete)}</td>
+        <td>${Math.round((t.datePrete - t.dateRecue) / 60000)} min</td>
+      </tr>`).join('');
+  }
+
+  // Changement d'état commun à tous les postes
+  async function marquerTicket(id, etat){
+    const t = ticketsCourants.find(x => x.id === id);
+    if(!t) return;
+    const champs = {
+      preparation: 'datePreparation', prete: 'datePrete',
+      servie: 'dateServie', livree: 'dateLivree', encaissee: 'dateEncaissee',
+    };
+    try {
+      await agrSet(cheminTickets() + '/' + id + '/statut', etat);
+      if(champs[etat]) await agrSet(cheminTickets() + '/' + id + '/' + champs[etat], Date.now());
+      await agrSet(cheminTickets() + '/' + id + '/par' + etat, nomUtilisateurCourant());
+      t.statut = etat;
+      if(champs[etat]) t[champs[etat]] = Date.now();
+
+      if(etat === 'prete') afficherToast('Commande prête', t.numero + ' — ' + (t.table || 'à livrer'), () => showSection('service'));
+      await recordAudit('Ticket ' + (ETATS_TICKET[etat] || {}).libelle, t.numero + ' — ' + (t.table || ''));
+      majBadgesTickets();
+      rafraichirVuesTickets();
+    } catch(e){
+      showBanner('cuisineError', "Impossible de mettre à jour ce ticket.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Côté serveur : commandes prêtes à servir
+  // ---------------------------------------------------------------
+  function renderPretsAServir(){
+    const el = document.getElementById('servicePrets');
+    const sub = document.getElementById('servicePretsSub');
+    if(!el) return;
+    const prets = ticketsPrets();
+
+    sub.textContent = prets.length
+      ? prets.length + ' commande(s) prête(s) à servir.'
+      : 'Aucune commande prête pour le moment.';
+
+    if(!prets.length){
+      el.innerHTML = '<div style="font-size:13px; color:var(--text-dim);">La cuisine vous préviendra dès qu\'une commande sera prête.</div>';
+      return;
+    }
+    el.innerHTML = prets.map(t => `
+      <div class="pret-carte">
+        <div>
+          <div class="t">${echapper(t.table || 'Livraison')} · ${echapper(t.numero || '')}</div>
+          <div class="d">${echapper(resumePlats(t))} — prête depuis ${minutesDepuis(t.datePrete)} min</div>
+        </div>
+        <div style="display:flex; gap:7px; flex-wrap:wrap;">
+          ${t.source === 'salle'
+            ? `<button class="btn-primary" style="padding:9px 16px;" onclick="marquerTicket('${t.id}','servie')">Servie au client</button>`
+            : `<button class="btn-primary" style="padding:9px 16px;" onclick="marquerTicket('${t.id}','livree')">Remise au livreur</button>`}
+          <button class="mini-btn" onclick="imprimerTicketParId('${t.id}')">🖨 Ticket</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // ---------------------------------------------------------------
+  // Côté salle : suivi des tables en cours
+  // ---------------------------------------------------------------
+  function renderSalleEnCours(){
+    const el = document.getElementById('salleEnCours');
+    const sub = document.getElementById('salleEnCoursSub');
+    if(!el) return;
+    const enCours = ticketsCourants.filter(t => !['encaissee','annulee'].includes(t.statut));
+
+    sub.textContent = enCours.length ? enCours.length + ' commande(s) en cours.' : 'Aucune commande en cours.';
+    if(!enCours.length){ el.innerHTML = ''; return; }
+
+    const couleur = { recue:'nouvelle', preparation:'nouvelle', prete:'traitee', servie:'traitee', livree:'traitee' };
+    el.innerHTML = enCours.map(t => `
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+                  padding:11px 0; border-bottom:1px solid var(--line);">
+        <div>
+          <strong>${echapper(t.table || 'En ligne')}</strong>
+          <span style="font-family:'IBM Plex Mono',monospace; color:var(--gold-soft); font-size:12px;"> ${echapper(t.numero || '')}</span>
+          <div style="font-size:12px; color:var(--text-dim);">${echapper(resumePlats(t))} · ${fmtGNF(t.total)}</div>
+        </div>
+        <div style="display:flex; gap:7px; align-items:center; flex-wrap:wrap;">
+          <span class="etat-badge ${couleur[t.statut] || 'nouvelle'}">${(ETATS_TICKET[t.statut] || {}).libelle || t.statut}</span>
+          <button class="mini-btn" onclick="imprimerTicketParId('${t.id}')">🖨</button>
+          ${['recue','preparation'].includes(t.statut)
+            ? `<button class="mini-btn" onclick="annulerTicket('${t.id}')">Annuler</button>` : ''}
+        </div>
+      </div>`).join('');
+  }
+
+  async function annulerTicket(id){
+    const t = ticketsCourants.find(x => x.id === id);
+    if(!t || !confirm('Annuler la commande ' + t.numero + ' ?')) return;
+    await marquerTicket(id, 'annulee');
+  }
+
+  // ---------------------------------------------------------------
+  // Côté caisse : tickets servis ou livrés, en attente d'encaissement
+  // ---------------------------------------------------------------
+  function renderTicketsAEncaisser(){
+    const el = document.getElementById('encTickets');
+    const sub = document.getElementById('encTicketsSub');
+    if(!el) return;
+    const aEncaisser = ticketsCourants.filter(t => ['servie','livree'].includes(t.statut));
+
+    sub.textContent = aEncaisser.length
+      ? aEncaisser.length + ' commande(s) à encaisser — ' + fmtGNF(aEncaisser.reduce((s,t) => s + (t.total||0), 0)) + '.'
+      : 'Aucune commande en attente d\'encaissement.';
+
+    if(!aEncaisser.length){ el.innerHTML = ''; return; }
+    el.innerHTML = aEncaisser.map(t => `
+      <div class="pret-carte" style="background:rgba(201,162,39,0.10); border-color:var(--gold);">
+        <div>
+          <div class="t">${echapper(t.table || 'Livraison')} · ${echapper(t.numero || '')}</div>
+          <div class="d">${echapper(resumePlats(t))}</div>
+        </div>
+        <div style="display:flex; gap:9px; align-items:center; flex-wrap:wrap;">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:var(--gold-soft);">${fmtGNF(t.total)}</span>
+          <button class="btn-primary" style="padding:9px 16px;" onclick="encaisserTicket('${t.id}')">Encaisser</button>
+          <button class="mini-btn" onclick="imprimerAdditionTicket('${t.id}')">🖨 Addition</button>
+        </div>
+      </div>`).join('');
+  }
+
+  // L'encaissement crée la recette et l'écriture d'encaissement
+  async function encaisserTicket(id){
+    const t = ticketsCourants.find(x => x.id === id);
+    if(!t) return;
+    const mode = document.getElementById('encMode') ? document.getElementById('encMode').value : 'especes';
+
+    try {
+      await marquerTicket(id, 'encaissee');
+
+      // Recette : créée ici pour les commandes en salle. Pour une commande
+      // en ligne, elle a déjà été enregistrée lors de la validation.
+      if(!t.recetteDejaEnregistree)
+      await window._agrSet(window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/commandes')), {
+        numero: t.numero,
+        origine: t.source === 'salle' ? 'Salle' : 'Commande en ligne',
+        plats: t.plats || {},
+        platsVendus: t.platsVendus || 0,
+        revenu: t.total || 0,
+        mode: t.source === 'salle' ? 'sur_place' : 'livraison',
+        table: t.table || null,
+        clientNom: t.clientNom || null,
+        date: Date.now(),
+      });
+
+      await window._agrSet(window._agrPush(agrRef('agr_tenants/' + currentTenantId + '/encaissements')), {
+        platNom: 'Ticket ' + t.numero,
+        quantite: t.platsVendus || 0,
+        prixUnitaire: t.platsVendus ? Math.round((t.total || 0) / t.platsVendus) : (t.total || 0),
+        montant: t.total || 0,
+        mode,
+        table: t.table || null,
+        par: nomUtilisateurCourant(),
+        parRole: currentRole,
+        date: Date.now(),
+      });
+
+      afficherToast('Encaissement', t.numero + ' — ' + fmtGNF(t.total));
+      renderEncaissementsDuJour();
+    } catch(e){
+      showBanner('encaissementError', "L'encaissement n'a pas pu être enregistré.");
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // Impression : ticket cuisine et addition client
+  // ---------------------------------------------------------------
+  function imprimerTicketParId(id){
+    const t = ticketsCourants.find(x => x.id === id);
+    if(t) imprimerTicketCuisine(t);
+  }
+
+  function imprimerTicketCuisine(t){
+    const plats = Object.values(t.plats || {}).map(p => `
+      <tr><td class="n" style="font-size:17px;">${p.qty} ×</td><td style="font-size:16px;">${echapper(p.nom)}</td></tr>`).join('');
+
+    imprimerDocument(
+      `<div class="ticket">
+        <div class="ticket-tete">
+          <div class="ticket-num">${echapper(t.numero || '')}</div>
+          <div class="ticket-table">${echapper(t.table || (t.source === 'salle' ? 'Salle' : 'LIVRAISON'))}</div>
+          <div class="ticket-meta">
+            ${t.source === 'salle' ? 'Commande en salle' : 'Commande en ligne'}
+            ${t.couverts ? ' · ' + t.couverts + ' couvert(s)' : ''}<br>
+            Reçue le ${new Date(t.dateRecue || Date.now()).toLocaleDateString('fr-FR')} à ${heureCourte(t.dateRecue)}<br>
+            ${t.parServeur ? 'Saisie par ' + echapper(t.parServeur) : ''}
+            ${t.clientNom ? '<br>Client : ' + echapper(t.clientNom) : ''}
+          </div>
+        </div>
+        <table class="ticket-plats">${plats}</table>
+        ${t.note ? `<div class="ticket-note">⚠ ${echapper(t.note)}</div>` : ''}
+        <div class="ticket-pied">
+          ${echapper((infoRestaurant || {}).nomRestaurant || '')} — bon de cuisine
+        </div>
+      </div>`
+    );
+  }
+
+  function imprimerAdditionTicket(id){
+    const t = ticketsCourants.find(x => x.id === id);
+    if(!t) return;
+    const lignes = Object.values(t.plats || {}).map(p =>
+      [p.nom, p.qty, Number(p.prix||0).toLocaleString('fr-FR'), Number((p.prix||0)*p.qty).toLocaleString('fr-FR')]);
+
+    definirFiche('_addition', {
+      sansPeriode: true,
+      titre: 'Addition — ' + (t.numero || ''),
+      colonnes: [{titre:'Plat'},{titre:'Qté',num:true},{titre:'P. unitaire',num:true},{titre:'Montant',num:true}],
+      lignes,
+      totaux: [{ libelle: 'TOTAL À PAYER (GNF)', valeur: Number(t.total||0).toLocaleString('fr-FR') }],
+      note: (t.table || '') + (t.clientNom ? ' · ' + t.clientNom : ''),
+      signatureGauche: 'Le client', signatureDroite: 'Le caissier',
+    });
+    imprimerFiche('_addition', (t.table || '') + ' — ' + dateLongue(t.dateRecue));
+  }
+
+
   // ---------------------------------------------------------------
   // Messages du téléconseiller remontés dans les notifications
   // ---------------------------------------------------------------
@@ -7493,6 +9280,30 @@
       if(c.clientTelephone){
         try { await enregistrerClient(currentTenantId, c.clientNom, c.clientTelephone, c.total || 0); } catch(e){}
       }
+      // La commande rejoint la file de la cuisine : préparation, puis remise
+      // au livreur, puis encaissement. La recette étant déjà enregistrée
+      // ci-dessus, l'encaissement du ticket ne la comptera pas deux fois.
+      try {
+        const numeroT = await numeroTicket();
+        await window._agrSet(window._agrPush(agrRef(cheminTickets())), {
+          numero: numeroT,
+          source: 'enligne',
+          table: c.mode === 'livraison' ? ('Livraison — ' + (c.quartier || c.zone || 'à domicile')) : 'À emporter',
+          clientNom: c.clientNom || null,
+          clientTelephone: c.clientTelephone || null,
+          adresse: [c.quartier, c.adresse].filter(Boolean).join(' — ') || null,
+          plats: c.plats || {},
+          platsVendus: c.platsVendus || 0,
+          total: c.total || 0,
+          note: c.note || null,
+          statut: 'recue',
+          recetteDejaEnregistree: true,
+          commandeEnLigneId: id,
+          parServeur: nomUtilisateurCourant(),
+          dateRecue: Date.now(),
+        });
+      } catch(e){ /* la validation reste acquise même si l'envoi en cuisine échoue */ }
+
       await recordAudit('Commande en ligne validée', (c.numero || id) + ' — ' + fmtGNF(c.total));
 
       Object.assign(c, { statut:'validee', commandeId:ref.key, valideePar:nomUtilisateurCourant() });
@@ -9022,6 +10833,13 @@
         (infoRestaurant || {}).nomRestaurant);
 
       await recordAudit('Paiement de licence déclaré', r.offre.libelle + ' — ' + fmtGNF(r.offre.prix));
+
+      // Le concepteur est prévenu du renouvellement demandé
+      try {
+        await alerterRenouvellement(currentTenantId, infoRestaurant, r.offre,
+          document.getElementById('licenceMode').value, reference, r.auto);
+      } catch(e){}
+
       showBanner('licenceSuccess', r.auto
         ? 'Paiement enregistré. Votre licence court désormais jusqu\'au ' + new Date(r.jusqu).toLocaleDateString('fr-FR') + '.'
         : 'Déclaration enregistrée. Le concepteur la vérifie et votre licence sera prolongée après validation.');
@@ -9074,6 +10892,12 @@
       const r = await enregistrerDeclarationPaiement(
         tenantBloque.code, offreChoisieBloc,
         document.getElementById('blockedMode').value, reference, tenantBloque.nom);
+
+      try {
+        const info = await agrGet('agr_tenants/' + tenantBloque.code + '/info') || {};
+        await alerterRenouvellement(tenantBloque.code, info, r.offre,
+          document.getElementById('blockedMode').value, reference, r.auto);
+      } catch(e){}
 
       showBanner('blockedSuccess', r.auto
         ? 'Licence réactivée jusqu\'au ' + new Date(r.jusqu).toLocaleDateString('fr-FR') +
@@ -9473,6 +11297,10 @@
     document.getElementById('sfDirNote').textContent = 'Ouverture de la page du restaurant…';
   } else {
     showView('home');
+    (function carrouselQuandPret(n){
+      if(!window._agrReady){ if(n < 40) setTimeout(() => carrouselQuandPret(n+1), 200); return; }
+      chargerCarrouselAccueil();
+    })(0);
   }
 
   (function routerQuandPret(essais){
