@@ -1312,6 +1312,13 @@
   }
   .nav-badge.on{display:inline-block;}
 
+  .apercu-global{
+    display:none; position:fixed; inset:0; z-index:600; cursor:zoom-out;
+    background:rgba(0,0,0,0.9); align-items:center; justify-content:center; padding:24px;
+  }
+  .apercu-global.on{display:flex;}
+  .apercu-global img{max-width:94vw; max-height:92vh; border-radius:10px;}
+
   .toast-zone{position:fixed; right:18px; bottom:18px; z-index:520; display:flex; flex-direction:column; gap:10px; max-width:330px;}
   .toast{
     background:var(--surface); border:1px solid var(--gold); border-left:4px solid var(--gold);
@@ -1578,6 +1585,51 @@
     border-top:2px dashed #000; padding-top:9px; text-align:center; font-size:11px;
   }
 
+  /* ===== Facture de licence ===== */
+  #printArea .facture{font-family:'Inter',sans-serif; color:#000;}
+  #printArea .fac-tete{display:flex; justify-content:space-between; gap:24px; margin-bottom:24px;}
+  #printArea .fac-emetteur{font-size:11.5px; line-height:1.65;}
+  #printArea .fac-emetteur .nom{font-size:16px; font-weight:800; margin-bottom:4px;}
+  #printArea .fac-identite{text-align:right; min-width:190px;}
+  #printArea .fac-mot{font-size:26px; font-weight:800; letter-spacing:0.16em; line-height:1;}
+  #printArea .fac-num{font-family:'IBM Plex Mono',monospace; font-size:14px; margin-top:5px;}
+  #printArea .fac-date{font-size:11.5px; margin-top:3px;}
+  #printArea .fac-etat{
+    display:inline-block; margin-top:8px; padding:4px 11px; border:2px solid;
+    border-radius:4px; font-size:10.5px; font-weight:800; letter-spacing:0.06em;
+  }
+  #printArea .fac-client{
+    border:1px solid #999; border-radius:4px; padding:12px 14px;
+    margin-bottom:20px; font-size:12px; line-height:1.6; max-width:60%;
+  }
+  #printArea .fac-lbl{
+    font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em;
+    color:#666; margin-bottom:5px;
+  }
+  #printArea .fac-client .nom{font-size:14px; font-weight:700;}
+  #printArea .fac-code{font-family:'IBM Plex Mono',monospace; font-size:11px; color:#555; margin-top:5px;}
+  #printArea .fac-table{width:100%; border-collapse:collapse; margin-bottom:20px; font-size:12px;}
+  #printArea .fac-table th{
+    background:#f0f0f0; text-align:left; padding:9px 10px; border-bottom:2px solid #000;
+    font-size:10px; text-transform:uppercase; letter-spacing:0.06em;
+  }
+  #printArea .fac-table th.n, #printArea .fac-table td.n{text-align:right; white-space:nowrap;}
+  #printArea .fac-table td{padding:12px 10px; border-bottom:1px solid #ccc; vertical-align:top;}
+  #printArea .fac-detail{font-size:10.5px; color:#555; margin-top:5px; line-height:1.55;}
+  #printArea .fac-bas{display:flex; justify-content:space-between; gap:26px; margin-bottom:18px;}
+  #printArea .fac-reglement{font-size:11.5px; line-height:1.7; flex:1;}
+  #printArea .fac-totaux{min-width:250px;}
+  #printArea .fac-totaux .l{display:flex; justify-content:space-between; font-size:12px; padding:5px 0;}
+  #printArea .fac-net{
+    display:flex; justify-content:space-between; align-items:baseline;
+    border-top:2px solid #000; margin-top:7px; padding-top:9px;
+    font-size:15px; font-weight:800;
+  }
+  #printArea .fac-mention{
+    border:1px dashed #666; padding:9px 12px; font-size:11.5px;
+    text-align:center; margin-bottom:16px;
+  }
+
   @media print{
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
     body{ background:#fff !important; }
@@ -1613,6 +1665,7 @@
 <body>
 
 <div id="printArea"></div>
+<div class="apercu-global" id="apercuGlobal" onclick="fermerApercu()"><img id="apercuGlobalImg" alt=""></div>
 <div class="toast-zone" id="toastZone"></div>
 
 <div class="conn-status" id="connStatus">
@@ -1708,34 +1761,51 @@
       <div class="cdb-onglets">
         <button class="cdb-onglet on" id="cdbOng-restaurants" onclick="cdbOnglet('restaurants')">Restaurants</button>
         <button class="cdb-onglet" id="cdbOng-licences" onclick="cdbOnglet('licences')">Licences &amp; paiements</button>
-        <button class="cdb-onglet" id="cdbOng-mail" onclick="cdbOnglet('mail')">Compte mail &amp; déblocages</button>
+        <button class="cdb-onglet" id="cdbOng-mail" onclick="cdbOnglet('mail')">WhatsApp &amp; déblocages</button>
         <button class="cdb-onglet" id="cdbOng-securite" onclick="cdbOnglet('securite')">Sécurité</button>
       </div>
 
       <!-- ===== Onglet : compte mail et demandes de déblocage ===== -->
       <div id="cdbVue-mail" style="display:none;">
-        <div style="font-weight:700; color:#e2e8f0; margin-bottom:4px;">Votre compte mail</div>
+        <div style="font-weight:700; color:#e2e8f0; margin-bottom:4px;">Vos coordonnées de contact</div>
         <div style="font-size:11.5px; color:#64748b; margin-bottom:12px; line-height:1.7;">
-          Chaque blocage de licence vous est signalé à cette adresse, avec un lien pour confirmer
-          si le restaurant a payé. Pour un envoi automatique, renseignez vos identifiants EmailJS
-          (service gratuit, à créer sur emailjs.com). Sans eux, les messages sont préparés dans
-          votre logiciel de messagerie et sur WhatsApp.
+          Les alertes de licence arrivent d'abord sur <strong>WhatsApp</strong>, plus fiable que l'email.
+          Renseignez au minimum votre numéro. L'email n'est qu'un secours.
         </div>
 
-        <input type="email" id="cdbMailAdresse" placeholder="Votre adresse email (celle qui reçoit les alertes)"
+        <div style="font-size:11.5px; color:#25D366; font-weight:700; margin-bottom:7px;">WhatsApp (canal principal)</div>
+        <input type="text" id="cdbWhatsapp" placeholder="Votre numéro WhatsApp — 224623030403 (indicatif sans +)"
+          style="width:100%; padding:9px 11px; margin-bottom:7px; background:#060d24; border:1px solid rgba(37,197,94,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <input type="text" id="cdbCallmebot" placeholder="Clé CallMeBot (facultatif — pour un envoi 100% automatique)"
+          style="width:100%; padding:9px 11px; margin-bottom:6px; background:#060d24; border:1px solid rgba(37,197,94,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <div style="font-size:11px; color:#64748b; margin-bottom:14px; line-height:1.7;">
+          Pour obtenir la clé : envoyez <strong>« I allow callmebot to send me messages »</strong> au
+          <strong>+34 644 51 95 23</strong> depuis votre WhatsApp ; le robot vous répond avec votre clé.
+          Sans clé, WhatsApp s'ouvre pré-rempli et il vous suffit d'appuyer sur Envoyer.
+        </div>
+
+        <div style="font-size:11.5px; color:#94a3b8; font-weight:700; margin-bottom:7px;">Email (secours)</div>
+        <input type="email" id="cdbMailAdresse" placeholder="Votre adresse email (facultatif)"
           style="width:100%; padding:9px 11px; margin-bottom:7px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
         <input type="text" id="cdbMailExpediteur" placeholder="Nom affiché comme expéditeur (ex : AGR — Souleymane Diallo)"
+          style="width:100%; padding:9px 11px; margin-bottom:10px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <div style="font-size:11.5px; color:#94a3b8; margin:14px 0 7px;">Identité qui figure sur les factures de licence</div>
+        <input type="text" id="cdbRaisonSociale" placeholder="Raison sociale (ex : NEINDI MULTI-SERVICES)"
+          style="width:100%; padding:9px 11px; margin-bottom:6px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <input type="text" id="cdbAdresseFacturation" placeholder="Adresse (ex : Damakania, Kindia — Guinée)"
+          style="width:100%; padding:9px 11px; margin-bottom:6px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
+        <input type="text" id="cdbNif" placeholder="NIF / RCCM (facultatif)"
           style="width:100%; padding:9px 11px; margin-bottom:12px; background:#060d24; border:1px solid rgba(37,99,235,0.35); border-radius:6px; color:#e2e8f0; font-size:12px; box-sizing:border-box;">
 
-        <div style="font-size:11.5px; color:#94a3b8; margin-bottom:7px;">Envoi automatique (EmailJS) — facultatif</div>
         <div class="cdb-toolbar">
-          <input type="text" id="cdbMailService" placeholder="service_id">
+          <input type="text" id="cdbMailService" placeholder="EmailJS service_id">
           <input type="text" id="cdbMailTemplate" placeholder="template_id">
           <input type="text" id="cdbMailCle" placeholder="public key">
         </div>
         <div style="display:flex; gap:9px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
-          <button class="cdb-btn ok" onclick="enregistrerCompteMail()">Enregistrer le compte mail</button>
-          <button class="cdb-btn" onclick="testerCompteMail()">Envoyer un email de test</button>
+          <button class="cdb-btn ok" onclick="enregistrerCompteMail()">Enregistrer mes coordonnées</button>
+          <button class="cdb-btn" onclick="testerWhatsapp()">Test WhatsApp</button>
+          <button class="cdb-btn" onclick="testerCompteMail()">Test email</button>
         </div>
         <div id="cdbMailNote" style="font-size:11.5px; color:#64748b; margin-bottom:18px; line-height:1.7;"></div>
 
@@ -1747,6 +1817,12 @@
           </table>
         </div>
         <div id="cdbDemandesNote" style="font-size:11.5px; color:#64748b; margin-top:10px; line-height:1.7;"></div>
+
+        <div style="font-weight:700; color:#e2e8f0; margin:18px 0 6px;">Messages en attente d'envoi</div>
+        <div style="font-size:11.5px; color:#64748b; margin-bottom:10px;">
+          Alertes qui n'ont pas pu partir automatiquement — rien n'est perdu, vous pouvez les envoyer d'ici.
+        </div>
+        <div id="cdbOutbox"></div>
       </div>
 
       <!-- ===== Onglet : tarifs de licence et déclarations de paiement ===== -->
@@ -1788,7 +1864,7 @@
         <div style="font-weight:700; color:#e2e8f0; margin-bottom:8px;">Déclarations de paiement</div>
         <div class="cdb-wrap" style="max-height:34vh;">
           <table class="cdb-table">
-            <thead><tr><th>Date</th><th>Restaurant</th><th>Formule</th><th>Montant</th><th>Référence</th><th>État</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Restaurant</th><th>Formule</th><th>Montant</th><th>Justificatif</th><th>État</th><th>Actions</th></tr></thead>
             <tbody id="cdbPaiementsBody"><tr><td colspan="7" class="cdb-empty">Chargement…</td></tr></tbody>
           </table>
         </div>
@@ -2319,7 +2395,14 @@
             <option value="especes">Espèces</option>
           </select>
         </div>
-        <div class="field"><label>Référence de la transaction</label><input type="text" id="blockedReference" placeholder="N° de reçu ou de transaction"></div>
+        <div class="field"><label>Justificatif de paiement (photo ou capture du reçu)</label>
+          <input type="file" id="blockedPreuve" accept="image/*" onchange="chargerPreuve(this,'blocked')"
+            style="width:100%; padding:10px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
+        </div>
+        <div id="blockedPreuveApercu" style="display:none; margin-bottom:12px;">
+          <img id="blockedPreuveImg" alt="Justificatif" style="max-width:220px; max-height:180px; border-radius:8px; border:1px solid var(--line); display:block; margin-bottom:6px;">
+          <button class="mini-btn" onclick="retirerPreuve('blocked')">Retirer le justificatif</button>
+        </div>
         <div id="blockedInstructions" style="font-size:12.5px; color:var(--text-dim); margin-bottom:12px; line-height:1.7;"></div>
         <button class="btn-primary" onclick="declarerPaiementBlocage()">Déclarer mon paiement</button>
       </div>
@@ -3344,7 +3427,14 @@
                   <option value="especes">Espèces</option>
                 </select>
               </div>
-              <div class="field"><label>Référence de la transaction</label><input type="text" id="licenceReference" placeholder="N° de reçu ou de transaction"></div>
+              <div class="field"><label>Justificatif de paiement (photo ou capture du reçu)</label>
+                <input type="file" id="licencePreuve" accept="image/*" onchange="chargerPreuve(this,'licence')"
+                  style="width:100%; padding:10px 12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; color:var(--text); font-size:13px;">
+              </div>
+            </div>
+            <div id="licencePreuveApercu" style="display:none; margin-bottom:12px;">
+              <img id="licencePreuveImg" alt="Justificatif" style="max-width:220px; max-height:180px; border-radius:8px; border:1px solid var(--line); display:block; margin-bottom:6px;">
+              <button class="mini-btn" onclick="retirerPreuve('licence')">Retirer le justificatif</button>
             </div>
             <div id="licenceInstructions" style="font-size:12.5px; color:var(--text-dim); margin-bottom:12px; line-height:1.7;"></div>
             <button class="btn-primary" onclick="declarerPaiementLicence()">Déclarer mon paiement</button>
@@ -6005,8 +6095,101 @@
   }
 
   // Envoi réel via EmailJS ; repli sur l'ouverture du logiciel de messagerie
-  async function envoyerMail(destinataire, sujet, corps){
+  // ===============================================================
+  // NOTIFICATIONS — WhatsApp en canal principal, email en secours
+  //
+  // Trois voies, essayées dans cet ordre :
+  //   1. Envoi automatique par CallMeBot (une clé gratuite à demander une
+  //      fois depuis votre WhatsApp) — le message part sans intervention.
+  //   2. Ouverture de WhatsApp pré-rempli sur l'appareil de l'expéditeur :
+  //      un seul appui sur « Envoyer » et le message part réellement.
+  //      C'est la voie la plus sûre, elle ne dépend d'aucun service tiers.
+  //   3. Mise en file d'attente dans la base : rien ne se perd, le message
+  //      est renvoyable depuis l'espace concepteur.
+  // L'email reste disponible en secours si vous le configurez.
+  // ===============================================================
+
+  function numeroWhatsapp(n){
+    return String(n || '').replace(/[^0-9]/g, '');
+  }
+
+  function lienWhatsapp(numero, texte){
+    return 'https://wa.me/' + numeroWhatsapp(numero) + '?text=' + encodeURIComponent(texte);
+  }
+
+  // Ouvre WhatsApp sans être bloqué par le navigateur : un lien cliqué
+  // passe là où window.open est refusé après une attente réseau.
+  function ouvrirWhatsapp(numero, texte){
+    const a = document.createElement('a');
+    a.href = lienWhatsapp(numero, texte);
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  // Envoi réellement automatique, si une clé CallMeBot a été enregistrée.
+  // CallMeBot n'écrit qu'au numéro qui a demandé la clé : il sert donc aux
+  // alertes qui vous sont destinées, pas aux messages vers les restaurants.
+  async function envoyerWhatsappAuto(numero, texte, cle){
+    if(!cle) return false;
+    try {
+      const url = 'https://api.callmebot.com/whatsapp.php?phone=' + numeroWhatsapp(numero) +
+                  '&text=' + encodeURIComponent(texte) + '&apikey=' + encodeURIComponent(cle);
+      // CallMeBot n'autorise pas la lecture de sa réponse depuis un
+      // navigateur : le mode « no-cors » envoie sans pouvoir la lire.
+      await fetch(url, { mode: 'no-cors' });
+      return true;
+    } catch(e){ return false; }
+  }
+
+  // Point d'entrée unique de toutes les notifications de licence
+  async function notifier(cible, sujet, corps, options){
+    const opt = options || {};
     const m = compteMailConcepteur || {};
+    const texte = sujet + '\n\n' + corps;
+
+    const numero = numeroWhatsapp(cible.whatsapp);
+    const versConcepteur = numero && numero === numeroWhatsapp(m.whatsapp);
+
+    // 1. Envoi automatique WhatsApp — réservé à vos propres alertes
+    if(numero && versConcepteur && m.callmebotCle){
+      if(await envoyerWhatsappAuto(numero, texte, m.callmebotCle))
+        return { envoye: true, canal: 'whatsapp_auto' };
+    }
+
+    // 2. WhatsApp pré-rempli sur l'appareil de celui qui déclenche l'action
+    if(numero && opt.ouvrirApp){
+      ouvrirWhatsapp(numero, texte);
+      return { envoye: false, prepare: true, canal: 'whatsapp' };
+    }
+
+    // 3. Email, si le concepteur l'a configuré
+    if(cible.email && mailConfigure()){
+      const r = await envoyerMail(cible.email, sujet, corps, opt);
+      if(r.envoye) return { envoye: true, canal: 'email' };
+    }
+    if(cible.email && opt.ouvrirApp){
+      const r = await envoyerMail(cible.email, sujet, corps, { ouvrirMessagerie: true });
+      if(r.prepare) return { envoye: false, prepare: true, canal: 'email' };
+    }
+
+    // 4. File d'attente : le message reste disponible dans votre espace
+    await mettreEnAttente(numero || cible.email || '(destinataire inconnu)', sujet, corps,
+      opt.raison || (numero ? 'WhatsApp à envoyer depuis votre espace' : 'aucun canal configuré'),
+      numero || null);
+    return { envoye: false, enAttente: true, canal: numero ? 'whatsapp' : null };
+  }
+
+  // `ouvrirMessagerie` n'a de sens que sur l'appareil du concepteur : quand
+  // c'est un restaurant qui déclenche l'alerte, ouvrir sa messagerie à lui
+  // n'aurait aucun effet utile. Dans ce cas le message est mis en attente
+  // dans la base, et le concepteur le retrouve dans son espace.
+  async function envoyerMail(destinataire, sujet, corps, options){
+    const opt = options || {};
+    const m = compteMailConcepteur || {};
+
     if(mailConfigure()){
       try {
         const r = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -6018,6 +6201,7 @@
             user_id: m.emailjsCle,
             template_params: {
               to_email: destinataire,
+              to_name: opt.nomDestinataire || destinataire,
               from_name: m.expediteur || 'AGR — Espace Concepteur',
               reply_to: m.email || '',
               subject: sujet,
@@ -6026,14 +6210,41 @@
           }),
         });
         if(r.ok) return { envoye: true };
-      } catch(e){ /* on retombe sur le repli ci-dessous */ }
+        // EmailJS répond en clair : on garde la raison pour l'afficher
+        const detail = await r.text().catch(() => '');
+        await mettreEnAttente(destinataire, sujet, corps, detail || ('HTTP ' + r.status));
+        return { envoye: false, enAttente: true, raison: detail || ('HTTP ' + r.status) };
+      } catch(e){
+        await mettreEnAttente(destinataire, sujet, corps, 'réseau injoignable');
+        return { envoye: false, enAttente: true, raison: 'réseau injoignable' };
+      }
     }
-    // Repli : préparer le message dans le logiciel de messagerie
-    const lien = 'mailto:' + encodeURIComponent(destinataire) +
-                 '?subject=' + encodeURIComponent(sujet) +
-                 '&body=' + encodeURIComponent(corps);
-    window.open(lien, '_blank');
-    return { envoye: false, prepare: true };
+
+    // Aucun envoi automatique configuré
+    if(opt.ouvrirMessagerie){
+      const lien = 'mailto:' + encodeURIComponent(destinataire) +
+                   '?subject=' + encodeURIComponent(sujet) +
+                   '&body=' + encodeURIComponent(corps);
+      const a = document.createElement('a');
+      a.href = lien; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); a.remove();
+      return { envoye: false, prepare: true };
+    }
+    await mettreEnAttente(destinataire, sujet, corps, 'envoi automatique non configuré');
+    return { envoye: false, enAttente: true, raison: 'envoi automatique non configuré' };
+  }
+
+  // File d'attente : rien ne se perd, même sans EmailJS
+  async function mettreEnAttente(destinataire, sujet, corps, raison, whatsapp){
+    try {
+      await window._agrSet(window._agrPush(agrRef('agr_platform_outbox')), {
+        destinataire, sujet, corps,
+        whatsapp: whatsapp || null,
+        raison: raison || null,
+        statut: 'en_attente',
+        date: Date.now(),
+      });
+    } catch(e){}
   }
 
   // Code de licence : 4 groupes de 4 caractères, sans lettres ambiguës
@@ -6135,11 +6346,9 @@
 
   // Le restaurant demande un renouvellement : vous êtes prévenu, et le
   // message porte les liens d'action pour répondre en un clic.
-  async function alerterRenouvellement(code, info, offre, mode, reference, auto){
+  async function alerterRenouvellement(code, info, offre, mode, paiementId, auto){
     await chargerCompteMail();
     const m = compteMailConcepteur || {};
-    if(!m.email) return { envoye: false, sansCompte: true };
-
     const nom = (info || {}).nomRestaurant || code;
 
     // Une demande est ouverte (ou reprise) pour porter les liens d'action
@@ -6172,27 +6381,32 @@
 
     const liens = id ? [
       '',
-      'Répondre en un clic :',
-      '  • Paiement confirmé, envoyer le code : ' + await lienAction(id, 'activer'),
-      '  • Paiement non constaté, refuser : ' + await lienAction(id, 'refuser'),
+      'Confirmer et envoyer le code : ' + await lienAction(id, 'activer'),
+      'Refuser : ' + await lienAction(id, 'refuser'),
     ] : [];
 
     const corps = [
-      'Demande de renouvellement de licence',
+      'Renouvellement de licence demandé',
       '',
-      'Restaurant : ' + nom + ' (identifiant ' + code + ')',
-      'Formule choisie : ' + offre.libelle + ' — ' + Number(offre.prix||0).toLocaleString('fr-FR') + ' GNF (' + offre.jours + ' jours)',
-      'Mode de paiement déclaré : ' + mode,
-      'Référence : ' + (reference || 'non communiquée'),
-      'Contact : ' + ((info || {}).emailFacturation || (info || {}).email || '—') +
-        ' · ' + ((info || {}).whatsapp || (info || {}).telephone || '—'),
+      'Restaurant : ' + nom + ' (' + code + ')',
+      'Carte : ' + offre.libelle + ' — ' + Number(offre.prix||0).toLocaleString('fr-FR') + ' GNF (' + offre.jours + ' j)',
+      'Paiement déclaré par : ' + mode,
+      'Reçu joint, visible dans votre espace (Licences & paiements).',
+      'Contact : ' + ((info || {}).whatsapp || (info || {}).telephone || '—') +
+        ' · ' + ((info || {}).emailFacturation || (info || {}).email || '—'),
       '',
       auto
-        ? 'Le déblocage automatique étant actif, la licence a déjà été prolongée.'
-        : 'La licence est en attente de votre confirmation.',
-    ].concat(liens).concat(['', '— AGR, espace concepteur']).join('\n');
+        ? 'Déblocage automatique actif : la licence est déjà prolongée.'
+        : 'En attente de votre confirmation.',
+    ].concat(liens).join('\n');
 
-    const r = await envoyerMail(m.email, 'AGR — renouvellement demandé : ' + nom, corps);
+    // L'alerte part de l'appareil du restaurant : WhatsApp s'ouvre chez lui,
+    // pré-rempli vers votre numéro. Il lui suffit d'appuyer sur Envoyer, et
+    // vous recevez le message à coup sûr.
+    const r = await notifier(
+      { whatsapp: m.whatsapp, email: m.email },
+      'AGR — renouvellement demandé : ' + nom, corps,
+      { ouvrirApp: true, raison: 'alerte de renouvellement à transmettre' });
     return Object.assign({ id }, r);
   }
 
@@ -6255,27 +6469,23 @@
 
     // Le lien ramène le concepteur directement sur la demande
     const corps = [
-      'Restaurant bloqué : ' + nom + ' (identifiant ' + code + ')',
+      'Restaurant bloqué : ' + nom + ' (' + code + ')',
       'Motif : ' + demande.motif,
       '',
-      'La licence de ce restaurant a-t-elle été payée ?',
+      'La licence a-t-elle été payée ?',
       '',
-      'Répondre en un clic :',
-      '  • Oui, envoyer le code d\'activation : ' + await lienAction(ref.key, 'activer'),
-      '  • Non, refuser la demande : ' + await lienAction(ref.key, 'refuser'),
+      'Oui, envoyer le code : ' + await lienAction(ref.key, 'activer'),
+      'Non, refuser : ' + await lienAction(ref.key, 'refuser'),
       '',
-      'Ou ouvrir simplement la demande : ' + location.href.split('#')[0] + '#/licence/' + ref.key,
-      '',
-      'Chaque lien demande votre mot de passe concepteur avant d\'agir :',
-      'la page web du restaurant reste consultable 24 heures, puis se ferme.',
-      '',
-      '— AGR, espace concepteur',
+      'Chaque lien demande votre mot de passe avant d\'agir.',
+      'La page web du restaurant reste consultable 24 h, puis se ferme.',
     ].join('\n');
 
+    const m = compteMailConcepteur || {};
     let resultat = { envoye: false };
-    if((compteMailConcepteur || {}).email){
-      resultat = await envoyerMail(compteMailConcepteur.email,
-        'AGR — licence bloquée : ' + nom, corps);
+    if(m.whatsapp || m.email){
+      resultat = await notifier({ whatsapp: m.whatsapp, email: m.email },
+        'AGR — licence bloquée : ' + nom, corps, { ouvrirApp: true });
     }
     await agrSet('agr_licences_demandes/' + ref.key + '/mailConcepteur',
                  resultat.envoye ? 'envoye' : 'a_envoyer');
@@ -6290,61 +6500,197 @@
   async function chargerVueMail(){
     await chargerCompteMail();
     const m = compteMailConcepteur || {};
+    document.getElementById('cdbWhatsapp').value = m.whatsapp || '';
+    document.getElementById('cdbCallmebot').value = m.callmebotCle || '';
     document.getElementById('cdbMailAdresse').value = m.email || (concepteurConnecte || {}).email || '';
     document.getElementById('cdbMailExpediteur').value = m.expediteur || '';
     document.getElementById('cdbMailService').value = m.emailjsService || '';
     document.getElementById('cdbMailTemplate').value = m.emailjsTemplate || '';
     document.getElementById('cdbMailCle').value = m.emailjsCle || '';
+    document.getElementById('cdbRaisonSociale').value = m.raisonSociale || '';
+    document.getElementById('cdbAdresseFacturation').value = m.adresseFacturation || '';
+    document.getElementById('cdbNif').value = m.nif || '';
 
     const note = document.getElementById('cdbMailNote');
     note.style.color = '#64748b';
-    note.textContent = mailConfigure()
-      ? 'Envoi automatique actif : les alertes et les codes partent sans intervention.'
-      : "Envoi automatique inactif : les messages s'ouvrent dans votre logiciel de messagerie et sur WhatsApp.";
+    note.textContent = etatCanaux();
     chargerDemandesLicence();
+    chargerOutbox();
+  }
+
+  // Résumé lisible de ce qui est réellement actif
+  function etatCanaux(){
+    const m = compteMailConcepteur || {};
+    if(m.whatsapp && m.callmebotCle)
+      return 'WhatsApp automatique actif : les alertes arrivent seules sur votre téléphone.';
+    if(m.whatsapp)
+      return 'WhatsApp actif : les restaurants vous envoient leurs alertes en un appui, ' +
+             'et les messages non partis restent dans la file ci-dessous.';
+    if(mailConfigure())
+      return 'Email automatique actif, WhatsApp non renseigné.';
+    return "Aucun canal configuré : renseignez au moins votre numéro WhatsApp, " +
+           'sinon les alertes ne feront que s\'empiler dans la file ci-dessous.';
   }
 
   async function enregistrerCompteMail(){
     const note = document.getElementById('cdbMailNote');
     const email = document.getElementById('cdbMailAdresse').value.trim();
-    if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+    const whatsapp = numeroWhatsapp(document.getElementById('cdbWhatsapp').value);
+
+    if(!whatsapp && !email){
       note.style.color = '#f87171';
-      note.textContent = 'Indiquez une adresse email valide.';
+      note.textContent = 'Indiquez au moins un numéro WhatsApp ou une adresse email.';
+      return;
+    }
+    if(whatsapp && whatsapp.length < 8){
+      note.style.color = '#f87171';
+      note.textContent = 'Le numéro WhatsApp doit comporter l\'indicatif du pays, sans le +. Exemple : 224623030403.';
+      return;
+    }
+    if(email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+      note.style.color = '#f87171';
+      note.textContent = "L'adresse email saisie n'est pas valide.";
       return;
     }
     try {
       await agrSet('agr_platform_mail', {
-        email,
+        whatsapp: whatsapp || null,
+        callmebotCle: document.getElementById('cdbCallmebot').value.trim() || null,
+        email: email || null,
         expediteur: document.getElementById('cdbMailExpediteur').value.trim(),
         emailjsService: document.getElementById('cdbMailService').value.trim(),
         emailjsTemplate: document.getElementById('cdbMailTemplate').value.trim(),
         emailjsCle: document.getElementById('cdbMailCle').value.trim(),
+        raisonSociale: document.getElementById('cdbRaisonSociale').value.trim() || null,
+        adresseFacturation: document.getElementById('cdbAdresseFacturation').value.trim() || null,
+        nif: document.getElementById('cdbNif').value.trim() || null,
         majLe: Date.now(),
       });
       compteMailConcepteur = null;
       await chargerVueMail();
       const note2 = document.getElementById('cdbMailNote');
       note2.style.color = '#4ade80';
-      note2.textContent = 'Compte mail enregistré. Les alertes de licence partiront vers ' + email + '.';
+      note2.textContent = 'Coordonnées enregistrées. ' + etatCanaux();
     } catch(e){
       note.style.color = '#f87171';
       note.textContent = "Enregistrement impossible.";
     }
   }
 
+  async function testerWhatsapp(){
+    const note = document.getElementById('cdbMailNote');
+    await chargerCompteMail();
+    const m = compteMailConcepteur || {};
+    if(!m.whatsapp){
+      note.style.color = '#f87171';
+      note.textContent = 'Enregistrez d\'abord votre numéro WhatsApp.';
+      return;
+    }
+    const texte = 'AGR — test de configuration\n\nSi vous lisez ce message, les alertes de licence ' +
+                  'vous parviendront bien sur WhatsApp.';
+    if(m.callmebotCle && await envoyerWhatsappAuto(m.whatsapp, texte, m.callmebotCle)){
+      note.style.color = '#4ade80';
+      note.textContent = 'Message de test envoyé automatiquement au +' + m.whatsapp +
+                         '. S\'il n\'arrive pas, vérifiez votre clé CallMeBot.';
+      return;
+    }
+    ouvrirWhatsapp(m.whatsapp, texte);
+    note.style.color = '#fbbf24';
+    note.textContent = 'WhatsApp a été ouvert avec le message de test — appuyez sur Envoyer. ' +
+                       'Pour un envoi sans intervention, renseignez une clé CallMeBot.';
+  }
+
   async function testerCompteMail(){
     const note = document.getElementById('cdbMailNote');
     await chargerCompteMail();
     const m = compteMailConcepteur || {};
-    if(!m.email){ note.style.color = '#f87171'; note.textContent = 'Enregistrez d\'abord votre adresse email.'; return; }
+    if(!m.email){
+      note.style.color = '#fbbf24';
+      note.textContent = "Aucune adresse email enregistrée — l'email n'est qu'un secours, WhatsApp suffit.";
+      return;
+    }
 
     const r = await envoyerMail(m.email, 'AGR — test de configuration',
       'Ceci est un message de test envoyé depuis votre espace concepteur AGR.\n' +
-      'Si vous le recevez, les alertes de licence vous parviendront bien.');
+      'Si vous le recevez, les alertes de licence vous parviendront bien.',
+      { ouvrirMessagerie: true });
     note.style.color = r.envoye ? '#4ade80' : '#fbbf24';
     note.textContent = r.envoye
       ? 'Email de test envoyé à ' + m.email + '.'
       : "Envoi automatique indisponible : le message a été ouvert dans votre logiciel de messagerie.";
+  }
+
+  // Boîte d'envoi : messages restés en attente faute d'EmailJS ou de réseau
+  let outboxCourante = [];
+
+  async function chargerOutbox(){
+    const el = document.getElementById('cdbOutbox');
+    if(!el) return;
+    try {
+      const o = await agrGet('agr_platform_outbox') || {};
+      outboxCourante = Object.entries(o).map(([id, v]) => Object.assign({ id }, v))
+                             .filter(v => v.statut === 'en_attente')
+                             .sort((a,b) => (b.date||0) - (a.date||0));
+
+      if(!outboxCourante.length){
+        el.innerHTML = '<div style="font-size:11.5px; color:#4ade80;">Aucun message en attente.</div>';
+        return;
+      }
+      el.innerHTML = outboxCourante.slice(0, 15).map(x => `
+        <div style="background:#060d24; border:1px solid rgba(37,99,235,0.25); border-radius:8px; padding:11px; margin-bottom:8px;">
+          <div style="font-size:12px; color:#e2e8f0; font-weight:600;">${echapper(x.sujet || '')}</div>
+          <div class="cdb-sub">${new Date(x.date||0).toLocaleString('fr-FR')} — ${echapper(x.raison || '')}</div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+            <button class="cdb-btn ok" onclick="renvoyerMessage('${x.id}')">
+              ${x.whatsapp ? 'Envoyer sur WhatsApp' : 'Envoyer maintenant'}
+            </button>
+            <button class="cdb-btn" onclick="voirMessage('${x.id}')">Lire</button>
+            <button class="cdb-btn danger" onclick="ecarterMessage('${x.id}')">Écarter</button>
+          </div>
+        </div>`).join('');
+    } catch(e){
+      el.innerHTML = '<div style="font-size:11.5px; color:#f87171;">Impossible de lire la file d\'attente.</div>';
+    }
+  }
+
+  async function renvoyerMessage(id){
+    const x = outboxCourante.find(v => v.id === id);
+    const note = document.getElementById('cdbMailNote');
+    if(!x) return;
+    await chargerCompteMail();
+    const m = compteMailConcepteur || {};
+
+    // Le numéro d'origine du message, à défaut le vôtre
+    const numero = x.whatsapp || (/^[0-9]+$/.test(x.destinataire) ? x.destinataire : m.whatsapp);
+    const email = /@/.test(x.destinataire) ? x.destinataire : m.email;
+
+    if(!numero && !email){
+      note.style.color = '#f87171';
+      note.textContent = 'Enregistrez d\'abord un numéro WhatsApp ou une adresse email.';
+      return;
+    }
+
+    const r = await notifier({ whatsapp: numero, email }, x.sujet, x.corps, { ouvrirApp: true });
+    if(r.envoye || r.prepare){
+      try { await agrSet('agr_platform_outbox/' + id + '/statut', 'envoye'); } catch(e){}
+      chargerOutbox();
+      note.style.color = r.envoye ? '#4ade80' : '#fbbf24';
+      note.textContent = r.envoye
+        ? 'Message envoyé.'
+        : (r.canal === 'whatsapp'
+            ? 'WhatsApp s\'est ouvert avec le message — appuyez sur Envoyer.'
+            : 'Message ouvert dans votre logiciel de messagerie.');
+    }
+  }
+
+  function voirMessage(id){
+    const x = outboxCourante.find(v => v.id === id);
+    if(x) alert(x.sujet + '\n\n' + x.corps);
+  }
+
+  async function ecarterMessage(id){
+    try { await agrSet('agr_platform_outbox/' + id + '/statut', 'ecarte'); } catch(e){}
+    chargerOutbox();
   }
 
   async function chargerDemandesLicence(){
@@ -6426,25 +6772,28 @@
         '— AGR, espace concepteur',
       ].join('\n');
 
-      let etatMail = 'non_envoye';
-      if(d.emailRestaurant){
-        const r = await envoyerMail(d.emailRestaurant, 'AGR — votre code de licence', corps);
-        etatMail = r.envoye ? 'envoye' : 'prepare';
-      }
+      // WhatsApp d'abord : la conversation avec le restaurant s'ouvre
+      // pré-remplie sur votre appareil, un appui et le code part.
+      const envoi = await notifier(
+        { whatsapp: d.whatsappRestaurant, email: d.emailRestaurant },
+        'AGR — votre code de licence', corps,
+        { ouvrirApp: true, nomDestinataire: d.nomRestaurant });
+      const etatMail = envoi.envoye ? 'envoye' : (envoi.prepare ? 'prepare' : 'en_attente');
       await agrSet('agr_licences_demandes/' + id + '/mailRestaurant', etatMail);
-
-      // WhatsApp : ouverture de la conversation pré-remplie
-      const tel = String(d.whatsappRestaurant || '').replace(/[^0-9]/g, '');
-      if(tel) window.open('https://wa.me/' + tel + '?text=' + encodeURIComponent(corps), '_blank');
+      await agrSet('agr_licences_demandes/' + id + '/canalEnvoi', envoi.canal || null);
 
       d.statut = 'code_envoye';
       chargerDemandesLicence();
 
+      const parCanal = {
+        whatsapp_auto: ' — envoyé automatiquement sur WhatsApp au restaurant.',
+        whatsapp: ' — WhatsApp s\'est ouvert avec le message : appuyez sur Envoyer.',
+        email: envoi.envoye ? ' — envoyé par email au restaurant.'
+                            : ' — message email préparé dans votre logiciel de messagerie.',
+      };
       note.style.color = '#4ade80';
       note.innerHTML = 'Code engendré : <strong>' + codeLicence + '</strong>' +
-        (etatMail === 'envoye' ? ' — envoyé par email au restaurant.'
-          : (etatMail === 'prepare' ? ' — message email préparé dans votre logiciel de messagerie.'
-             : ' — aucun email connu pour ce restaurant, transmettez-le vous-même.')) +
+        (parCanal[envoi.canal] || ' — aucun contact connu pour ce restaurant, transmettez-le vous-même.') +
         '<br>Notez-le : il n\'est plus réaffiché ensuite.';
     } catch(e){
       note.style.color = '#f87171';
@@ -6678,13 +7027,17 @@
           <td><span class="cdb-code">${x.code || '—'}</span><div class="cdb-sub">${x.nomRestaurant || ''}</div></td>
           <td>${x.offreLibelle || '—'}<div class="cdb-sub">${x.jours || 0} j</div></td>
           <td>${Number(x.montant||0).toLocaleString('fr-FR')} GNF</td>
-          <td>${x.reference || '—'}<div class="cdb-sub">${x.mode || ''}</div></td>
+          <td>${x.preuve
+                ? `<img src="${x.preuve}" alt="Reçu" onclick="voirPreuve('${x.id}')" style="width:52px; height:40px; object-fit:cover; border-radius:5px; border:1px solid rgba(37,99,235,0.35); cursor:zoom-in; display:block;">`
+                : '<span class="cdb-sub">aucun</span>'}
+              <div class="cdb-sub">${echapper(x.mode || '')}</div></td>
           <td><span class="cdb-badge ${x.statut === 'refuse' ? 'bloque' : (x.statut === 'en_attente' ? 'essai' : 'actif')}">${etats[x.statut] || x.statut}</span></td>
           <td><div class="cdb-act">
             ${x.statut === 'en_attente'
               ? `<button class="cdb-btn ok" onclick="validerPaiement('${x.id}')">Valider</button>
                  <button class="cdb-btn danger" onclick="refuserPaiement('${x.id}')">Refuser</button>`
               : '<span class="cdb-sub">Traité</span>'}
+            <button class="cdb-btn" onclick="factureDepuisConcepteur('${x.id}')">🖨 Facture</button>
           </div></td>
         </tr>`).join('');
     } catch(e){
@@ -6695,6 +7048,183 @@
   // Validation : la licence est prolongée et le restaurant débloqué
   // Validation d'un paiement : un code d'activation est engendré et envoyé
   // au restaurant, qui le saisit lui-même pour réactiver son accès.
+  // ===============================================================
+  // FACTURE DE LICENCE
+  // La facture oppose deux parties : l'émetteur (l'éditeur de l'application)
+  // et le client (le restaurant). Elle ne peut donc pas reprendre l'en-tête
+  // habituel des documents, qui affiche toujours le restaurant connecté.
+  // Le numéro est attribué une seule fois puis conservé sur le paiement :
+  // rouvrir une facture ne crée jamais de doublon.
+  // ===============================================================
+
+  async function numeroFactureLicence(paiementId, paiement){
+    if(paiement && paiement.numeroFacture) return paiement.numeroFacture;
+
+    let n = 0;
+    try { n = Number(await agrGet('agr_platform_compteurs/factures')) || 0; } catch(e){}
+    const suivant = n + 1;
+    const d = new Date();
+    const numero = 'FAC-' + d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') +
+                   '-' + String(suivant).padStart(4,'0');
+    try {
+      await agrSet('agr_platform_compteurs/factures', suivant);
+      if(paiementId) await agrSet('agr_paiements/' + paiementId + '/numeroFacture', numero);
+    } catch(e){}
+    if(paiement) paiement.numeroFacture = numero;
+    return numero;
+  }
+
+  // Émetteur : identité renseignée dans l'espace concepteur
+  function emetteurFacture(){
+    const m = compteMailConcepteur || {};
+    return {
+      nom: m.raisonSociale || m.expediteur || 'Éditeur AGR',
+      adresse: m.adresseFacturation || '',
+      whatsapp: m.whatsapp || '',
+      email: m.email || '',
+      nif: m.nif || '',
+    };
+  }
+
+  const ETATS_FACTURE = {
+    en_attente: { libelle: 'EN ATTENTE DE VALIDATION', couleur: '#8a6d1f' },
+    auto:       { libelle: 'PAYÉE',                    couleur: '#2F6F5E' },
+    valide:     { libelle: 'PAYÉE',                    couleur: '#2F6F5E' },
+    refuse:     { libelle: 'REFUSÉE',                  couleur: '#B4483A' },
+  };
+
+  // `client` porte les coordonnées du restaurant ; côté restaurant elles
+  // viennent de infoRestaurant, côté concepteur de la fiche du paiement.
+  async function imprimerFactureLicence(paiement, client, paiementId){
+    await chargerCompteMail();
+    const e = emetteurFacture();
+    const c = client || {};
+    const numero = await numeroFactureLicence(paiementId || paiement.id, paiement);
+    const etat = ETATS_FACTURE[paiement.statut] || ETATS_FACTURE.en_attente;
+
+    const modes = {
+      especes:'Espèces', orange_money:'Orange Money', mobile_money:'Mobile Money / MoMo',
+      virement:'Virement bancaire', carte:'Carte bancaire', cheque:'Chèque',
+    };
+    const montant = Number(paiement.montant || 0);
+    const gnf = v => Number(v || 0).toLocaleString('fr-FR') + ' GNF';
+
+    // Période couverte par la licence achetée
+    const debut = paiement.debutPeriode || paiement.date || Date.now();
+    const fin = debut + (paiement.jours || 30) * 24 * 60 * 60 * 1000;
+
+    imprimerDocument(`
+      <div class="facture">
+        <div class="fac-tete">
+          <div class="fac-emetteur">
+            <div class="nom">${echapper(e.nom)}</div>
+            ${e.adresse ? `<div>${echapper(e.adresse)}</div>` : ''}
+            ${e.whatsapp ? `<div>WhatsApp : +${echapper(e.whatsapp)}</div>` : ''}
+            ${e.email ? `<div>${echapper(e.email)}</div>` : ''}
+            ${e.nif ? `<div>NIF / RCCM : ${echapper(e.nif)}</div>` : ''}
+          </div>
+          <div class="fac-identite">
+            <div class="fac-mot">FACTURE</div>
+            <div class="fac-num">${echapper(numero)}</div>
+            <div class="fac-date">Du ${dateLongue(paiement.date)}</div>
+            <div class="fac-etat" style="border-color:${etat.couleur}; color:${etat.couleur};">${etat.libelle}</div>
+          </div>
+        </div>
+
+        <div class="fac-client">
+          <div class="fac-lbl">Facturé à</div>
+          <div class="nom">${echapper(c.nomRestaurant || paiement.nomRestaurant || paiement.code || '')}</div>
+          ${[c.adresse, c.ville].filter(Boolean).length
+            ? `<div>${echapper([c.adresse, c.ville].filter(Boolean).join(', '))}</div>` : ''}
+          ${c.telephone ? `<div>Tél. ${echapper(c.telephone)}</div>` : ''}
+          ${(c.emailFacturation || c.email) ? `<div>${echapper(c.emailFacturation || c.email)}</div>` : ''}
+          <div class="fac-code">Identifiant restaurant : ${echapper(paiement.code || '')}</div>
+        </div>
+
+        <table class="fac-table">
+          <thead>
+            <tr><th>Désignation</th><th class="n">Durée</th><th class="n">P. unitaire</th><th class="n">Montant</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>Licence d'utilisation AGR — ${echapper(paiement.offreLibelle || '')}</strong>
+                <div class="fac-detail">Application de gestion de restaurant<br>
+                Période couverte : du ${dateLongue(debut)} au ${dateLongue(fin)}</div>
+              </td>
+              <td class="n">${paiement.jours || 0} jours</td>
+              <td class="n">${gnf(montant)}</td>
+              <td class="n">${gnf(montant)}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="fac-bas">
+          <div class="fac-reglement">
+            <div class="fac-lbl">Règlement</div>
+            <div>Mode : ${echapper(modes[paiement.mode] || paiement.mode || '—')}</div>
+            <div>Déclaré le ${dateLongue(paiement.date)}</div>
+            ${paiement.valideLe ? `<div>Validé le ${dateLongue(paiement.valideLe)}</div>` : ''}
+            ${paiement.preuve ? '<div>Justificatif de paiement fourni par le client.</div>' : ''}
+            ${paiement.motif ? `<div>Motif du refus : ${echapper(paiement.motif)}</div>` : ''}
+          </div>
+          <div class="fac-totaux">
+            <div class="l"><span>Total hors taxes</span><b>${gnf(montant)}</b></div>
+            <div class="l"><span>TVA</span><b>Non applicable</b></div>
+            <div class="fac-net"><span>NET À PAYER</span><span>${gnf(montant)}</span></div>
+          </div>
+        </div>
+
+        ${['valide','auto'].includes(paiement.statut)
+          ? '<div class="fac-mention">Facture acquittée — merci de votre confiance.</div>'
+          : (paiement.statut === 'refuse'
+              ? '<div class="fac-mention">Paiement non constaté : cette facture reste due.</div>'
+              : '<div class="fac-mention">En attente de validation du règlement par l&rsquo;éditeur.</div>')}
+      </div>
+      ${signaturesDocument('Le client', e.nom)}
+      <div class="doc-pied"><span>${echapper(e.nom)} — facture de licence</span><span>${echapper(numero)}</span></div>
+    `);
+  }
+
+  // Depuis l'espace concepteur
+  async function factureDepuisConcepteur(id){
+    const x = paiementsCourants.find(v => v.id === id);
+    if(!x) return;
+    let info = {};
+    try { info = await agrGet('agr_tenants/' + x.code + '/info') || {}; } catch(e){}
+    await imprimerFactureLicence(x, info, id);
+    chargerPaiements();
+  }
+
+  // Depuis l'onglet Licence du restaurant
+  async function factureDepuisRestaurant(id){
+    try {
+      const x = await agrGet('agr_paiements/' + id);
+      if(!x) return;
+      await imprimerFactureLicence(Object.assign({ id }, x), infoRestaurant || {}, id);
+      afficherHistoriquePaiements();
+    } catch(e){
+      showBanner('licenceError', "La facture n'a pas pu être générée.");
+    }
+  }
+
+  // Agrandissement du reçu envoyé par le restaurant
+  function voirPreuve(id){
+    const x = paiementsCourants.find(v => v.id === id);
+    if(x && x.preuve) afficherApercu(x.preuve);
+  }
+
+  // Visionneuse indépendante : la vitrine étant masquée hors de sa vue,
+  // l'espace concepteur a besoin de la sienne.
+  function afficherApercu(src){
+    document.getElementById('apercuGlobalImg').src = src;
+    document.getElementById('apercuGlobal').classList.add('on');
+  }
+
+  function fermerApercu(){
+    document.getElementById('apercuGlobal').classList.remove('on');
+  }
+
   async function validerPaiement(id){
     const x = paiementsCourants.find(v => v.id === id);
     const note = document.getElementById('cdbTarifsNote');
@@ -10983,24 +11513,30 @@
     if(!el || !currentTenantId) return;
     try {
       const p = await agrGet('agr_paiements') || {};
-      const miens = Object.values(p).filter(x => x.code === currentTenantId)
+      const miens = Object.entries(p).map(([id, v]) => Object.assign({ id }, v))
+                          .filter(x => x.code === currentTenantId)
                           .sort((a,b) => (b.date||0) - (a.date||0)).slice(0, 6);
       if(!miens.length){ el.innerHTML = ''; return; }
       const etats = { en_attente:'En attente de vérification', valide:'Validé', auto:'Pris en compte', refuse:'Refusé' };
       el.innerHTML = '<div style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Vos déclarations de paiement</div>' +
         miens.map(x => `<div style="font-size:12.5px; padding:7px 0; border-bottom:1px solid var(--line);">
+          ${x.preuve ? `<img src="${x.preuve}" alt="Reçu" onclick="afficherApercu(this.src)" style="width:46px; height:36px; object-fit:cover; border-radius:5px; border:1px solid var(--line); cursor:zoom-in; float:left; margin-right:9px;">` : ''}
           ${new Date(x.date||0).toLocaleDateString('fr-FR')} — ${echapper(x.offreLibelle || '')} ·
           ${Number(x.montant||0).toLocaleString('fr-FR')} GNF ·
           <strong>${etats[x.statut] || x.statut}</strong>
           ${x.motif ? '<div style="color:#E19488; font-size:11.5px;">Motif : ' + echapper(x.motif) + '</div>' : ''}
+          <div style="margin-top:6px;">
+            <button class="mini-btn" onclick="factureDepuisRestaurant('${x.id}')">🖨 Facture${x.numeroFacture ? ' ' + echapper(x.numeroFacture) : ''}</button>
+          </div>
         </div>`).join('');
     } catch(e){ el.innerHTML = ''; }
   }
 
   // Enregistre la déclaration et, si le concepteur l'autorise, prolonge aussitôt
-  async function enregistrerDeclarationPaiement(code, cleOffre, mode, reference, nomRestaurant){
+  async function enregistrerDeclarationPaiement(code, cleOffre, mode, preuve, nomRestaurant){
     const t = await chargerOffresPubliees();
-    const offre = (t.offres || {})[cleOffre];
+    // La carte payée est cherchée dans les deux formats
+    const offre = (listeOffres(t).find(o => o.cle === cleOffre)) || (t.offres || {})[cleOffre];
     if(!offre) throw new Error('offre inconnue');
 
     const auto = t.deblocageAuto === true;
@@ -11009,16 +11545,53 @@
       code, nomRestaurant: nomRestaurant || code,
       offre: cleOffre, offreLibelle: offre.libelle,
       montant: offre.prix, jours: offre.jours,
-      mode, reference: reference || null,
+      mode,
+      preuve: preuve || null,          // image du reçu, jointe par le restaurant
       statut: auto ? 'auto' : 'en_attente',
       date: Date.now(),
+      // Point de départ réel de la période achetée : la licence en cours
+      // si elle court encore, sinon aujourd'hui.
+      debutPeriode: Math.max(Date.now(), (await agrGet('agr_tenants/' + code + '/info/dateExpiration')) || 0),
     });
 
     if(auto){
       const nouvelle = await prolongerLicenceRestaurant(code, offre.jours);
-      return { auto:true, jusqu:nouvelle, offre };
+      return { auto:true, jusqu:nouvelle, offre, paiementId: ref.key };
     }
-    return { auto:false, offre };
+    return { auto:false, offre, paiementId: ref.key };
+  }
+
+  // ---------------------------------------------------------------
+  // Justificatif de paiement : l'image est réduite avant enregistrement
+  // pour rester lisible sans alourdir la base.
+  // ---------------------------------------------------------------
+  const preuvesPaiement = { licence: null, blocked: null };
+
+  async function chargerPreuve(input, cible){
+    const f = (input.files || [])[0];
+    if(!f) return;
+    const banniere = cible === 'licence' ? 'licenceError' : 'blockedError';
+    showBanner(banniere, null);
+
+    if(!/^image\//.test(f.type)){
+      showBanner(banniere, 'Choisissez une image (photo ou capture d\'écran du reçu).');
+      input.value = '';
+      return;
+    }
+    try {
+      preuvesPaiement[cible] = await fileToResizedBase64(f, 1100);
+      document.getElementById(cible + 'PreuveImg').src = preuvesPaiement[cible];
+      document.getElementById(cible + 'PreuveApercu').style.display = 'block';
+    } catch(e){
+      showBanner(banniere, "Cette image n'a pas pu être lue — essayez une autre photo.");
+      input.value = '';
+    }
+  }
+
+  function retirerPreuve(cible){
+    preuvesPaiement[cible] = null;
+    document.getElementById(cible + 'Preuve').value = '';
+    document.getElementById(cible + 'PreuveApercu').style.display = 'none';
   }
 
   async function declarerPaiementLicence(){
@@ -11026,32 +11599,47 @@
     showBanner('licenceSuccess', null);
     if(!offreChoisie) return showBanner('licenceError', 'Choisissez d\'abord une formule.');
 
-    const reference = document.getElementById('licenceReference').value.trim();
-    if(!reference) return showBanner('licenceError', 'Indiquez la référence de votre transaction.');
+    if(!preuvesPaiement.licence)
+      return showBanner('licenceError', 'Joignez la photo ou la capture de votre reçu de paiement.');
+
+    const btn = document.querySelector('#licenceFormPaiement .btn-primary');
+    if(btn){ btn.disabled = true; btn.textContent = 'Envoi…'; }
 
     try {
       const r = await enregistrerDeclarationPaiement(
         currentTenantId, offreChoisie,
-        document.getElementById('licenceMode').value, reference,
+        document.getElementById('licenceMode').value, preuvesPaiement.licence,
         (infoRestaurant || {}).nomRestaurant);
 
       await recordAudit('Paiement de licence déclaré', r.offre.libelle + ' — ' + fmtGNF(r.offre.prix));
 
-      // Le concepteur est prévenu du renouvellement demandé
-      try {
-        await alerterRenouvellement(currentTenantId, infoRestaurant, r.offre,
-          document.getElementById('licenceMode').value, reference, r.auto);
-      } catch(e){}
+      // Le concepteur est prévenu, et le restaurant sait ce qu'il en est
+      const alerte = await alerterRenouvellement(currentTenantId, infoRestaurant, r.offre,
+        document.getElementById('licenceMode').value, r.paiementId, r.auto);
 
-      showBanner('licenceSuccess', r.auto
-        ? 'Paiement enregistré. Votre licence court désormais jusqu\'au ' + new Date(r.jusqu).toLocaleDateString('fr-FR') + '.'
-        : 'Déclaration enregistrée. Le concepteur la vérifie et votre licence sera prolongée après validation.');
-      document.getElementById('licenceReference').value = '';
+      showBanner('licenceSuccess', (r.auto
+        ? 'Paiement enregistré. Votre licence court désormais jusqu\'au ' + new Date(r.jusqu).toLocaleDateString('fr-FR') + '. '
+        : 'Déclaration et justificatif enregistrés. ') + messageAlerte(alerte));
+
+      retirerPreuve('licence');
       loadLicenceInfo();
       afficherHistoriquePaiements();
     } catch(e){
       showBanner('licenceError', "La déclaration n'a pas pu être enregistrée — vérifiez la connexion.");
+    } finally {
+      if(btn){ btn.disabled = false; btn.textContent = 'Déclarer mon paiement'; }
     }
+  }
+
+  // Ce que le restaurant doit comprendre du sort de son alerte
+  function messageAlerte(a){
+    if(!a) return 'Le concepteur sera prévenu.';
+    if(a.envoye) return 'Le concepteur a été prévenu automatiquement.';
+    if(a.prepare && a.canal === 'whatsapp')
+      return 'WhatsApp vient de s\'ouvrir avec votre demande : appuyez sur Envoyer pour la transmettre au concepteur.';
+    if(a.prepare) return 'Votre logiciel de messagerie vient de s\'ouvrir : envoyez le message au concepteur.';
+    if(a.enAttente) return 'Le concepteur verra votre demande dès sa prochaine connexion.';
+    return 'Le concepteur verra votre demande dans son espace.';
   }
 
   // ---- Écran de blocage : mêmes offres, réservé au restaurant identifié ----
@@ -11099,25 +11687,25 @@
     if(!tenantBloque) return showBanner('blockedError', 'Session expirée — reconnectez-vous.');
     if(!offreChoisieBloc) return showBanner('blockedError', 'Choisissez d\'abord une formule.');
 
-    const reference = document.getElementById('blockedReference').value.trim();
-    if(!reference) return showBanner('blockedError', 'Indiquez la référence de votre transaction.');
+    if(!preuvesPaiement.blocked)
+      return showBanner('blockedError', 'Joignez la photo ou la capture de votre reçu de paiement.');
 
     try {
       const r = await enregistrerDeclarationPaiement(
         tenantBloque.code, offreChoisieBloc,
-        document.getElementById('blockedMode').value, reference, tenantBloque.nom);
+        document.getElementById('blockedMode').value, preuvesPaiement.blocked, tenantBloque.nom);
 
-      try {
-        const info = await agrGet('agr_tenants/' + tenantBloque.code + '/info') || {};
-        await alerterRenouvellement(tenantBloque.code, info, r.offre,
-          document.getElementById('blockedMode').value, reference, r.auto);
-      } catch(e){}
+      const info = await agrGet('agr_tenants/' + tenantBloque.code + '/info') || {};
+      const alerte = await alerterRenouvellement(tenantBloque.code, info, r.offre,
+        document.getElementById('blockedMode').value, r.paiementId, r.auto);
 
-      showBanner('blockedSuccess', r.auto
+      showBanner('blockedSuccess', (r.auto
         ? 'Licence réactivée jusqu\'au ' + new Date(r.jusqu).toLocaleDateString('fr-FR') +
-          '. Reconnectez-vous pour retrouver votre restaurant.'
-        : 'Déclaration enregistrée. Votre restaurant sera rouvert dès que le concepteur aura vérifié le paiement.');
-      document.getElementById('blockedReference').value = '';
+          '. Reconnectez-vous pour retrouver votre restaurant. '
+        : 'Déclaration et justificatif enregistrés. ') + messageAlerte(alerte) +
+        (r.auto ? '' : ' Vous recevrez ensuite un code d\'activation à saisir ci-dessus.'));
+
+      retirerPreuve('blocked');
     } catch(e){
       showBanner('blockedError', "La déclaration n'a pas pu être enregistrée.");
     }
