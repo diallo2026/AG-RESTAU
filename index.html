@@ -12307,5 +12307,962 @@
   })(0);
 </script>
 
+
+<!-- ============================================================
+     MODULE AGR-X1 — App AGR (restaurants)
+     ------------------------------------------------------------
+     1. LA PAGE WEB PUBLIQUE
+        L'adresse #/mon-restaurant est resolue par l'index
+        agr_sites. Quand cet index est vide — page publiee avant sa
+        creation, ecriture refusee par les regles, ou nom web jamais
+        enregistre — la resolution echouait et le visiteur ne voyait
+        qu'un « Page web not found » muet.
+
+        Desormais la resolution essaie, dans l'ordre :
+          a) l'index agr_sites ;
+          b) la copie gardee sur l'appareil ;
+          c) le nom web (slug) de chaque restaurant ;
+          d) le CODE du restaurant : #/ABC123 ouvre sa page meme
+             sans nom web enregistre ;
+          e) le nom du restaurant lui-meme, ecrit en clair
+             (#/le-gourmet retrouve « Le Gourmet »).
+        Et l'index est repare au passage, silencieusement.
+
+        En cas d'echec, la page 404 dit ENFIN pourquoi : index vide,
+        lecture refusee, aucun restaurant portant ce nom, ou reseau
+        injoignable.
+
+     2. FACTURES DE LICENCE (espace concepteur)
+        Comme sur les deux autres applications : la liste des
+        restaurants ayant paye, une facture numerotee FL-annee-suite
+        imprimable, l'envoi par WhatsApp ou par email, et le montant
+        paye modifiable a la main, applique aussitot a la facture.
+
+     OU SONT ECRITES LES DONNEES
+     - agr_sites/<slug> : uniquement REPARE (meme forme qu'avant) ;
+     - agr_platform/facturesLicence : noeud AJOUTE, celui du
+       concepteur.
+     Les fiches des restaurants sont LUES seulement : aucune
+     ecriture dans agr_tenants, aucune structure modifiee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+function nb(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function esc(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function argent(n){ return Number(nb(n)).toLocaleString('fr-FR') + ' GNF'; }
+function jour(d){
+  if(!d) return '—';
+  var x = (typeof d === 'number') ? new Date(d) : new Date(String(d));
+  return isNaN(x.getTime()) ? '—' : x.toLocaleDateString('fr-FR');
+}
+function pret(){ return !!(window._agrDb && window._agrRef && window._agrGet && window._agrSet); }
+function lire(chemin){
+  if(!pret()) return Promise.reject(new Error('Firebase indisponible'));
+  return window._agrGet(window._agrRef(window._agrDb, chemin)).then(function(s){
+    return s.exists() ? s.val() : null;
+  });
+}
+function ecrire(chemin, v){
+  if(!pret()) return Promise.reject(new Error('Firebase indisponible'));
+  return window._agrSet(window._agrRef(window._agrDb, chemin), v);
+}
+function normaliser(t){
+  var s = String(t || '').toLowerCase().trim();
+  try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(e){}
+  return s.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+/* ============================================================
+   1. PAGE WEB PUBLIQUE — RESOLUTION ROBUSTE
+   ============================================================ */
+var motif = null;   /* pourquoi la resolution a echoue */
+
+function noteDiagnostic(txt){
+  motif = txt;
+  var z = document.getElementById('storeIntrouvable');
+  if(!z) return;
+  var p = document.getElementById('agrx-motif');
+  if(!p){
+    p = document.createElement('p');
+    p.id = 'agrx-motif';
+    p.style.cssText = 'margin-top:10px;font-size:12.5px;opacity:.75;line-height:1.7;max-width:520px';
+    var bouton = z.querySelector('button');
+    if(bouton && bouton.parentNode) bouton.parentNode.insertBefore(p, bouton);
+    else z.appendChild(p);
+  }
+  p.textContent = txt;
+}
+
+/* retrouve un restaurant par son nom web, son code ou son nom */
+window.agrResoudreAdresse = function(slug){
+  var cherche = normaliser(slug);
+  if(!cherche) return Promise.resolve(null);
+
+  return lire('agr_sites/' + slug).then(function(site){
+    if(site && site.code) return { code: site.code, source: 'index' };
+    return null;
+  }, function(e){
+    noteDiagnostic('L\'index des pages web n\'a pas pu etre lu : ' + (e && e.message ? e.message : e));
+    return null;
+  }).then(function(trouve){
+    if(trouve) return trouve;
+    /* parcours des restaurants : nom web, code, puis nom du restaurant */
+    return lire('agr_tenants').then(function(tenants){
+      if(!tenants){
+        noteDiagnostic('Aucun restaurant n\'est enregistre dans la base, ou la lecture en est refusee.');
+        return null;
+      }
+      var codes = Object.keys(tenants);
+      var parSlug = null, parCode = null, parNom = null;
+      codes.forEach(function(code){
+        var t = tenants[code] || {};
+        var web = t.siteweb || {};
+        var info = t.info || {};
+        if(!parSlug && web.slug && normaliser(web.slug) === cherche) parSlug = code;
+        if(!parCode && normaliser(code) === cherche) parCode = code;
+        if(!parNom && info.nomRestaurant && normaliser(info.nomRestaurant) === cherche) parNom = code;
+      });
+      var code = parSlug || parCode || parNom;
+      if(!code){
+        noteDiagnostic('Aucun restaurant ne correspond a l\'adresse « ' + slug +' ». '
+          + 'Verifiez le nom web enregistre dans « Page web du restaurant », '
+          + 'ou utilisez l\'adresse contenant le code du restaurant.');
+        return null;
+      }
+      /* reparation silencieuse de l'index */
+      try{
+        var t = tenants[code] || {}, info = t.info || {}, web = t.siteweb || {};
+        ecrire('agr_sites/' + (web.slug ? normaliser(web.slug) : cherche), {
+          code: code,
+          nom: info.nomRestaurant || code,
+          ville: info.ville || '',
+          logo: info.logo || null,
+          slogan: web.slogan || '',
+          actif: web.actif !== false,
+          misAJourLe: Date.now()
+        }).catch(function(){});
+      }catch(e){}
+      return { code: code, source: parSlug ? 'nom web' : (parCode ? 'code' : 'nom du restaurant') };
+    }, function(e){
+      noteDiagnostic('La liste des restaurants n\'a pas pu etre lue : '
+        + (e && e.message ? e.message : e) + '. Verifiez les regles de la base.');
+      return null;
+    });
+  });
+};
+
+/* on branche la resolution robuste sur la fonction d'origine */
+(function brancher(){
+  function poser(){
+    if(typeof window.resoudreAdressePublique === 'function' && !window._agrX1Resolution){
+      window._agrX1Resolution = true;
+      var original = window.resoudreAdressePublique;
+      window.resoudreAdressePublique = function(slug){
+        return Promise.resolve(original.call(this, slug)).then(function(code){
+          if(code) return code;
+          return window.agrResoudreAdresse(slug).then(function(r){ return r ? r.code : null; });
+        }, function(){
+          return window.agrResoudreAdresse(slug).then(function(r){ return r ? r.code : null; });
+        });
+      };
+    }
+    /* la page 404 doit expliquer, meme si la fonction d'origine reste en place */
+    var z = document.getElementById('storeIntrouvable');
+    if(z && z.style.display !== 'none' && !document.getElementById('agrx-motif')){
+      var hash = (location.hash || '').replace(/^#\//, '');
+      if(hash && !motif){
+        window.agrResoudreAdresse(hash).then(function(r){
+          if(r && r.code){
+            noteDiagnostic('Restaurant retrouve par son ' + r.source + ' — rechargez la page.');
+            if(typeof window.chargerRestaurant === 'function'){
+              try{ window.chargerRestaurant(r.code, hash); }catch(e){}
+            }
+          }else if(!motif){
+            noteDiagnostic('Adresse inconnue : « ' + hash + ' ».');
+          }
+        });
+      }
+    }
+  }
+  poser();
+  setInterval(poser, 1500);
+})();
+
+/* outil du concepteur : reconstruire tout l'index des pages web */
+window.agrReparerPagesWeb = function(){
+  return lire('agr_tenants').then(function(tenants){
+    if(!tenants) return 'Aucun restaurant lu.';
+    var codes = Object.keys(tenants), faits = 0, sans = [];
+    return codes.reduce(function(chaine, code){
+      return chaine.then(function(){
+        var t = tenants[code] || {}, info = t.info || {}, web = t.siteweb || {};
+        var slug = normaliser(web.slug || info.nomRestaurant || code);
+        if(!slug){ sans.push(code); return null; }
+        return ecrire('agr_sites/' + slug, {
+          code: code, nom: info.nomRestaurant || code, ville: info.ville || '',
+          logo: info.logo || null, slogan: web.slogan || '',
+          actif: web.actif !== false, misAJourLe: Date.now()
+        }).then(function(){ faits++; }, function(){});
+      });
+    }, Promise.resolve()).then(function(){
+      var m = faits + ' page(s) web reparee(s) sur ' + codes.length
+        + (sans.length ? ' — sans nom web : ' + sans.join(', ') : '');
+      console.log('[AGR] ' + m);
+      return m;
+    });
+  });
+};
+
+/* ============================================================
+   2. FACTURES DE LICENCE — ESPACE CONCEPTEUR
+   ============================================================ */
+var restos = [], factures = {}, config = null;
+
+function nomResto(r){ return (r.info && (r.info.nomRestaurant || r.info.nom)) || r.code; }
+function aPaye(r){
+  var i = r.info || {};
+  return !!(i.dateDernierPaiement || i.dateExpiration);
+}
+function cleFacture(r){
+  var i = r.info || {};
+  var q = i.dateDernierPaiement ? String(jour(i.dateDernierPaiement)).replace(/\//g,'-') : 'sansdate';
+  return r.code + '_' + q;
+}
+function numeroSuivant(){
+  var an = new Date().getFullYear(), max = 0;
+  Object.keys(factures).forEach(function(k){
+    var m = /^FL-(\d{4})-(\d+)$/.exec(String(factures[k] && factures[k].numero || ''));
+    if(m && Number(m[1]) === an) max = Math.max(max, Number(m[2]));
+  });
+  return 'FL-' + an + '-' + String(max + 1).padStart(4, '0');
+}
+function montantDe(r){
+  var f = factures[cleFacture(r)];
+  if(f && f.montantSaisi === true) return nb(f.montant);
+  var i = r.info || {};
+  return nb(i.montantLicence || i.dernierMontant || 0);
+}
+function factureDe(r){
+  var cle = cleFacture(r);
+  if(factures[cle]) return Promise.resolve(factures[cle]);
+  var i = r.info || {};
+  var f = { numero: numeroSuivant(), code: r.code, restaurant: nomResto(r),
+            formule: i.licencePeriode || i.formule || '', montant: montantDe(r), montantSaisi: false,
+            datePaiement: i.dateDernierPaiement || null, expiration: i.dateExpiration || null,
+            creeLe: Date.now() };
+  factures[cle] = f;
+  return ecrire('agr_platform/facturesLicence/' + cle, f).then(function(){ return f; }, function(){ return f; });
+}
+
+window.agrFacturesFermer = function(){
+  var o = document.getElementById('agrx-ov');
+  if(o) o.remove();
+};
+
+window.agrFacturesLicence = function(){
+  window.agrFacturesFermer();
+  var ov = document.createElement('div');
+  ov.id = 'agrx-ov';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.9);display:flex;'
+    + 'align-items:center;justify-content:center;padding:10px';
+  ov.innerHTML = '<div style="background:#0a1628;border:1px solid rgba(37,99,235,0.35);border-radius:14px;'
+      + 'padding:18px;width:100%;max-width:900px;height:90vh;display:flex;flex-direction:column;'
+      + 'color:#cbd5e1;font-family:inherit;font-size:13px">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+      + '<div><div style="font-size:15px;font-weight:700;color:#e2e8f0">Factures de licence</div>'
+      + '<div id="agrx-sous" style="font-size:11.5px;color:#64748b">Lecture des restaurants...</div></div>'
+      + '<button onclick="agrFacturesFermer()" style="padding:6px 12px;border:1px solid rgba(37,99,235,0.35);'
+      + 'border-radius:7px;background:rgba(37,99,235,0.12);color:#93c5fd;font-size:11.5px;font-weight:700;'
+      + 'cursor:pointer;font-family:inherit">Fermer</button></div>'
+    + '<div style="font-size:11.5px;color:#64748b;margin-bottom:10px">Le montant paye est modifiable : '
+      + 'il s\'applique aussitot a la facture et au message envoye.</div>'
+    + '<input id="agrx-recherche" placeholder="Rechercher un restaurant..." oninput="agrFacturesRendre()"'
+      + ' style="padding:9px 11px;margin-bottom:10px;background:#060d24;border:1px solid rgba(37,99,235,0.3);'
+      + 'border-radius:8px;color:#e2e8f0;font-size:13px;font-family:inherit;outline:none">'
+    + '<div id="agrx-liste" style="flex:1;overflow:auto"></div>'
+    + '<div id="agrx-note" style="font-size:11.5px;color:#64748b;margin-top:8px;min-height:16px"></div>'
+    + '</div>';
+  ov.onclick = function(e){ if(e.target === ov) window.agrFacturesFermer(); };
+  document.body.appendChild(ov);
+  charger();
+};
+
+function note(t, ok){
+  var n = document.getElementById('agrx-note');
+  if(n){ n.style.color = ok ? '#4ade80' : '#f87171'; n.textContent = t; }
+}
+
+function charger(){
+  Promise.all([
+    lire('agr_platform/facturesLicence').catch(function(){ return null; }),
+    lire('agr_platform/config').catch(function(){ return null; }),
+    lire('agr_tenants')
+  ]).then(function(r){
+    factures = r[0] || {};
+    config = r[1] || {};
+    var tenants = r[2] || {};
+    restos = Object.keys(tenants).map(function(code){
+      return { code: code, info: (tenants[code] || {}).info || {} };
+    }).filter(aPaye);
+    var s = document.getElementById('agrx-sous');
+    if(s) s.textContent = restos.length + ' restaurant(s) avec une licence';
+    window.agrFacturesRendre();
+  }).catch(function(e){
+    var z = document.getElementById('agrx-liste');
+    if(z) z.innerHTML = '<div style="padding:20px;text-align:center;color:#f87171">'
+      + 'Lecture impossible : ' + esc(e.message || e) + '</div>';
+  });
+}
+
+window.agrFacturesRendre = function(){
+  var z = document.getElementById('agrx-liste');
+  if(!z) return;
+  var q = String((document.getElementById('agrx-recherche') || {}).value || '').toLowerCase();
+  var l = restos.filter(function(r){
+    if(!q) return true;
+    return (nomResto(r) + ' ' + r.code).toLowerCase().indexOf(q) >= 0;
+  });
+  if(!l.length){
+    z.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b">Aucun restaurant.</div>';
+    return;
+  }
+  z.innerHTML = l.map(function(r){
+    var f = factures[cleFacture(r)];
+    var i = r.info || {};
+    return '<div style="background:#060d24;border:1px solid rgba(37,99,235,0.18);border-radius:10px;'
+        + 'padding:11px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px;'
+        + 'flex-wrap:wrap;align-items:center">'
+      + '<div style="min-width:170px;flex:1">'
+        + '<div style="font-weight:700;color:#e2e8f0">' + esc(nomResto(r)) + '</div>'
+        + '<div style="font-size:10.5px;color:#64748b">' + esc(r.code)
+          + (i.tel ? ' · ' + esc(i.tel) : '') + (i.email ? ' · ' + esc(i.email) : '') + '</div>'
+        + '<div style="font-size:10.5px;color:#64748b">paye le ' + jour(i.dateDernierPaiement)
+          + ' · expire le ' + jour(i.dateExpiration) + (f ? ' · ' + esc(f.numero) : '') + '</div></div>'
+      + '<div style="display:flex;align-items:center;gap:5px">'
+        + '<input id="agrx-m-' + esc(r.code) + '" type="number" min="0" value="' + nb(montantDe(r)) + '"'
+          + ' onkeydown="if(event.key===\'Enter\')agrFactureMontant(\'' + esc(r.code) + '\')"'
+          + ' style="width:112px;padding:6px 8px;background:#0a1628;border:1px solid rgba(37,99,235,0.35);'
+          + 'border-radius:6px;color:#93c5fd;font-size:12px;font-weight:700;font-family:inherit;'
+          + 'text-align:right;outline:none">'
+        + '<span style="font-size:10px;color:#64748b">GNF</span>'
+        + '<button onclick="agrFactureMontant(\'' + esc(r.code) + '\')" style="padding:5px 9px;'
+          + 'border:1px solid rgba(34,197,94,0.4);border-radius:6px;background:rgba(34,197,94,0.12);'
+          + 'color:#4ade80;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit">Appliquer</button>'
+        + (f && f.montantSaisi ? '<span style="font-size:9.5px;color:#fbbf24">montant saisi</span>' : '')
+      + '</div>'
+      + '<div style="display:flex;gap:5px;flex-wrap:wrap">'
+        + '<button onclick="agrFactureImprimer(\'' + esc(r.code) + '\')" style="padding:5px 9px;'
+          + 'border:1px solid rgba(37,99,235,0.35);border-radius:6px;background:rgba(37,99,235,0.12);'
+          + 'color:#93c5fd;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit">Facture</button>'
+        + (i.tel ? '<button onclick="agrFactureWhatsapp(\'' + esc(r.code) + '\')" style="padding:5px 9px;'
+          + 'border:1px solid rgba(37,211,102,0.45);border-radius:6px;background:rgba(37,211,102,0.12);'
+          + 'color:#4ade80;font-size:10.5px;font-weight:700;cursor:pointer;font-family:inherit">WhatsApp</button>' : '')
+      + '</div></div>';
+  }).join('');
+};
+
+function restoDe(code){
+  var t = null;
+  restos.forEach(function(r){ if(!t && r.code === code) t = r; });
+  return t;
+}
+
+window.agrFactureMontant = function(code){
+  var r = restoDe(code);
+  if(!r) return;
+  var champ = document.getElementById('agrx-m-' + code);
+  if(!champ) return;
+  var montant = nb(champ.value);
+  if(montant < 0) return note('Montant invalide.', false);
+  var avant = montantDe(r);
+  factureDe(r).then(function(f){
+    f.montant = montant;
+    f.montantSaisi = true;
+    f.montantMajLe = Date.now();
+    return ecrire('agr_platform/facturesLicence/' + cleFacture(r), f).then(function(){
+      note('Montant de ' + nomResto(r) + ' : ' + argent(avant) + ' \u2192 ' + argent(montant)
+        + ' — applique a la facture ' + f.numero + '.', true);
+      window.agrFacturesRendre();
+    });
+  }).catch(function(e){
+    note('Enregistrement refuse : ' + (e.message || e)
+      + ' — autorisez le noeud agr_platform dans les regles.', false);
+  });
+};
+
+window.agrFactureImprimer = function(code){
+  var r = restoDe(code);
+  if(!r) return;
+  factureDe(r).then(function(f){
+    var c = config || {};
+    var raison = c.raisonSociale || 'NEINDI MULTI-SERVICES';
+    var adresse = c.adresse || 'Damakania, Kindia — Guinee';
+    var tel = c.whatsapp || '224623030403';
+    var i = r.info || {};
+    var css = 'body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:28px;font-size:13px}'
+      + '.t{display:flex;justify-content:space-between;border-bottom:3px solid #1d4ed8;padding-bottom:12px;margin-bottom:18px}'
+      + '.t h1{margin:0;font-size:19px;color:#1d4ed8}.p{font-size:11.5px;color:#555;line-height:1.6}'
+      + 'table{width:100%;border-collapse:collapse;margin-top:14px}'
+      + 'th,td{border:1px solid #cbd5e1;padding:9px 10px;text-align:left}'
+      + 'th{background:#eff6ff;color:#1e3a8a}td.d{text-align:right}'
+      + '.tot{margin-top:14px;text-align:right;font-size:16px;font-weight:800}'
+      + '.paye{display:inline-block;padding:6px 14px;border:2px solid #15803d;color:#15803d;'
+      + 'border-radius:6px;font-weight:800;transform:rotate(-3deg)}'
+      + '.pied{margin-top:32px;display:flex;justify-content:space-between;font-size:11.5px;color:#555;'
+      + 'border-top:1px solid #cbd5e1;padding-top:10px}@media print{.np{display:none}}';
+    var corps = '<div class="t"><div><h1>' + esc(raison) + '</h1>'
+        + '<div class="p">' + esc(adresse) + '<br>' + esc(tel) + '</div></div>'
+      + '<div style="text-align:right"><div style="font-size:18px;font-weight:700">FACTURE DE LICENCE</div>'
+      + '<div class="p">N&deg; ' + esc(f.numero) + '<br>' + jour(f.datePaiement || f.creeLe) + '</div></div></div>'
+      + '<div class="p"><strong>Client</strong><br>' + esc(nomResto(r))
+        + '<br>Code : ' + esc(r.code) + (i.tel ? '<br>' + esc(i.tel) : '')
+        + (i.email ? '<br>' + esc(i.email) : '') + (i.ville ? '<br>' + esc(i.ville) : '') + '</div>'
+      + '<table><thead><tr><th>Designation</th><th>Periode</th><th>Montant</th></tr></thead><tbody>'
+      + '<tr><td>Licence d\'utilisation de l\'application App AGR</td>'
+      + '<td>' + esc(f.formule || '—')
+      + (i.dateExpiration ? '<br><span style="font-size:11px;color:#555">jusqu\'au '
+          + jour(i.dateExpiration) + '</span>' : '') + '</td>'
+      + '<td class="d">' + argent(f.montant) + '</td></tr></tbody></table>'
+      + '<div class="tot">Total : ' + argent(f.montant) + '</div>'
+      + '<div style="text-align:right"><span class="paye">PAYEE</span></div>'
+      + '<div class="pied"><span>Merci de votre confiance.</span><span>Signature et cachet</span></div>'
+      + '<div class="np" style="margin-top:22px"><button onclick="window.print()" style="padding:9px 18px;'
+      + 'background:#1d4ed8;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;'
+      + 'cursor:pointer">Imprimer / PDF</button></div>';
+    var w = window.open('', '_blank');
+    if(!w) return note('Autorisez les fenetres pour imprimer.', false);
+    w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Facture ' + esc(f.numero)
+      + '</title><style>' + css + '</style></head><body>' + corps + '</body></html>');
+    w.document.close();
+    window.agrFacturesRendre();
+  });
+};
+
+window.agrFactureWhatsapp = function(code){
+  var r = restoDe(code);
+  if(!r) return;
+  factureDe(r).then(function(f){
+    var i = r.info || {};
+    var n = String(i.tel || '').replace(/[^0-9]/g,'');
+    if(n.length === 9) n = '224' + n;
+    if(!n) return note('Ce restaurant n\'a pas de numero.', false);
+    var texte = 'FACTURE DE LICENCE — App AGR\nN° ' + f.numero + '\n\n'
+      + 'Restaurant : ' + nomResto(r) + '\nCode : ' + r.code + '\n'
+      + 'Montant : ' + argent(f.montant) + '\nPaye le : ' + jour(f.datePaiement) + '\n'
+      + 'Valable jusqu\'au : ' + jour(i.dateExpiration) + '\n\nStatut : PAYEE — merci de votre confiance.';
+    window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(texte), '_blank');
+    note('WhatsApp ouvert — facture ' + f.numero, true);
+    window.agrFacturesRendre();
+  });
+};
+
+/* bouton dans l'espace concepteur */
+setInterval(function(){
+  var panneau = document.getElementById('cdbPanel') || document.getElementById('cdb-panel')
+    || document.querySelector('[id*="cdb"]');
+  if(!panneau || document.getElementById('agrx-bouton')) return;
+  var b = document.createElement('button');
+  b.id = 'agrx-bouton';
+  b.textContent = 'Factures de licence';
+  b.style.cssText = 'margin:6px 0 6px 6px;padding:5px 10px;border:1px solid rgba(37,99,235,0.35);'
+    + 'border-radius:6px;background:rgba(37,99,235,0.12);color:#93c5fd;font-size:10.5px;'
+    + 'font-weight:700;cursor:pointer;font-family:inherit';
+  b.onclick = function(){ window.agrFacturesLicence(); };
+  panneau.insertBefore(b, panneau.firstChild);
+}, 1500);
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X2 — LA PAGE WEB S'OUVRE DIRECTEMENT
+     ------------------------------------------------------------
+     CE QUI RETARDAIT L'OUVERTURE
+
+     1. LE VISITEUR ATTENDAIT LA BASE
+        Le routeur n'ouvrait la page qu'une fois Firebase pret
+        (window._agrReady), en reessayant toutes les 150 ms
+        jusqu'a 9 secondes. Sur une connexion mobile lente, le
+        visiteur restait devant « Ouverture de la page du
+        restaurant... » sans rien voir.
+        Desormais : si cet appareil a deja consulte la page, elle
+        s'affiche IMMEDIATEMENT depuis la copie gardee en local,
+        puis se met a jour en arriere-plan des que la base repond.
+
+     2. UNE SEULE FORME D'ADRESSE ETAIT ACCEPTEE
+        Seul #/nom-web (et l'ancien #/r/CODE) ouvrait la page.
+        Un lien colle sans le # — ?resto=nom-web, ?r=CODE, ou
+        l'adresse se terminant par /nom-web — retombait sur
+        l'accueil de l'application, avec les codes de connexion.
+        Desormais toutes ces formes sont reconnues et converties
+        en #/nom-web : le visiteur arrive sur la page, jamais sur
+        l'accueil.
+
+     3. L'ACCUEIL POUVAIT REPRENDRE LA MAIN
+        Un rendu tardif de l'application replacait parfois l'ecran
+        d'accueil par-dessus la page du restaurant. Tant que
+        l'adresse designe un restaurant, l'accueil et l'ecran de
+        connexion ne peuvent plus s'afficher.
+
+     AUCUNE ecriture en base, aucune structure modifiee : ce
+     module ne fait que lire et afficher.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+function normaliser(t){
+  var s = String(t || '').toLowerCase().trim();
+  try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(e){}
+  return s.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+/* ------------------------------------------------------------
+   1. Reconnaitre l'adresse d'un restaurant, quelle qu'en soit
+      la forme, et la ramener a #/<nom-web>
+   ------------------------------------------------------------ */
+function referenceDemandee(){
+  var hash = location.hash || '';
+  var m = hash.match(/^#\/r\/([A-Za-z0-9_-]+)/);
+  if(m) return { ref: m[1], hash: hash };
+  m = hash.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(m && !/^licence$/i.test(m[1])) return { ref: m[1], hash: hash };
+
+  /* formes sans # : ?resto= ?r= ?page= ?restaurant= */
+  try{
+    var p = new URLSearchParams(location.search || '');
+    var cles = ['resto','restaurant','r','page','site'];
+    for(var i=0;i<cles.length;i++){
+      var v = p.get(cles[i]);
+      if(v) return { ref: v, hash: '#/' + normaliser(v), aConvertir: true };
+    }
+  }catch(e){}
+
+  /* derniere portion du chemin : /le-gourmet (hebergement avec reecriture) */
+  try{
+    var bouts = (location.pathname || '').split('/').filter(Boolean);
+    var dernier = bouts[bouts.length - 1] || '';
+    if(dernier && !/\.(html?|js|css|png|jpe?g|webp|ico|json|txt|xml)$/i.test(dernier)
+       && !/^index$/i.test(dernier) && /^[A-Za-z0-9_-]{3,}$/.test(dernier)){
+      return { ref: dernier, hash: '#/' + normaliser(dernier), aConvertir: true };
+    }
+  }catch(e){}
+
+  return null;
+}
+
+var demande = referenceDemandee();
+
+/* ------------------------------------------------------------
+   2. Affichage immediat
+   ------------------------------------------------------------ */
+function montrerVitrine(){
+  try{
+    var v = document.getElementById('view-storefront');
+    if(v) v.style.display = 'block';
+    ['view-home','view-login','view-blocked','view-dashboard'].forEach(function(id){
+      var e = document.getElementById(id);
+      if(e) e.style.display = 'none';
+    });
+  }catch(e){}
+}
+
+/* l'accueil ne peut plus reprendre la main tant que l'adresse
+   designe un restaurant */
+(function protegerVue(){
+  if(!demande) return;
+  function poser(){
+    if(typeof window.showView !== 'function'){ setTimeout(poser, 200); return; }
+    if(window._agrX2Vue) return;
+    window._agrX2Vue = true;
+    var original = window.showView;
+    window.showView = function(nom){
+      if(demande && (nom === 'home' || nom === 'login')){
+        montrerVitrine();
+        return;
+      }
+      return original.apply(this, arguments);
+    };
+  }
+  poser();
+  setInterval(function(){
+    if(!demande) return;
+    var accueil = document.getElementById('view-home');
+    if(accueil && accueil.style.display !== 'none') montrerVitrine();
+  }, 600);
+})();
+
+/* la page deja consultee sur cet appareil s'affiche sans attendre */
+function ouvertureImmediate(){
+  if(!demande) return false;
+  if(typeof window.lireCachePage !== 'function' || typeof window.chargerRestaurant !== 'function') return false;
+  var refs = [demande.ref, normaliser(demande.ref), String(demande.ref).toUpperCase()];
+  var cache = null, refTrouvee = null;
+  for(var i=0;i<refs.length && !cache;i++){
+    try{
+      var c = window.lireCachePage(refs[i]);
+      if(c && c.info && c.code){ cache = c; refTrouvee = refs[i]; }
+    }catch(e){}
+  }
+  if(!cache) return false;
+  /* trop ancienne : on laisse le circuit normal decider */
+  if(Date.now() - (cache.majLe || 0) > 48*60*60*1000) return false;
+
+  montrerVitrine();
+  try{
+    var note = document.getElementById('sfDirNote');
+    if(note) note.textContent = '';
+    window.chargerRestaurant(cache.code, cache.slug || refTrouvee);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ------------------------------------------------------------
+   3. Ouverture au chargement, sans attendre la base
+   ------------------------------------------------------------ */
+(function demarrer(){
+  if(!demande) return;
+
+  /* adresse sans # : on la convertit pour que le routeur d'origine
+     la reconnaisse aussi */
+  if(demande.aConvertir && location.hash !== demande.hash){
+    try{ history.replaceState(null, '', location.pathname + location.search + demande.hash); }
+    catch(e){ location.hash = demande.hash; }
+  }
+
+  montrerVitrine();
+  var note = document.getElementById('sfDirNote');
+  if(note && !note.textContent) note.textContent = 'Ouverture de la page du restaurant…';
+
+  var affichee = false;
+  /* 1. copie locale : affichage instantane */
+  var essais = 0;
+  (function tenterCache(){
+    if(affichee) return;
+    if(ouvertureImmediate()){ affichee = true; return; }
+    if(essais++ < 20) setTimeout(tenterCache, 100);
+  })();
+
+  /* 2. base : des que les aides existent, on resout sans attendre
+     la fin de l'initialisation complete */
+  var tours = 0;
+  (function tenterBase(){
+    if(!window._agrDb || typeof window.ouvrirDepuisLien !== 'function'){
+      if(tours++ < 100) setTimeout(tenterBase, 120);
+      return;
+    }
+    try{ window.ouvrirDepuisLien(); }catch(e){}
+  })();
+
+  /* 3. filet : si rien ne s'est affiche au bout de 12 s */
+  setTimeout(function(){
+    var vitrine = document.getElementById('view-storefront');
+    var vide = !vitrine || vitrine.style.display === 'none';
+    if(vide) montrerVitrine();
+    var n = document.getElementById('sfDirNote');
+    if(n && /Ouverture de la page/.test(n.textContent || '')){
+      n.textContent = 'Le restaurant met du temps a repondre. '
+        + 'Verifiez votre connexion, puis rechargez la page.';
+    }
+  }, 12000);
+})();
+
+/* le lien partage garde la forme courte : on aide le restaurateur
+   a copier la bonne adresse */
+window.agrLienPageWeb = function(slugOuCode){
+  var base = location.origin + location.pathname;
+  return base + '#/' + normaliser(slugOuCode);
+};
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X3 — LA PAGE WEB, EN LIGNE UNIQUEMENT
+     ------------------------------------------------------------
+     TROIS CHANGEMENTS DEMANDES
+
+     1. PLUS D'ANNUAIRE POUR LES VISITEURS
+        L'ecran « Les restaurants en ligne / Choisissez un
+        restaurant... / Retour » ne s'affiche plus jamais sur la
+        page d'un restaurant. Un visiteur venu pour un restaurant
+        precis ne se retrouve plus devant la liste des autres.
+
+     2. PLUS DE MODE LOCAL SUR LA PAGE PUBLIQUE
+        La page ne sert plus de contenu enregistre sur l'appareil :
+        elle travaille uniquement avec la base. Un visiteur ne peut
+        donc plus voir une carte, des prix ou des photos qui ne
+        sont plus a jour.
+
+     3. UN MESSAGE D'ATTENTE QUI DONNE ENVIE DE REVENIR
+        Restaurant momentanement injoignable, ferme, bloque ou
+        licence expiree : le visiteur voit le nom du restaurant,
+        son logo, ses horaires, et une invitation courtoise a
+        revenir — avec le bouton WhatsApp du restaurant s'il est
+        renseigne. Aucun message technique, aucune mention de
+        panne, rien qui laisse penser que le restaurant a ferme.
+
+     AUCUNE ecriture en base, aucune structure modifiee.
+     ============================================================ -->
+<style>
+  .agrx-indispo{
+    position:fixed; inset:0; z-index:9998; display:none;
+    align-items:center; justify-content:center; padding:24px;
+    background:radial-gradient(1200px 600px at 50% -10%, #16233d 0%, #0b1220 60%, #070b14 100%);
+    color:#e8eefc; font-family:inherit; text-align:center;
+  }
+  .agrx-indispo.on{ display:flex; }
+  .agrx-carte{ max-width:520px; width:100%; }
+  .agrx-logo{
+    width:96px; height:96px; object-fit:contain; border-radius:24px;
+    background:rgba(255,255,255,0.06); padding:10px; margin-bottom:22px;
+    box-shadow:0 18px 50px rgba(0,0,0,0.45);
+  }
+  .agrx-nom{ font-size:26px; font-weight:800; letter-spacing:-0.3px; margin-bottom:10px; }
+  .agrx-mot{ font-size:16px; line-height:1.75; opacity:.92; margin-bottom:6px; }
+  .agrx-sous{ font-size:13.5px; line-height:1.8; opacity:.68; }
+  .agrx-horaires{
+    margin:22px auto 0; padding:14px 18px; border-radius:14px; max-width:420px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+    font-size:14px; line-height:1.7;
+  }
+  .agrx-horaires .t{ font-size:11px; text-transform:uppercase; letter-spacing:.09em; opacity:.55; margin-bottom:4px; }
+  .agrx-actions{ margin-top:26px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .agrx-b{
+    padding:12px 22px; border-radius:999px; border:1px solid rgba(255,255,255,0.18);
+    background:rgba(255,255,255,0.06); color:#e8eefc; font-family:inherit;
+    font-size:14px; font-weight:700; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .agrx-b:hover{ background:rgba(255,255,255,0.12); }
+  .agrx-b.wa{ background:#25D366; border-color:#25D366; color:#04220f; }
+  .agrx-pied{ margin-top:26px; font-size:12px; opacity:.45; }
+</style>
+<script>
+(function(){
+'use strict';
+
+function esc(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function adresseRestaurant(){
+  var h = location.hash || '';
+  var m = h.match(/^#\/r\/([A-Za-z0-9_-]+)/) || h.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(!m || /^licence$/i.test(m[1])) return null;
+  return m[1];
+}
+
+/* ============================================================
+   1. PLUS DE MODE LOCAL SUR LA PAGE PUBLIQUE
+   ============================================================ */
+(function couperModeLocal(){
+  function poser(){
+    if(typeof window.lireCachePage !== 'function'){ setTimeout(poser, 200); return; }
+    if(window._agrX3Local) return;
+    window._agrX3Local = true;
+    /* la page ne lit plus de contenu enregistre sur l'appareil */
+    window.lireCachePage = function(){ return null; };
+    /* et n'en enregistre plus */
+    if(typeof window.ecrireCachePage === 'function') window.ecrireCachePage = function(){};
+    /* le bandeau « hors ligne » n'a plus lieu d'etre */
+    var b = document.getElementById('sfHorsLigne');
+    if(b) b.style.display = 'none';
+    /* les copies deja presentes sont retirees de cet appareil */
+    try{
+      var aRetirer = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = localStorage.key(i);
+        if(k && k.indexOf('agr_page_') === 0) aRetirer.push(k);
+      }
+      aRetirer.forEach(function(k){ try{ localStorage.removeItem(k); }catch(e){} });
+    }catch(e){}
+  }
+  poser();
+})();
+
+/* ============================================================
+   2. L'ECRAN D'ATTENTE
+   ============================================================ */
+var derniereInfo = null;   /* memorise le restaurant en cours d'ouverture */
+
+function ecran(){
+  var e = document.getElementById('agrx-indispo');
+  if(e) return e;
+  e = document.createElement('div');
+  e.id = 'agrx-indispo';
+  e.className = 'agrx-indispo';
+  e.innerHTML = '<div class="agrx-carte">'
+    + '<img id="agrx-logo" class="agrx-logo" alt="" style="display:none">'
+    + '<div class="agrx-nom" id="agrx-nom"></div>'
+    + '<div class="agrx-mot" id="agrx-mot"></div>'
+    + '<div class="agrx-sous" id="agrx-sous"></div>'
+    + '<div class="agrx-horaires" id="agrx-horaires" style="display:none">'
+      + '<div class="t">Nos horaires</div><div id="agrx-h-texte"></div></div>'
+    + '<div class="agrx-actions" id="agrx-actions"></div>'
+    + '<div class="agrx-pied">À très bientôt.</div>'
+  + '</div>';
+  document.body.appendChild(e);
+  return e;
+}
+
+var MOTS = [
+  'Nous ne sommes pas joignables pour le moment.',
+  'Notre page fait une petite pause.',
+  'Nous revenons très vite.'
+];
+
+window.agrPageIndisponible = function(donnees){
+  donnees = donnees || {};
+  var info = donnees.info || derniereInfo || {};
+  var site = donnees.site || {};
+  var nom = donnees.nom || info.nomRestaurant || info.nom || '';
+  var e = ecran();
+
+  var logo = document.getElementById('agrx-logo');
+  if(logo){
+    if(info.logo){ logo.src = info.logo; logo.style.display = 'inline-block'; }
+    else logo.style.display = 'none';
+  }
+  var zNom = document.getElementById('agrx-nom');
+  if(zNom) zNom.textContent = nom || 'Notre restaurant';
+
+  var mot = document.getElementById('agrx-mot');
+  if(mot){
+    mot.textContent = donnees.message
+      || (nom ? nom + ' n\'est pas joignable pour le moment.' : MOTS[0]);
+  }
+  var sous = document.getElementById('agrx-sous');
+  if(sous){
+    sous.textContent = donnees.sousTitre
+      || 'Merci de revenir dans un petit moment : la carte, les photos et la commande '
+       + 'en ligne vous attendront. Nous serons ravis de vous accueillir.';
+  }
+
+  var horaires = (site && site.horaires) || info.horaires || '';
+  var ouvre = (site && site.ouvre) || '', ferme = (site && site.ferme) || '';
+  if(!horaires && ouvre && ferme) horaires = 'Tous les jours de ' + ouvre + ' à ' + ferme;
+  var zh = document.getElementById('agrx-horaires');
+  var zht = document.getElementById('agrx-h-texte');
+  if(zh && zht){
+    if(horaires){ zht.textContent = horaires; zh.style.display = 'block'; }
+    else zh.style.display = 'none';
+  }
+
+  var actions = document.getElementById('agrx-actions');
+  if(actions){
+    var html = '<button class="agrx-b" onclick="location.reload()">Réessayer</button>';
+    var tel = info.whatsapp || info.tel || info.telephone || '';
+    var num = String(tel).replace(/[^0-9]/g, '');
+    if(num.length === 9) num = '224' + num;
+    if(num.length >= 8){
+      html += '<a class="agrx-b wa" target="_blank" href="https://wa.me/' + num
+        + '?text=' + encodeURIComponent('Bonjour, je souhaite passer commande.') + '">Nous écrire</a>';
+    }
+    actions.innerHTML = html;
+  }
+
+  /* on masque tout le reste de la page publique */
+  ['storePage','storeDirectory','storeIntrouvable'].forEach(function(id){
+    var x = document.getElementById(id);
+    if(x){ x.style.display = 'none'; x.classList && x.classList.remove('on'); }
+  });
+  var v = document.getElementById('view-storefront');
+  if(v) v.style.display = 'block';
+  e.classList.add('on');
+};
+
+window.agrPageDisponible = function(){
+  var e = document.getElementById('agrx-indispo');
+  if(e) e.classList.remove('on');
+};
+
+/* ============================================================
+   3. L'ANNUAIRE ET LE 404 NE S'AFFICHENT PLUS AUX VISITEURS
+   ============================================================ */
+(function remplacer(){
+  function poser(){
+    if(window._agrX3Ecrans) return;
+    if(typeof window.afficherAnnuaire !== 'function' && typeof window.pageIntrouvable !== 'function'){
+      setTimeout(poser, 200); return;
+    }
+    window._agrX3Ecrans = true;
+
+    if(typeof window.afficherAnnuaire === 'function'){
+      var annuaire = window.afficherAnnuaire;
+      window.afficherAnnuaire = function(){
+        if(adresseRestaurant()){ window.agrPageIndisponible({}); return; }
+        return annuaire.apply(this, arguments);
+      };
+    }
+    if(typeof window.pageIntrouvable === 'function'){
+      var intro = window.pageIntrouvable;
+      window.pageIntrouvable = function(){
+        if(adresseRestaurant()){ window.agrPageIndisponible({}); return; }
+        return intro.apply(this, arguments);
+      };
+    }
+    /* on retient le restaurant en cours pour personnaliser le message */
+    if(typeof window.chargerRestaurant === 'function' && !window._agrX3Charge){
+      window._agrX3Charge = true;
+      var charger = window.chargerRestaurant;
+      window.chargerRestaurant = function(code, slug){
+        var r = charger.apply(this, arguments);
+        try{
+          if(window._agrGet && window._agrRef && window._agrDb){
+            window._agrGet(window._agrRef(window._agrDb, 'agr_tenants/' + code + '/info'))
+              .then(function(s){ if(s && s.exists && s.exists()) derniereInfo = s.val(); })
+              .catch(function(){});
+          }
+        }catch(e){}
+        return r;
+      };
+    }
+  }
+  poser();
+  setInterval(poser, 1500);
+})();
+
+/* filet : si l'annuaire parvenait malgre tout a s'afficher */
+setInterval(function(){
+  if(!adresseRestaurant()) return;
+  var d = document.getElementById('storeDirectory');
+  if(d && d.style.display !== 'none'){
+    d.style.display = 'none';
+    window.agrPageIndisponible({});
+  }
+  var i = document.getElementById('storeIntrouvable');
+  if(i && (i.style.display === 'flex' || i.classList.contains('on'))){
+    i.style.display = 'none';
+    i.classList.remove('on');
+    window.agrPageIndisponible({});
+  }
+}, 800);
+
+/* la page a mis trop longtemps a repondre : on invite a revenir */
+(function delaiCourtois(){
+  if(!adresseRestaurant()) return;
+  setTimeout(function(){
+    var page = document.getElementById('storePage');
+    var visible = page && page.style.display !== 'none';
+    var indispo = document.getElementById('agrx-indispo');
+    if(!visible && !(indispo && indispo.classList.contains('on'))){
+      window.agrPageIndisponible({});
+    }
+  }, 14000);
+})();
+
+})();
+</script>
+
 </body>
 </html>
