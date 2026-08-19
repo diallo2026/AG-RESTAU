@@ -12838,22 +12838,16 @@ function referenceDemandee(){
   /* formes sans # : ?resto= ?r= ?page= ?restaurant= */
   try{
     var p = new URLSearchParams(location.search || '');
-    var cles = ['resto','restaurant','r','page','site'];
+    var cles = ['resto','restaurant'];   /* [X4] formes explicites uniquement */
     for(var i=0;i<cles.length;i++){
       var v = p.get(cles[i]);
       if(v) return { ref: v, hash: '#/' + normaliser(v), aConvertir: true };
     }
   }catch(e){}
 
-  /* derniere portion du chemin : /le-gourmet (hebergement avec reecriture) */
-  try{
-    var bouts = (location.pathname || '').split('/').filter(Boolean);
-    var dernier = bouts[bouts.length - 1] || '';
-    if(dernier && !/\.(html?|js|css|png|jpe?g|webp|ico|json|txt|xml)$/i.test(dernier)
-       && !/^index$/i.test(dernier) && /^[A-Za-z0-9_-]{3,}$/.test(dernier)){
-      return { ref: dernier, hash: '#/' + normaliser(dernier), aConvertir: true };
-    }
-  }catch(e){}
+  /* [X4] la reconnaissance par le chemin de l'adresse est retiree :
+     l'adresse de l'application elle-meme se terminait par un segment
+     de ce genre, et l'application se croyait sur une page publique. */
 
   return null;
 }
@@ -12894,6 +12888,10 @@ function montrerVitrine(){
   poser();
   setInterval(function(){
     if(!demande) return;
+    /* [X4] un restaurant connecte n'est pas un visiteur */
+    var tb = document.getElementById('view-dashboard');
+    if(tb && tb.style.display && tb.style.display !== 'none') return;
+    if(!/^#\//.test(location.hash || '')) return;      /* [X4] adresse stricte */
     var accueil = document.getElementById('view-home');
     if(accueil && accueil.style.display !== 'none') montrerVitrine();
   }, 600);
@@ -13259,6 +13257,212 @@ setInterval(function(){
       window.agrPageIndisponible({});
     }
   }, 14000);
+})();
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X4 — App AGR
+     ------------------------------------------------------------
+     1. CORRECTION DE MA PROPRE FAUTE (connexion des restaurants)
+        Mon module X2 reconnaissait une adresse de restaurant a
+        partir du DERNIER SEGMENT DU CHEMIN de l'adresse. Sur votre
+        hebergement, l'adresse de l'application elle-meme se termine
+        par un segment de ce genre : l'application se croyait donc
+        en permanence sur une page de restaurant. Consequences : la
+        page web s'affichait apres la saisie du code, et le tableau
+        de bord ne s'ouvrait plus.
+
+        Desormais SEULE l'adresse en #/... designe un restaurant.
+        La detection est refaite a chaque instant (et non une fois
+        pour toutes au chargement), et elle est completement
+        desactivee des qu'un restaurant est connecte.
+
+     2. LA BARRE DE RECHERCHE DE L'ANNUAIRE
+        Elle ne s'affiche plus sur la page publique.
+
+     3. LE LIEN PARTAGE
+        Un client qui ouvre le lien arrive directement sur la page
+        du restaurant si la base repond ; sinon il voit le message
+        d'attente courtois — jamais l'accueil ni l'annuaire.
+
+     4. L'ESPACE CONCEPTEUR SE CACHE
+        Le bouton « Souleymane » du pied de page disparait.
+        L'espace s'ouvre en saisissant @CONCEPTEUR dans le champ
+        d'identifiant du restaurant, sur l'ecran de connexion.
+
+     AUCUNE ecriture en base, aucune structure modifiee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   1. DETECTION STRICTE — uniquement #/...
+   ============================================================ */
+function adresseRestaurant(){
+  /* un restaurant connecte n'est jamais un visiteur */
+  var tb = document.getElementById('view-dashboard');
+  if(tb && tb.style.display && tb.style.display !== 'none') return null;
+  var h = location.hash || '';
+  var m = h.match(/^#\/r\/([A-Za-z0-9_-]+)/) || h.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(!m) return null;
+  if(/^(licence|login|home|accueil|dashboard)$/i.test(m[1])) return null;
+  return m[1];
+}
+window.agrAdresseRestaurant = adresseRestaurant;
+
+/* on neutralise l'ancienne detection, trop large */
+(function corrigerX2(){
+  /* la protection de vue de X2 est remplacee par une version stricte */
+  function poser(){
+    if(typeof window.showView !== 'function'){ setTimeout(poser, 200); return; }
+    if(window._agrX4Vue) return;
+    window._agrX4Vue = true;
+
+    /* on repart de la fonction d'origine si X2 l'avait enveloppee */
+    var base = window.showView;
+    window.showView = function(nom){
+      if(adresseRestaurant() && (nom === 'home' || nom === 'login')){
+        /* visiteur d'une page de restaurant : on garde la vitrine */
+        var v = document.getElementById('view-storefront');
+        if(v) v.style.display = 'block';
+        ['view-home','view-login','view-blocked','view-dashboard'].forEach(function(id){
+          var e = document.getElementById(id);
+          if(e) e.style.display = 'none';
+        });
+        return;
+      }
+      return base.apply(this, arguments);
+    };
+  }
+  poser();
+})();
+
+/* si un restaurant est connecte, plus rien ne doit forcer la vitrine */
+setInterval(function(){
+  var tb = document.getElementById('view-dashboard');
+  if(!tb || !tb.style.display || tb.style.display === 'none') return;
+  var v = document.getElementById('view-storefront');
+  if(v && v.style.display !== 'none') v.style.display = 'none';
+  var ind = document.getElementById('agrx-indispo');
+  if(ind) ind.classList.remove('on');
+}, 700);
+
+/* ============================================================
+   2. LA BARRE DE RECHERCHE DE L'ANNUAIRE NE S'AFFICHE PLUS
+   ============================================================ */
+(function masquerRecherche(){
+  function poser(){
+    var z = document.querySelector('#storeDirectory .sf-dir-search');
+    if(z) z.style.display = 'none';
+    var champ = document.getElementById('sfDirSearch');
+    if(champ && champ.parentNode) champ.parentNode.style.display = 'none';
+  }
+  poser();
+  setInterval(poser, 1500);
+})();
+
+/* ============================================================
+   3. LE LIEN PARTAGE OUVRE LA PAGE, SANS DETOUR
+   ============================================================ */
+(function ouvrirDirect(){
+  var ref = adresseRestaurant();
+  if(!ref) return;
+  var v = document.getElementById('view-storefront');
+  if(v) v.style.display = 'block';
+  ['view-home','view-login','view-blocked','view-dashboard'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.style.display = 'none';
+  });
+  var tours = 0;
+  (function tenter(){
+    if(typeof window.ouvrirDepuisLien === 'function' && window._agrDb){
+      try{ window.ouvrirDepuisLien(); }catch(e){}
+      return;
+    }
+    if(tours++ < 100) setTimeout(tenter, 120);
+  })();
+})();
+
+/* ============================================================
+   4. ESPACE CONCEPTEUR — ouverture par @CONCEPTEUR
+   ============================================================ */
+var MOT_CLE = '@CONCEPTEUR';
+
+function ouvrirConcepteur(){
+  try{
+    var note = document.getElementById('h2ConcepteurNote');
+    if(note && note.style.display === 'block') return;
+    if(typeof window.toggleConcepteurNote === 'function') window.toggleConcepteurNote();
+    else if(note) note.style.display = 'block';
+  }catch(e){}
+}
+window.agrOuvrirConcepteur = ouvrirConcepteur;
+
+/* le bouton visible du pied de page disparait */
+(function cacherBouton(){
+  function poser(){
+    var boutons = document.querySelectorAll('.h2-footer button');
+    Array.prototype.forEach.call(boutons, function(b){
+      var t = (b.textContent || '').trim();
+      if(/^souleymane$/i.test(t) || /toggleConcepteurNote/.test(b.getAttribute('onclick') || '')){
+        b.style.display = 'none';
+      }
+    });
+  }
+  poser();
+  setInterval(poser, 2000);
+})();
+
+/* la saisie de @CONCEPTEUR dans l'identifiant du restaurant ouvre l'espace */
+(function surveillerSaisie(){
+  function estMotCle(v){
+    return String(v || '').trim().toUpperCase().replace(/\s+/g, '') === MOT_CLE;
+  }
+  function poser(){
+    var champ = document.getElementById('loginTenantId');
+    if(!champ){ setTimeout(poser, 400); return; }
+    if(champ.getAttribute('data-agrx4')) return;
+    champ.setAttribute('data-agrx4', '1');
+
+    function verifier(){
+      if(!estMotCle(champ.value)) return false;
+      champ.value = '';
+      var err = document.getElementById('loginError');
+      if(err){ err.style.display = 'none'; err.textContent = ''; }
+      ouvrirConcepteur();
+      return true;
+    }
+    champ.addEventListener('input', function(){ verifier(); });
+    champ.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && estMotCle(champ.value)){
+        e.preventDefault();
+        e.stopPropagation();
+        verifier();
+      }
+    }, true);
+
+    /* le bouton « Se connecter » ne doit pas signaler une erreur
+       quand le mot-cle est saisi */
+    if(typeof window.doLogin === 'function' && !window._agrX4Login){
+      window._agrX4Login = true;
+      var original = window.doLogin;
+      window.doLogin = function(){
+        var c = document.getElementById('loginTenantId');
+        if(c && estMotCle(c.value)){
+          c.value = '';
+          ouvrirConcepteur();
+          return;
+        }
+        return original.apply(this, arguments);
+      };
+    }
+  }
+  poser();
+  setInterval(poser, 3000);
 })();
 
 })();
