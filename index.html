@@ -14646,7 +14646,7 @@ function afficherMessage(detail, n, libelle){
       z.id = 'agrx9-details';
       z.style.cssText = 'margin-top:18px;font-size:11.5px;opacity:.45';
       z.innerHTML = '<span id="agrx9-lien" style="cursor:pointer;text-decoration:underline">Details</span>'
-        + '<div id="agrx9-texte" style="display:none;margin-top:8px;font-family:monospace;'
+        + '<div id="agrx9-texte" style="display:block;margin-top:8px;font-family:monospace;'
         + 'font-size:11px;line-height:1.7;text-align:left;max-width:460px;margin-left:auto;margin-right:auto"></div>';
       carte.appendChild(z);
       z.querySelector('#agrx9-lien').onclick = function(){
@@ -14766,6 +14766,31 @@ function etape4(code, ref){
     echec(4, 'Fiche du restaurant lue', (e && e.message) ? e.message : String(e));
   });
 }
+
+/* l'application peut refuser la page de son cote (pageIntrouvable) :
+   on note la raison exacte au lieu de la perdre */
+(function tracerRefus(){
+  function poser(){
+    if(typeof window.pageIntrouvable !== 'function'){ setTimeout(poser, 300); return; }
+    if(window._agrX9Refus) return;
+    window._agrX9Refus = true;
+    var original = window.pageIntrouvable;
+    window.pageIntrouvable = function(){
+      var detail = 'refus interne de l\'application';
+      try{
+        var site = (typeof storeSite !== 'undefined') ? storeSite : null;
+        var code = (typeof storeTenantCode !== 'undefined') ? storeTenantCode : null;
+        detail += ' — code=' + (code || 'aucun')
+          + ', page publiee=' + (site && site.actif === false ? 'NON' : (site ? 'oui' : 'inconnue'))
+          + ', nom web=' + ((site && site.slug) || 'aucun');
+      }catch(e){}
+      noter(6, 'Page affichee', 'ko', detail);
+      afficherMessage(detail, 6, 'Page affichee');
+      return original.apply(this, arguments);
+    };
+  }
+  poser();
+})();
 
 if(refPublique()){
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(ouvrir, 60); });
@@ -14941,6 +14966,146 @@ window.agrVerifierDeploiement = function(){
     }
   }).catch(function(){});
 })();
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X11 — LA PAGE N'EST PLUS ANNULEE PAR UN DETAIL
+     ------------------------------------------------------------
+     CE QUE J'AI TROUVE EN RELISANT chargerRestaurant() EN ENTIER
+
+     La lecture de la base reussit chez vous : le nom « neindi »
+     s'affiche, donc la fiche a bien ete lue. Le blocage est APRES,
+     dans le second bloc de la fonction :
+
+         try {
+           storePage.style.display = 'block';
+           renderStoreVitrine(info);
+           renderStoreCategories(); renderSpecialites();
+           renderStoreMenu(); appliquerIdentiteWeb(...);
+           analyserRestaurant(); loadAvis(); renderCart();
+           restaurerPanier(); document.getElementById('storeZone')...
+         } catch(e){
+           sfDirNote.textContent = "Impossible d'afficher la page…";
+           afficherAnnuaire();            // <-- tout est annule
+         }
+
+     UNE SEULE de ces quinze operations qui echoue — un element
+     absent, un avis illisible, une image manquante, un plat mal
+     forme — et le catch efface TOUTE la page et renvoie vers
+     l'annuaire, donc vers mon ecran d'attente. L'erreur n'est
+     jamais montree : c'est l'un des 49 blocs catch vides que mon
+     audit signalait, et c'est le plus couteux.
+
+     CE QUE FAIT CE MODULE
+
+     Chaque fonction d'affichage est isolee : si l'une echoue, elle
+     est ignoree, son nom et son erreur sont journalises, et LES
+     AUTRES CONTINUENT. Le grand catch n'a donc plus de raison de
+     se declencher : la page s'affiche, meme incomplete, au lieu de
+     disparaitre entierement.
+
+     Et si le contenu a ete construit mais que la page a quand meme
+     ete masquee, elle est retablie.
+
+     AUCUNE ecriture en base, aucune donnee de restaurant touchee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+/* les etapes d'affichage de la page publique, dans l'ordre du code */
+var ETAPES = [
+  'masquerIntrouvable', 'renderStoreVitrine', 'surveillerSursis',
+  'renderStoreCategories', 'renderSpecialites', 'renderStoreMenu',
+  'appliquerIdentiteWeb', 'analyserRestaurant', 'preparerNumeroFiche',
+  'chargerClientConnu', 'changerModeFiche', 'renderCart', 'restaurerPanier',
+  'loadAvis', 'afficherBandeauHorsLigne', 'envoyerCommandesEnAttente',
+  'surveillerRetourReseau', 'renderStoreAvis', 'renderStoreHoraires'
+];
+
+var incidents = [];
+window.agrIncidentsPage = function(){ return incidents.slice(); };
+
+function signaler(nom, message){
+  try{
+    var texte = document.getElementById('agrx9-texte');
+    if(texte){
+      texte.insertAdjacentHTML('beforeend',
+        '<br><span style="opacity:.8">! ' + nom + ' : '
+        + String(message).replace(/</g,'&lt;') + '</span>');
+    }
+  }catch(e){}
+}
+
+function isoler(nom){
+  var original = window[nom];
+  if(typeof original !== 'function' || original.__x11) return;
+  var enveloppe = function(){
+    try{
+      return original.apply(this, arguments);
+    }catch(e){
+      var message = (e && e.message) ? e.message : String(e);
+      incidents.push({ fonction: nom, erreur: message, quand: Date.now() });
+      console.warn('[AGR] « ' + nom + ' » a echoue et a ete ignore : ' + message);
+      signaler(nom, message);
+      return undefined;      /* on avale : la suite doit continuer */
+    }
+  };
+  enveloppe.__x11 = true;
+  window[nom] = enveloppe;
+}
+
+function poser(){ ETAPES.forEach(isoler); }
+poser();
+setInterval(poser, 1500);
+
+/* ------------------------------------------------------------
+   Si le grand catch se declenche malgre tout, on le nomme
+   ------------------------------------------------------------ */
+(function surveillerAnnulation(){
+  function brancher(){
+    var note = document.getElementById('sfDirNote');
+    if(!note || note.__x11) return;
+    note.__x11 = true;
+    try{
+      new MutationObserver(function(){
+        var t = note.textContent || '';
+        if(/Impossible d'afficher la page/.test(t)){
+          var dernier = incidents[incidents.length - 1];
+          var detail = dernier
+            ? 'la fonction « ' + dernier.fonction + ' » a echoue : ' + dernier.erreur
+            : 'une operation d\'affichage a echoue (aucun detail capture)';
+          console.error('[AGR] page annulee par le catch d\'affichage — ' + detail);
+          incidents.push({ fonction:'chargerRestaurant (catch)', erreur: detail, quand: Date.now() });
+          signaler('affichage de la page', detail);
+        }
+      }).observe(note, { childList:true, characterData:true, subtree:true });
+    }catch(e){}
+  }
+  brancher();
+  setInterval(brancher, 2000);
+})();
+
+/* ------------------------------------------------------------
+   Filet : si le contenu existe, la page reste visible
+   ------------------------------------------------------------ */
+setInterval(function(){
+  var page = document.getElementById('storePage');
+  if(!page) return;
+  var zone = document.getElementById('storeMenu') || document.getElementById('storeVitrine');
+  var aDuContenu = zone && (zone.innerHTML || '').trim().length > 40;
+  if(aDuContenu && page.style.display === 'none'){
+    page.style.display = 'block';
+    var annuaire = document.getElementById('storeDirectory');
+    if(annuaire) annuaire.style.display = 'none';
+    var attente = document.getElementById('agrx-indispo');
+    if(attente) attente.classList.remove('on');
+    console.log('[AGR] contenu present : la page est retablie');
+  }
+}, 700);
 
 })();
 </script>
