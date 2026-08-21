@@ -13253,6 +13253,8 @@ setInterval(function(){
     var page = document.getElementById('storePage');
     var visible = page && page.style.display !== 'none';
     var indispo = document.getElementById('agrx-indispo');
+    /* [X5] un chargement en cours ne doit pas etre interrompu */
+    if(window._agrX5EnCours) return;
     if(!visible && !(indispo && indispo.classList.contains('on'))){
       window.agrPageIndisponible({});
     }
@@ -13463,6 +13465,1029 @@ window.agrOuvrirConcepteur = ouvrirConcepteur;
   }
   poser();
   setInterval(poser, 3000);
+})();
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X5 — App AGR
+     ------------------------------------------------------------
+     1. @CONCEPTEUR NE FONCTIONNAIT PAS : MAUVAIS CHAMP
+        J'avais branche le mot-cle sur « loginTenantId », le champ
+        de l'ecran de connexion detaille. Or vos restaurants
+        saisissent leur identifiant dans le champ de l'accueil,
+        « h2-code-input », qui appelle h2GoTo(). Le mot-cle est
+        desormais branche sur CE champ (et sur l'autre aussi, par
+        precaution), a la frappe, a la touche Entree et au clic sur
+        « Acceder ».
+
+     2. LE VISITEUR PASSAIT PAR LA CONNEXION PUIS L'ACCUEIL
+        L'application affiche ses ecrans en modifiant directement
+        leur style ; mes protections, posees APRES, arrivaient trop
+        tard et le visiteur voyait defiler connexion puis accueil.
+        Une feuille de style est maintenant injectee des le
+        chargement : tant que l'adresse designe un restaurant,
+        l'accueil, la connexion et le tableau de bord sont
+        neutralises par CSS — rien ne peut plus s'afficher a la
+        place de la page publique, meme une fraction de seconde.
+
+     3. LA PAGE NE S'AFFICHAIT PAS, MEME RESTAURANT EN LIGNE
+        L'ecran d'attente que j'ai ajoute hier est une couche qui
+        recouvre toute la page. Une fois affichee — notamment par
+        le delai de 14 secondes — elle restait par-dessus la page
+        du restaurant meme quand celle-ci finissait par arriver.
+        Elle se retire desormais automatiquement des que la page du
+        restaurant est prete, et le delai ne se declenche plus si
+        un chargement est en cours.
+
+        Un rapport de diagnostic est disponible : ajoutez ?diag=1
+        a l'adresse pour voir chaque etape et l'erreur exacte.
+
+     AUCUNE ecriture en base, aucune donnee de restaurant touchee,
+     aucune structure modifiee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+/* ------------------------------------------------------------
+   Adresse publique : uniquement #/...
+   ------------------------------------------------------------ */
+function refPublique(){
+  var h = location.hash || '';
+  var m = h.match(/^#\/r\/([A-Za-z0-9_-]+)/) || h.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(!m) return null;
+  if(/^(licence|login|home|accueil|dashboard)$/i.test(m[1])) return null;
+  return m[1];
+}
+var DIAG = /[?&]diag=1/.test(location.search || '');
+
+/* ============================================================
+   1. RIEN NE S'AFFICHE A LA PLACE DE LA PAGE PUBLIQUE
+   ============================================================ */
+(function verrouAffichage(){
+  var style = document.getElementById('agrx5-style');
+  if(!style){
+    style = document.createElement('style');
+    style.id = 'agrx5-style';
+    style.textContent =
+      'body.agr-visiteur #view-home,'
+    + 'body.agr-visiteur #view-login,'
+    + 'body.agr-visiteur #view-blocked,'
+    + 'body.agr-visiteur #view-dashboard{display:none !important}'
+    + 'body.agr-visiteur #view-storefront{display:block !important}'
+    + 'body.agr-visiteur #storeDirectory{display:none !important}';
+    (document.head || document.documentElement).appendChild(style);
+  }
+  function appliquer(){
+    var visiteur = !!refPublique();
+    document.body && document.body.classList.toggle('agr-visiteur', visiteur);
+  }
+  appliquer();
+  document.addEventListener('DOMContentLoaded', appliquer);
+  window.addEventListener('hashchange', appliquer);
+  setInterval(appliquer, 400);
+})();
+
+/* ============================================================
+   2. L'ECRAN D'ATTENTE NE RECOUVRE PLUS UNE PAGE PRETE
+   ============================================================ */
+(function liberer(){
+  setInterval(function(){
+    var page = document.getElementById('storePage');
+    var ind = document.getElementById('agrx-indispo');
+    if(!ind || !page) return;
+    var prete = page.style.display && page.style.display !== 'none';
+    if(prete && ind.classList.contains('on')) ind.classList.remove('on');
+  }, 500);
+})();
+
+/* ============================================================
+   3. OUVERTURE DE LA PAGE, AVEC DIAGNOSTIC
+   ============================================================ */
+var etapes = [];
+function etape(t, etat, detail){
+  etapes.push({ t: t, etat: etat, detail: detail || '' });
+  if(!DIAG) return;
+  var z = document.getElementById('agrx5-diag');
+  if(!z){
+    z = document.createElement('div');
+    z.id = 'agrx5-diag';
+    z.style.cssText = 'position:fixed;left:10px;right:10px;bottom:10px;z-index:100000;max-height:45vh;'
+      + 'overflow:auto;background:rgba(6,13,36,0.96);border:1px solid rgba(37,99,235,0.4);border-radius:10px;'
+      + 'padding:12px;color:#cbd5e1;font:12px/1.7 monospace';
+    document.body.appendChild(z);
+  }
+  var signe = etat === 'ok' ? '✔' : etat === 'ko' ? '✖' : '…';
+  var couleur = etat === 'ok' ? '#4ade80' : etat === 'ko' ? '#f87171' : '#60a5fa';
+  z.insertAdjacentHTML('beforeend',
+    '<div><span style="color:' + couleur + '">' + signe + '</span> ' + t
+    + (detail ? ' <span style="opacity:.65">— ' + String(detail).replace(/</g,'&lt;') + '</span>' : '') + '</div>');
+}
+window.agrDiagnosticPage = function(){ return etapes; };
+
+function lire(chemin){
+  if(!(window._agrDb && window._agrRef && window._agrGet)) return Promise.reject(new Error('Firebase pas encore charge'));
+  return window._agrGet(window._agrRef(window._agrDb, chemin)).then(function(s){
+    return (s && s.exists && s.exists()) ? s.val() : null;
+  });
+}
+function normaliser(t){
+  var s = String(t || '').toLowerCase().trim();
+  try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(e){}
+  return s.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+
+function ouvrirPage(){
+  var ref = refPublique();
+  if(!ref) return;
+  etape('Adresse demandee : ' + ref, 'ok');
+
+  var attente = 0;
+  (function attendreBase(){
+    if(window._agrDb && window._agrGet){
+      etape('Base joignable', 'ok');
+      resoudre(ref);
+      return;
+    }
+    if(attente++ < 120){ setTimeout(attendreBase, 150); return; }
+    etape('Base joignable', 'ko', 'aucune reponse');
+    if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+  })();
+}
+
+function resoudre(ref){
+  lire('agr_sites/' + ref).then(function(site){
+    if(site && site.code){ etape('Trouve dans l\'index des pages', 'ok', site.code); return site.code; }
+    etape('Index des pages', 'ko', 'aucune entree pour « ' + ref + ' »');
+    return lire('agr_tenants').then(function(tenants){
+      if(!tenants){ etape('Liste des restaurants', 'ko', 'lecture vide ou refusee'); return null; }
+      var cherche = normaliser(ref), code = null;
+      Object.keys(tenants).forEach(function(c){
+        if(code) return;
+        var t = tenants[c] || {}, web = t.siteweb || {}, info = t.info || {};
+        if((web.slug && normaliser(web.slug) === cherche)
+          || normaliser(c) === cherche
+          || (info.nomRestaurant && normaliser(info.nomRestaurant) === cherche)) code = c;
+      });
+      if(code) etape('Trouve parmi les restaurants', 'ok', code);
+      else etape('Recherche parmi les restaurants', 'ko', 'aucune correspondance');
+      return code;
+    });
+  }).then(function(code){
+    if(!code){
+      if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+      return;
+    }
+    if(typeof window.chargerRestaurant !== 'function'){
+      etape('Chargement de la page', 'ko', 'fonction indisponible');
+      return;
+    }
+    etape('Chargement de la page…', 'attente');
+    window._agrX5EnCours = Date.now();
+    try{ window.chargerRestaurant(code, ref); }
+    catch(e){ etape('Chargement de la page', 'ko', e && e.message ? e.message : e); }
+    /* controle : la page est-elle affichee ? */
+    var tours = 0;
+    (function verifier(){
+      var page = document.getElementById('storePage');
+      if(page && page.style.display && page.style.display !== 'none'){
+        etape('Page affichee', 'ok');
+        window._agrX5EnCours = 0;
+        var ind = document.getElementById('agrx-indispo');
+        if(ind) ind.classList.remove('on');
+        return;
+      }
+      if(tours++ < 90){ setTimeout(verifier, 200); return; }
+      etape('Page affichee', 'ko', 'le restaurant n\'a pas repondu a temps');
+      window._agrX5EnCours = 0;
+      if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+    })();
+  }).catch(function(e){
+    etape('Ouverture', 'ko', e && e.message ? e.message : e);
+    if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+  });
+}
+
+if(refPublique()){
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ouvrirPage);
+  else ouvrirPage();
+  window.addEventListener('hashchange', function(){ etapes = []; ouvrirPage(); });
+}
+
+/* ============================================================
+   4. @CONCEPTEUR — SUR LE BON CHAMP
+   ============================================================ */
+var MOT = '@CONCEPTEUR';
+function estMot(v){ return String(v || '').trim().toUpperCase().replace(/\s+/g, '') === MOT; }
+
+function ouvrirConcepteur(){
+  var note = document.getElementById('h2ConcepteurNote');
+  if(note && note.style.display === 'block') return true;
+  if(typeof window.toggleConcepteurNote === 'function'){ window.toggleConcepteurNote(); return true; }
+  if(note){ note.style.display = 'block'; return true; }
+  return false;
+}
+window.agrOuvrirConcepteur = ouvrirConcepteur;
+
+(function brancherMotCle(){
+  var CHAMPS = ['h2-code-input', 'loginTenantId'];
+
+  function nettoyer(champ){
+    champ.value = '';
+    var err = document.getElementById('h2-code-err') || document.getElementById('loginError');
+    if(err){ err.style.display = 'none'; err.textContent = ''; }
+  }
+
+  function poser(){
+    CHAMPS.forEach(function(id){
+      var champ = document.getElementById(id);
+      if(!champ || champ.getAttribute('data-agrx5')) return;
+      champ.setAttribute('data-agrx5', '1');
+      champ.addEventListener('input', function(){
+        if(estMot(champ.value)){ nettoyer(champ); ouvrirConcepteur(); }
+      });
+      champ.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' && estMot(champ.value)){
+          e.preventDefault(); e.stopImmediatePropagation();
+          nettoyer(champ); ouvrirConcepteur();
+        }
+      }, true);
+    });
+
+    /* le bouton « Acceder » de l'accueil */
+    if(typeof window.h2GoTo === 'function' && !window._agrX5GoTo){
+      window._agrX5GoTo = true;
+      var original = window.h2GoTo;
+      window.h2GoTo = function(){
+        var champ = document.getElementById('h2-code-input');
+        if(champ && estMot(champ.value)){
+          nettoyer(champ);
+          ouvrirConcepteur();
+          return;
+        }
+        return original.apply(this, arguments);
+      };
+    }
+    /* le bouton « Se connecter » de l'ecran detaille */
+    if(typeof window.doLogin === 'function' && !window._agrX5Login){
+      window._agrX5Login = true;
+      var originalLogin = window.doLogin;
+      window.doLogin = function(){
+        var champ = document.getElementById('loginTenantId');
+        if(champ && estMot(champ.value)){
+          nettoyer(champ);
+          ouvrirConcepteur();
+          return;
+        }
+        return originalLogin.apply(this, arguments);
+      };
+    }
+  }
+  poser();
+  setInterval(poser, 1200);
+})();
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X6 — RENFORCEMENT DU MOT DE PASSE CONCEPTEUR
+     ------------------------------------------------------------
+     CE QUI EXISTAIT DEJA (et que j'avais mal jugé)
+     Le mot de passe n'est PAS stocké en clair : l'application le
+     transforme déjà en empreinte SHA-256, migre silencieusement
+     les anciens comptes, verrouille après cinq tentatives et
+     protège le changement par une question de sécurité. Le
+     commentaire d'origine du fichier disait le contraire ; il
+     n'était plus à jour.
+
+     CE QUI RESTE FAIBLE, ET CE QUE FAIT CE MODULE
+     Une empreinte SHA-256 simple se calcule des millions de fois
+     par seconde : quelqu'un qui lit le nœud agr_platform_admins
+     (aujourd'hui lisible par tous) peut essayer un dictionnaire
+     hors ligne jusqu'à retrouver le mot de passe.
+
+     L'empreinte devient donc un PBKDF2-SHA256 à 210 000 tours
+     avec un sel propre à chaque compte : la même attaque devient
+     des centaines de milliers de fois plus lente, et deux comptes
+     ayant le même mot de passe n'ont plus la même empreinte.
+
+     MIGRATION SANS RUPTURE
+     - une empreinte ancienne reste acceptée à la connexion ;
+     - dès qu'elle est vérifiée, elle est remplacée par la nouvelle,
+       sans que le concepteur ait rien à faire ;
+     - un changement de mot de passe enregistre directement la
+       nouvelle forme.
+     Personne ne se retrouve dehors, aucun mot de passe à ressaisir.
+
+     Format enregistré :  pbkdf2$210000$<sel>$<empreinte>
+     La réponse de sécurité garde l'empreinte simple : elle n'ouvre
+     rien à elle seule.
+
+     AUCUNE donnée de restaurant touchée, aucune structure modifiée :
+     seul le champ passwordHash du compte concepteur change de forme.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+var TOURS = 210000;
+
+function hex(buf){
+  return Array.from(new Uint8Array(buf)).map(function(b){
+    return b.toString(16).padStart(2, '0');
+  }).join('');
+}
+function selAleatoire(){
+  var t = new Uint8Array(16);
+  (window.crypto || {}).getRandomValues && window.crypto.getRandomValues(t);
+  return hex(t.buffer);
+}
+function utf8(t){ return new TextEncoder().encode(t); }
+
+/* empreinte lente, propre a chaque compte */
+function empreinteForte(motDePasse, sel, tours){
+  tours = tours || TOURS;
+  if(!(window.crypto && window.crypto.subtle && window.crypto.subtle.importKey)){
+    return Promise.reject(new Error('chiffrement indisponible'));
+  }
+  return window.crypto.subtle.importKey('raw', utf8('agr::' + motDePasse), { name:'PBKDF2' }, false, ['deriveBits'])
+    .then(function(cle){
+      return window.crypto.subtle.deriveBits({
+        name:'PBKDF2', salt: utf8(sel), iterations: tours, hash:'SHA-256'
+      }, cle, 256);
+    })
+    .then(function(bits){ return 'pbkdf2$' + tours + '$' + sel + '$' + hex(bits); });
+}
+window.agrEmpreinteForte = empreinteForte;
+
+/* empreinte ancienne, conservee pour reconnaitre les comptes existants */
+function empreinteSimple(texte){
+  return window.crypto.subtle.digest('SHA-256', utf8('agr::' + texte)).then(hex);
+}
+
+function estForte(v){ return typeof v === 'string' && v.indexOf('pbkdf2$') === 0; }
+
+function verifierForte(stocke, saisi){
+  var p = String(stocke).split('$');
+  if(p.length !== 4) return Promise.resolve(false);
+  return empreinteForte(saisi, p[2], parseInt(p[1], 10) || TOURS)
+    .then(function(calcule){ return calcule === stocke; });
+}
+
+/* ------------------------------------------------------------
+   La verification accepte les deux formes et modernise au passage
+   ------------------------------------------------------------ */
+(function brancher(){
+  function poser(){
+    if(typeof window.motDePasseValide !== 'function'){ setTimeout(poser, 300); return; }
+    if(window._agrX6) return;
+    window._agrX6 = true;
+    var original = window.motDePasseValide;
+
+    window.motDePasseValide = function(admin, saisi){
+      if(!admin) return Promise.resolve(false);
+
+      /* forme moderne */
+      if(estForte(admin.passwordHash)) return verifierForte(admin.passwordHash, saisi);
+
+      /* forme ancienne : on valide comme avant, puis on modernise */
+      return Promise.resolve(original.call(this, admin, saisi)).then(function(ok){
+        if(!ok) return false;
+        moderniser(admin, saisi);
+        return true;
+      });
+    };
+  }
+  poser();
+  setInterval(poser, 4000);
+})();
+
+/* remplace l'ancienne empreinte par la nouvelle, en silence */
+function moderniser(admin, motDePasse){
+  try{
+    var cle = null;
+    if(window.concepteurConnecte && window.concepteurConnecte.cle) cle = window.concepteurConnecte.cle;
+    if(!cle && admin && admin.__cle) cle = admin.__cle;
+    if(!cle && admin && admin.email) cle = null;   /* la cle sera retrouvee ci-dessous */
+
+    var ecrire = function(cheminCle){
+      empreinteForte(motDePasse, selAleatoire()).then(function(forte){
+        return Promise.all([
+          window._agrSet(window._agrRef(window._agrDb, 'agr_platform_admins/' + cheminCle + '/passwordHash'), forte),
+          window._agrSet(window._agrRef(window._agrDb, 'agr_platform_admins/' + cheminCle + '/password'), null)
+        ]);
+      }).then(function(){
+        console.log('[AGR] empreinte du compte concepteur renforcee');
+      }).catch(function(e){
+        console.warn('[AGR] renforcement impossible :', e && e.message ? e.message : e);
+      });
+    };
+
+    if(cle) return ecrire(cle);
+
+    /* on retrouve la cle du compte a partir de son email */
+    if(!(window._agrDb && window._agrGet && admin && admin.email)) return;
+    window._agrGet(window._agrRef(window._agrDb, 'agr_platform_admins')).then(function(s){
+      var tous = (s && s.exists && s.exists()) ? s.val() : null;
+      if(!tous) return;
+      Object.keys(tous).forEach(function(k){
+        if(tous[k] && tous[k].email === admin.email) ecrire(k);
+      });
+    }).catch(function(){});
+  }catch(e){}
+}
+
+/* ------------------------------------------------------------
+   Un changement de mot de passe enregistre la forme moderne
+   ------------------------------------------------------------ */
+(function brancherChangement(){
+  function poser(){
+    if(typeof window.changerMotDePasseConcepteur !== 'function'){ setTimeout(poser, 300); return; }
+    if(window._agrX6Chgt) return;
+    window._agrX6Chgt = true;
+    var original = window.changerMotDePasseConcepteur;
+
+    window.changerMotDePasseConcepteur = function(){
+      var champ = document.getElementById('cdbNouveauMdp');
+      var nouveau = champ ? champ.value : '';
+      var resultat = original.apply(this, arguments);
+      /* une fois l'enregistrement d'origine termine, on remplace
+         l'empreinte simple par l'empreinte lente */
+      Promise.resolve(resultat).then(function(){
+        if(!nouveau) return;
+        var note = document.getElementById('cdbSecuriteNote');
+        var reussi = note && /modifi/i.test(note.textContent || '');
+        if(!reussi) return;
+        var cle = window.concepteurConnecte && window.concepteurConnecte.cle;
+        if(!cle) return;
+        empreinteForte(nouveau, selAleatoire()).then(function(forte){
+          return window._agrSet(window._agrRef(window._agrDb,
+            'agr_platform_admins/' + cle + '/passwordHash'), forte);
+        }).then(function(){
+          console.log('[AGR] nouveau mot de passe enregistre en empreinte renforcee');
+        }).catch(function(){});
+      });
+      return resultat;
+    };
+  }
+  poser();
+  setInterval(poser, 4000);
+})();
+
+/* ------------------------------------------------------------
+   Verification a la demande, sans rien modifier
+   ------------------------------------------------------------ */
+window.agrEtatMotDePasse = function(){
+  if(!(window._agrDb && window._agrGet)) return Promise.resolve('Firebase indisponible');
+  return window._agrGet(window._agrRef(window._agrDb, 'agr_platform_admins')).then(function(s){
+    var tous = (s && s.exists && s.exists()) ? s.val() : null;
+    if(!tous) return 'Aucun compte concepteur enregistre.';
+    return Object.keys(tous).map(function(k){
+      var a = tous[k] || {};
+      var forme = estForte(a.passwordHash) ? 'renforcee (PBKDF2)'
+        : a.passwordHash ? 'ancienne (SHA-256) — sera renforcee a la prochaine connexion'
+        : a.password ? 'EN CLAIR — connectez-vous une fois pour la remplacer'
+        : 'aucune empreinte';
+      return (a.email || k) + ' : ' + forme
+        + (a.question ? ' · question de securite definie' : ' · pas de question de securite');
+    }).join('\n');
+  });
+};
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X7 — AUTHENTIFICATION DU CONCEPTEUR
+     ------------------------------------------------------------
+     ETAPE 2 : la vraie fermeture.
+
+     Jusqu'ici, l'espace concepteur se protegeait tout seul : il
+     lisait agr_platform_admins et comparait l'empreinte du mot de
+     passe. Comme la base est lisible par tous, l'empreinte l'etait
+     aussi — et rien n'empechait quelqu'un d'ecrire dans ce noeud.
+
+     Desormais l'identite est verifiee PAR FIREBASE, pas par la
+     page : l'email et le mot de passe saisis servent a ouvrir une
+     session Firebase Authentication. Une fois cette session
+     ouverte, les regles de la base peuvent reserver le noeud du
+     concepteur aux comptes authentifies — la page ne peut plus
+     mentir, c'est le serveur qui tranche.
+
+     TRANSITION SANS RUPTURE, dans cet ordre :
+       1. ce fichier est deploye — rien ne change encore ;
+       2. vous activez Email/Mot de passe dans la console Firebase
+          et creez votre compte concepteur ;
+       3. vous vous connectez : si l'authentification reussit, elle
+          fait foi ; si elle echoue ou n'est pas activee, l'ancienne
+          verification par empreinte prend le relais ;
+       4. quand le bandeau affiche « session Firebase active »,
+          et SEULEMENT a ce moment, vous publiez les regles qui
+          ferment le noeud.
+     Vous ne pouvez donc pas vous enfermer dehors.
+
+     AUCUNE donnee de restaurant touchee, aucune structure modifiee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+var SDK = 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+var auth = null, api = null, chargement = null;
+
+function config(){
+  try{
+    if(window._agrDb && window._agrDb.app && window._agrDb.app.options) return window._agrDb.app;
+  }catch(e){}
+  return null;
+}
+
+/* le module d'authentification n'est charge qu'au moment ou l'on en a besoin */
+function chargerAuth(){
+  if(auth) return Promise.resolve(auth);
+  if(chargement) return chargement;
+  var source = (typeof window._agrAuthImport === 'function')
+    ? window._agrAuthImport()          /* point d'entree remplacable (essais) */
+    : import(SDK);
+  chargement = Promise.resolve(source).then(function(m){
+    api = m;
+    var app = config();
+    if(!app) throw new Error('Firebase pas encore initialise');
+    auth = m.getAuth(app);
+    return auth;
+  });
+  return chargement;
+}
+
+/* etat lisible : sert au bandeau et a votre verification avant de fermer */
+window.agrEtatAuth = function(){
+  return chargerAuth().then(function(a){
+    var u = a.currentUser;
+    return {
+      disponible: true,
+      connecte: !!u,
+      email: u ? u.email : null,
+      message: u ? 'session Firebase active (' + u.email + ')'
+                 : 'authentification disponible, aucune session ouverte'
+    };
+  }).catch(function(e){
+    return { disponible: false, connecte: false, email: null,
+             message: 'authentification indisponible : ' + (e && e.message ? e.message : e) };
+  });
+};
+
+/* ------------------------------------------------------------
+   Bandeau discret dans l'espace concepteur
+   ------------------------------------------------------------ */
+function bandeau(texte, etat){
+  var note = document.getElementById('h2ConcepteurNote');
+  if(!note) return;
+  var z = document.getElementById('agrx7-etat');
+  if(!z){
+    z = document.createElement('div');
+    z.id = 'agrx7-etat';
+    z.style.cssText = 'margin:8px 0;padding:7px 10px;border-radius:7px;font-size:11px;line-height:1.6';
+    var vue = document.getElementById('conceptPasswordView') || note.firstElementChild;
+    if(vue && vue.parentNode) vue.parentNode.insertBefore(z, vue);
+    else note.appendChild(z);
+  }
+  var couleurs = {
+    ok:   'background:rgba(34,197,94,0.12);color:#4ade80',
+    info: 'background:rgba(37,99,235,0.12);color:#93c5fd',
+    alerte:'background:rgba(245,158,11,0.12);color:#fbbf24'
+  };
+  z.setAttribute('style', z.getAttribute('style').replace(/background[^;]*;?|color:[^;]*;?/g, '')
+    + ';' + (couleurs[etat] || couleurs.info));
+  z.textContent = texte;
+}
+
+function rafraichirBandeau(){
+  var note = document.getElementById('h2ConcepteurNote');
+  if(!note || note.style.display !== 'block') return;
+  window.agrEtatAuth().then(function(e){
+    if(e.connecte) bandeau('Identite verifiee par Firebase — ' + e.email
+      + '. Vous pouvez fermer le noeud dans les regles.', 'ok');
+    else if(e.disponible) bandeau('Authentification Firebase disponible. '
+      + 'Connectez-vous avec l\'email et le mot de passe de votre compte concepteur.', 'info');
+    else bandeau('Authentification Firebase non activee : la verification '
+      + 'se fait encore par empreinte. Ne fermez pas encore le noeud dans les regles.', 'alerte');
+  });
+}
+setInterval(rafraichirBandeau, 2500);
+
+/* ------------------------------------------------------------
+   La connexion passe par Firebase, avec repli sur l'existant
+   ------------------------------------------------------------ */
+(function brancherConnexion(){
+  function poser(){
+    if(typeof window.checkConcepteurPassword !== 'function'){ setTimeout(poser, 300); return; }
+    if(window._agrX7) return;
+    window._agrX7 = true;
+    var original = window.checkConcepteurPassword;
+
+    window.checkConcepteurPassword = function(){
+      var email = (document.getElementById('conceptEmailInput') || {}).value || '';
+      var mdp = (document.getElementById('conceptPasswordInput') || {}).value || '';
+      email = String(email).trim();
+      if(!email || !mdp) return original.apply(this, arguments);
+
+      var btn = document.getElementById('conceptLoginBtn');
+      if(btn){ btn.disabled = true; btn.textContent = 'Verification…'; }
+
+      return chargerAuth().then(function(a){
+        return api.signInWithEmailAndPassword(a, email, mdp);
+      }).then(function(){
+        /* Firebase a valide : on laisse la suite d'origine ouvrir
+           l'espace (elle verifie aussi l'empreinte locale, ce qui
+           reste vrai puisque c'est le meme mot de passe) */
+        bandeau('Identite verifiee par Firebase — ' + email, 'ok');
+        if(btn){ btn.disabled = false; btn.textContent = 'Acceder'; }
+        return original.call(window);
+      }).catch(function(e){
+        var code = (e && e.code) ? e.code : '';
+        if(btn){ btn.disabled = false; btn.textContent = 'Acceder'; }
+        /* compte inexistant, authentification desactivee, hors ligne :
+           on retombe sur la verification par empreinte */
+        if(/auth\/(user-not-found|operation-not-allowed|configuration-not-found|network-request-failed|invalid-api-key)/.test(code)
+           || !code){
+          bandeau('Authentification Firebase indisponible (' + (code || 'non activee')
+            + ') — verification par empreinte.', 'alerte');
+          return original.call(window);
+        }
+        /* mot de passe refuse par Firebase : on ne contourne pas */
+        var err = document.getElementById('conceptPasswordErr');
+        if(err){
+          err.style.display = 'block';
+          err.textContent = /wrong-password|invalid-credential/.test(code)
+            ? 'Mot de passe refuse par Firebase.'
+            : 'Connexion refusee : ' + code;
+        }
+      });
+    };
+  }
+  poser();
+  setInterval(poser, 4000);
+})();
+
+/* ------------------------------------------------------------
+   Fermeture de la session avec la fenetre
+   ------------------------------------------------------------ */
+(function brancherFermeture(){
+  function poser(){
+    if(typeof window.closeConcepteurNote !== 'function'){ setTimeout(poser, 400); return; }
+    if(window._agrX7Fermer) return;
+    window._agrX7Fermer = true;
+    var original = window.closeConcepteurNote;
+    window.closeConcepteurNote = function(){
+      var r = original.apply(this, arguments);
+      if(auth && api && auth.currentUser){
+        try{ api.signOut(auth); }catch(e){}
+      }
+      return r;
+    };
+  }
+  poser();
+})();
+
+/* ------------------------------------------------------------
+   Creation du compte Firebase depuis l'espace, une fois connecte
+   par empreinte (evite un aller-retour par la console)
+   ------------------------------------------------------------ */
+window.agrCreerCompteAuth = function(email, motDePasse){
+  if(!email || !motDePasse) return Promise.resolve('Indiquez un email et un mot de passe.');
+  return chargerAuth().then(function(a){
+    return api.createUserWithEmailAndPassword(a, String(email).trim(), motDePasse);
+  }).then(function(c){
+    return 'Compte Firebase cree : ' + (c && c.user ? c.user.email : email)
+      + '. Reconnectez-vous pour ouvrir une session authentifiee.';
+  }).catch(function(e){
+    var code = (e && e.code) ? e.code : String(e);
+    if(/email-already-in-use/.test(code)) return 'Ce compte existe deja dans Firebase — connectez-vous simplement.';
+    if(/operation-not-allowed/.test(code)) return 'Activez d\'abord Email/Mot de passe dans la console Firebase '
+      + '(Authentication > Sign-in method).';
+    if(/weak-password/.test(code)) return 'Mot de passe trop court : 6 caracteres minimum cote Firebase.';
+    return 'Creation impossible : ' + code;
+  });
+};
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X8 — App AGR
+     ------------------------------------------------------------
+     A. POURQUOI LA PAGE NE S'OUVRAIT PAS, BASE EN LIGNE
+
+     En lisant chargerRestaurant(), la page se ferme dans trois cas
+     qui n'ont rien a voir avec le reseau :
+
+       • siteweb.actif === false  → la page n'a jamais ete mise en
+         ligne par le restaurant (« Page en ligne : Non ») ;
+       • licence expiree ou restaurant bloque, au-dela des 24 h de
+         sursis → la page se ferme ;
+       • aucun nom web enregistre → l'adresse ne mene nulle part.
+
+     Le visiteur voyait alors mon message d'indisponibilite, et le
+     restaurateur n'avait AUCUN moyen de savoir laquelle des trois
+     raisons s'appliquait. Ce module affiche la reponse la ou elle
+     sert : dans son onglet « Page web », en clair, avec ce qu'il
+     doit faire. Et `agrPourquoiPageFermee()` la donne en console.
+
+     B. LE DETOUR PAR L'ACCUEIL
+
+     ouvrirAnnuairePublic() commence par effacer l'adresse
+     (location.hash = ''). Appelee pendant l'ouverture — ce qui
+     arrive des que la resolution echoue — elle effaçait l'adresse
+     du restaurant : la page ne savait plus qui afficher et
+     retombait sur l'accueil de AGR. L'effacement est desormais
+     refuse tant que l'adresse designe un restaurant.
+
+     C. MEME MISE EN FORME A L'ECRAN ET A L'IMPRESSION
+
+     Les tableaux sortaient bien en PDF mais s'affichaient tasses a
+     l'ecran. Une feuille de style commune aligne les deux : memes
+     colonnes, memes en-tetes, memes alignements — les montants a
+     droite, les libelles a gauche — a l'ecran comme sur le papier,
+     dans tous les onglets.
+
+     AUCUNE ecriture en base, aucune donnee de restaurant modifiee.
+     ============================================================ -->
+<style>
+  /* ---- Tableaux : meme presentation a l'ecran et sur papier ---- */
+  .dash-section table{ width:100%; border-collapse:collapse; table-layout:auto; }
+  .dash-section table th{
+    text-align:left; font-weight:700; font-size:12px; letter-spacing:.04em;
+    text-transform:uppercase; white-space:nowrap; padding:10px 12px;
+    border-bottom:2px solid var(--line, #2a3244);
+  }
+  .dash-section table td{
+    padding:10px 12px; font-size:13.5px; vertical-align:middle;
+    border-bottom:1px solid var(--line, #2a3244);
+  }
+  /* les colonnes de montants et de quantites s'alignent a droite */
+  .dash-section table td.num, .dash-section table th.num,
+  .dash-section table td[data-num], .dash-section table th[data-num]{ text-align:right; font-variant-numeric:tabular-nums; }
+  .dash-section table td.centre, .dash-section table th.centre{ text-align:center; }
+  .dash-section table tbody tr:hover td{ background:rgba(255,255,255,0.03); }
+  .dash-section .table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .dash-section table tfoot td{ font-weight:800; border-top:2px solid var(--line, #2a3244); }
+
+  @media print{
+    body{ background:#fff !important; color:#111 !important; }
+    .sidebar, .topbar, .dash-nav, button, .btn, .btn-outline, .no-print,
+    #agrx-indispo, #agrx5-diag{ display:none !important; }
+    .dash-section{ display:block !important; page-break-inside:auto; }
+    .dash-section table{ width:100% !important; border-collapse:collapse !important; font-size:11.5pt; }
+    .dash-section table th{
+      background:#eef2f7 !important; color:#12203a !important;
+      border-bottom:1.5pt solid #12203a !important; padding:6pt 8pt !important;
+      -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    .dash-section table td{ border-bottom:.5pt solid #c9d2e0 !important; padding:5pt 8pt !important; color:#111 !important; }
+    .dash-section table thead{ display:table-header-group; }   /* en-tetes repetes a chaque page */
+    .dash-section table tr{ page-break-inside:avoid; }
+    .agrx8-entete{ display:block !important; }
+  }
+  .agrx8-entete{ display:none; }
+</style>
+<script>
+(function(){
+'use strict';
+
+function esc(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function refPublique(){
+  var h = location.hash || '';
+  var m = h.match(/^#\/r\/([A-Za-z0-9_-]+)/) || h.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(!m || /^(licence|login|home|accueil|dashboard)$/i.test(m[1])) return null;
+  return m[1];
+}
+
+/* ============================================================
+   B. L'ADRESSE DU RESTAURANT NE PEUT PLUS ETRE EFFACEE
+   ============================================================ */
+(function protegerAdresse(){
+  function poser(){
+    if(typeof window.ouvrirAnnuairePublic !== 'function'){ setTimeout(poser, 300); return; }
+    if(window._agrX8Annuaire) return;
+    window._agrX8Annuaire = true;
+    var original = window.ouvrirAnnuairePublic;
+    window.ouvrirAnnuairePublic = function(){
+      if(refPublique()){
+        /* un visiteur venu pour un restaurant precis : on ne le renvoie
+           ni vers l'annuaire ni vers l'accueil */
+        if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+        return;
+      }
+      return original.apply(this, arguments);
+    };
+  }
+  poser();
+  setInterval(poser, 3000);
+})();
+
+/* ============================================================
+   A. POURQUOI LA PAGE EST FERMEE
+   ============================================================ */
+function lire(chemin){
+  if(!(window._agrDb && window._agrRef && window._agrGet)) return Promise.reject(new Error('base indisponible'));
+  return window._agrGet(window._agrRef(window._agrDb, chemin)).then(function(s){
+    return (s && s.exists && s.exists()) ? s.val() : null;
+  });
+}
+
+window.agrPourquoiPageFermee = function(code){
+  code = code || window.currentTenantId || window.storeTenantCode;
+  if(!code) return Promise.resolve({ ok:false, motif:'Aucun restaurant identifie.' });
+  return Promise.all([lire('agr_tenants/' + code + '/info'), lire('agr_tenants/' + code + '/siteweb')])
+    .then(function(r){
+      var info = r[0] || {}, site = r[1] || {};
+      if(!r[0]) return { ok:false, motif:'Ce restaurant n\'existe pas dans la base.',
+                         action:'Verifiez le code utilise.' };
+      if(site.actif === false) return { ok:false,
+        motif:'Votre page web est sur « Non » : elle n\'est pas publiee.',
+        action:'Onglet Page web → « Page en ligne » → Oui → Enregistrer.' };
+      if(!site.slug) return { ok:false,
+        motif:'Aucun nom web enregistre pour ce restaurant.',
+        action:'Onglet Page web → renseignez le nom web → Enregistrer.' };
+      if(info.statut === 'bloque') return { ok:false,
+        motif:'Le restaurant est bloque : la page se ferme 24 h apres le blocage.',
+        action:'Contactez le concepteur pour retablir l\'acces.' };
+      if(info.dateExpiration && Date.now() > info.dateExpiration) return { ok:false,
+        motif:'La licence a expire le ' + new Date(info.dateExpiration).toLocaleDateString('fr-FR')
+          + ' : la page reste ouverte 24 h puis se ferme.',
+        action:'Renouvelez la licence pour rouvrir la page.' };
+      return { ok:true, motif:'La page est publiee et devrait s\'ouvrir.',
+               adresse: location.origin + location.pathname + '#/' + site.slug };
+    })
+    .catch(function(e){ return { ok:false, motif:'Lecture impossible : ' + (e.message || e) }; });
+};
+
+/* le restaurateur voit l'etat de SA page dans son onglet */
+(function bandeauPageWeb(){
+  function poser(){
+    var section = document.getElementById('section-pageweb');
+    if(!section || section.style.display === 'none') return;
+    var z = document.getElementById('agrx8-etatweb');
+    if(!z){
+      z = document.createElement('div');
+      z.id = 'agrx8-etatweb';
+      z.style.cssText = 'margin:0 0 14px;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.7';
+      section.insertBefore(z, section.firstChild);
+      z.textContent = 'Verification de votre page…';
+      window.agrPourquoiPageFermee().then(function(r){
+        if(r.ok){
+          z.style.background = 'rgba(34,197,94,0.12)';
+          z.style.color = '#4ade80';
+          z.innerHTML = '<strong>Votre page est en ligne.</strong><br>'
+            + 'Adresse a partager : <span style="font-family:monospace">' + esc(r.adresse || '') + '</span>';
+        }else{
+          z.style.background = 'rgba(245,158,11,0.12)';
+          z.style.color = '#fbbf24';
+          z.innerHTML = '<strong>Votre page n\'est pas visible par vos clients.</strong><br>'
+            + esc(r.motif) + (r.action ? '<br><em>' + esc(r.action) + '</em>' : '');
+        }
+      });
+    }
+  }
+  setInterval(poser, 1500);
+})();
+
+/* le visiteur : le motif reel est journalise pour le diagnostic */
+(function tracerFermeture(){
+  function poser(){
+    if(typeof window.pageIntrouvable !== 'function'){ setTimeout(poser, 300); return; }
+    if(window._agrX8Trace) return;
+    window._agrX8Trace = true;
+    var original = window.pageIntrouvable;
+    window.pageIntrouvable = function(){
+      var code = window.storeTenantCode || null;
+      if(code){
+        window.agrPourquoiPageFermee(code).then(function(r){
+          console.warn('[AGR] page fermee : ' + r.motif + (r.action ? ' — ' + r.action : ''));
+        });
+      }
+      return original.apply(this, arguments);
+    };
+  }
+  poser();
+})();
+
+/* ============================================================
+   C. IMPRESSION : en-tete du restaurant sur chaque document
+   ============================================================ */
+function entete(){
+  var e = document.getElementById('agrx8-entete');
+  if(e) return e;
+  e = document.createElement('div');
+  e.id = 'agrx8-entete';
+  e.className = 'agrx8-entete';
+  e.style.cssText = 'margin-bottom:14px;padding-bottom:10px;border-bottom:2pt solid #12203a;color:#111';
+  document.body.insertBefore(e, document.body.firstChild);
+  return e;
+}
+function nomOnglet(){
+  var actif = document.querySelector('.dash-section:not([style*="display: none"])');
+  if(!actif) return '';
+  var t = actif.querySelector('h2, h3, .section-title');
+  return t ? t.textContent.trim() : String(actif.id || '').replace('section-', '');
+}
+function remplirEntete(){
+  var e = entete();
+  var nom = '', ville = '';
+  try{
+    var info = window.tenantInfo || window.currentTenantInfo || {};
+    nom = info.nomRestaurant || info.nom || document.title || '';
+    ville = info.ville || '';
+  }catch(x){}
+  e.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-end">'
+    + '<div><div style="font-size:15pt;font-weight:800">' + esc(nom || 'Restaurant') + '</div>'
+    + '<div style="font-size:9.5pt;color:#555">' + esc(ville) + '</div></div>'
+    + '<div style="text-align:right;font-size:9.5pt;color:#555">'
+    + '<div style="font-weight:700;color:#111;font-size:11pt">' + esc(nomOnglet()) + '</div>'
+    + 'Edite le ' + new Date().toLocaleString('fr-FR') + '</div></div>';
+}
+window.addEventListener('beforeprint', remplirEntete);
+
+/* ============================================================
+   C bis. Alignement automatique des colonnes chiffrees
+   ------------------------------------------------------------
+   Une colonne dont l'en-tete parle de montant, de quantite ou de
+   nombre est alignee a droite, a l'ecran comme a l'impression.
+   ============================================================ */
+var MOTS_NUM = /(montant|total|revenu|prix|recette|solde|somme|co[uû]t|quantit|qte|qt[eé]|nombre|nb|stock|payé|paye|reste|marge|benefice|bénéfice|encaiss|depense|dépense|gnf)/i;
+
+function normaliserTableaux(){
+  var tables = document.querySelectorAll('.dash-section table');
+  Array.prototype.forEach.call(tables, function(t){
+    if(t.getAttribute('data-agrx8')) return;
+    var entetes = t.querySelectorAll('thead th');
+    if(!entetes.length) return;
+    t.setAttribute('data-agrx8', '1');
+    var colonnesNum = [];
+    Array.prototype.forEach.call(entetes, function(th, i){
+      if(MOTS_NUM.test(th.textContent || '')){ th.classList.add('num'); colonnesNum.push(i); }
+    });
+    if(!colonnesNum.length) return;
+    var appliquer = function(){
+      Array.prototype.forEach.call(t.querySelectorAll('tbody tr'), function(tr){
+        colonnesNum.forEach(function(i){
+          var c = tr.children[i];
+          if(c) c.classList.add('num');
+        });
+      });
+      /* le pied de tableau utilise souvent colspan : on aligne a droite
+         ses dernieres cellules, en comptant depuis la fin */
+      Array.prototype.forEach.call(t.querySelectorAll('tfoot tr'), function(tr){
+        var total = 0;
+        Array.prototype.forEach.call(tr.children, function(c){
+          total += parseInt(c.getAttribute('colspan') || '1', 10);
+        });
+        var position = total;
+        for(var k = tr.children.length - 1; k >= 0; k--){
+          var cel = tr.children[k];
+          var largeur = parseInt(cel.getAttribute('colspan') || '1', 10);
+          position -= largeur;
+          if(largeur === 1 && colonnesNum.indexOf(position) >= 0) cel.classList.add('num');
+        }
+      });
+    };
+    appliquer();
+    /* les tableaux sont redessines : on suit les changements */
+    try{
+      new MutationObserver(appliquer).observe(t, { childList:true, subtree:true });
+    }catch(e){ setInterval(appliquer, 2000); }
+  });
+}
+setInterval(normaliserTableaux, 1200);
+normaliserTableaux();
+
+/* les tableaux larges deviennent defilables au lieu d'etre tasses */
+(function habillerTableaux(){
+  function poser(){
+    var tables = document.querySelectorAll('.dash-section table');
+    Array.prototype.forEach.call(tables, function(t){
+      if(t.parentNode && t.parentNode.classList
+         && t.parentNode.classList.contains('table-wrap')) return;
+      if(t.getAttribute('data-agrx8-wrap')) return;
+      t.setAttribute('data-agrx8-wrap', '1');
+      var w = document.createElement('div');
+      w.className = 'table-wrap';
+      t.parentNode.insertBefore(w, t);
+      w.appendChild(t);
+    });
+  }
+  setInterval(poser, 1500);
+  poser();
 })();
 
 })();
