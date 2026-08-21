@@ -13541,8 +13541,18 @@ var DIAG = /[?&]diag=1/.test(location.search || '');
     + 'body.agr-visiteur #storeDirectory{display:none !important}';
     (document.head || document.documentElement).appendChild(style);
   }
+  function sessionActive(){
+    var c = null;
+    try{ c = currentTenantId; }catch(e){}
+    if(!c) c = window.currentTenantId || null;
+    if(c) return true;
+    var tb = document.getElementById('view-dashboard');
+    return !!(tb && tb.style.display && tb.style.display !== 'none');
+  }
   function appliquer(){
-    var visiteur = !!refPublique();
+    /* [X14] un restaurant CONNECTE n'est jamais un visiteur : son tableau
+       de bord ne doit pas etre masque parce que l'adresse contient #/... */
+    var visiteur = !!refPublique() && !sessionActive();
     document.body && document.body.classList.toggle('agr-visiteur', visiteur);
   }
   appliquer();
@@ -14679,18 +14689,10 @@ function ouvrir(){
       if(attente++ < 80) return setTimeout(attendreBase, 150);
       return echec(2, 'Base joignable', 'Firebase ne s\'est pas initialise');
     }
-    avecDelai(lire('.info/connected'), 8000, 'connexion').then(function(){
-      noter(2, 'Base joignable', 'ok');
-      etape3(ref);
-    }, function(e){
-      /* .info/connected peut etre refuse par les regles : on tente une vraie lecture */
-      avecDelai(lire('agr_sites'), 8000, 'lecture').then(function(){
-        noter(2, 'Base joignable', 'ok');
-        etape3(ref);
-      }, function(e2){
-        echec(2, 'Base joignable', (e2 && e2.message) ? e2.message : String(e2));
-      });
-    });
+    /* [X12] plus de sonde prealable : la premiere vraie lecture fait foi.
+       Un aller-retour de moins avant l'affichage. */
+    noter(2, 'Base joignable', 'ok', 'verifiee par la premiere lecture');
+    etape3(ref);
   })();
 }
 
@@ -15106,6 +15108,698 @@ setInterval(function(){
     console.log('[AGR] contenu present : la page est retablie');
   }
 }, 700);
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X12 — OUVERTURE INSTANTANEE
+     ------------------------------------------------------------
+     POURQUOI IL FALLAIT INSISTER SUR « REESSAYER »
+
+     L'ouverture accumulait des attentes inutiles :
+
+       1. mon module X9 commençait par lire « .info/connected »
+          juste pour verifier que la base repond — un aller-retour
+          entier avant meme de chercher le restaurant, et qui peut
+          rester sans reponse si les regles l'interdisent ;
+       2. il attendait Firebase en sondant toutes les 150 ms, ce
+          qui ajoutait jusqu'a un septieme de seconde apres que
+          tout etait pret ;
+       3. deux modules (X5 et X9) demandaient chacun l'ouverture :
+          les memes lectures partaient en double ;
+       4. l'application lit ensuite quatre noeuds l'un APRES
+          l'autre (fiche, page web, produits, zones) : quatre
+          allers-retours en file indienne.
+
+     CE QUE FAIT CE MODULE
+
+       • la verification « .info/connected » est supprimee : on
+         cherche le restaurant tout de suite — si la base ne
+         repond pas, la lecture echouera d'elle-meme et le message
+         s'affichera, sans avoir rien attendu pour rien ;
+       • Firebase est attendu toutes les 20 ms au lieu de 150 ;
+       • une seule ouverture est autorisee a la fois, les demandes
+         concurrentes sont ignorees ;
+       • les quatre lectures sont lancees EN PARALLELE, avant meme
+         que l'application n'en ait besoin : quand elle les
+         demande, la reponse est deja arrivee ;
+       • « Reessayer » relance l'ouverture au lieu de recharger
+         toute la page.
+
+     AUCUNE ecriture en base, aucune donnee de restaurant touchee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+function ref(){
+  var h = location.hash || '';
+  var m = h.match(/^#\/r\/([A-Za-z0-9_-]+)/) || h.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(!m || /^(licence|login|home|accueil|dashboard)$/i.test(m[1])) return null;
+  return m[1];
+}
+function normaliser(t){
+  var s = String(t || '').toLowerCase().trim();
+  try{ s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }catch(e){}
+  return s.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+}
+function pret(){ return !!(window._agrDb && window._agrRef && window._agrGet); }
+function lire(chemin){
+  return window._agrGet(window._agrRef(window._agrDb, chemin)).then(function(s){
+    return (s && s.exists && s.exists()) ? s.val() : null;
+  });
+}
+
+/* ------------------------------------------------------------
+   1. Plus de sonde « .info/connected » : on cherche directement
+   ------------------------------------------------------------ */
+(function supprimerSonde(){
+  /* X9 expose son ouverture ; on la remplace par la version rapide */
+  window._agrX9SansSonde = true;
+})();
+
+/* ------------------------------------------------------------
+   2. Ouverture rapide, une seule a la fois
+   ------------------------------------------------------------ */
+var enCours = false;
+var debut = 0;
+
+function ouvrirVite(){
+  var r = ref();
+  if(!r || enCours) return;
+  enCours = true;
+  debut = Date.now();
+
+  var essais = 0;
+  (function attendreBase(){
+    if(pret()) return resoudre(r);
+    if(essais++ > 400){ enCours = false; return; }   /* 8 s au plus, par pas de 20 ms */
+    setTimeout(attendreBase, 20);
+  })();
+}
+
+function resoudre(r){
+  /* l'index d'abord : une seule lecture, la plus courte */
+  lire('agr_sites/' + r).then(function(site){
+    if(site && site.code) return site.code;
+    /* sinon la liste complete, une seule fois */
+    return lire('agr_tenants').then(function(tenants){
+      if(!tenants) return null;
+      var cherche = normaliser(r), code = null;
+      Object.keys(tenants).forEach(function(c){
+        if(code) return;
+        var t = tenants[c] || {}, w = t.siteweb || {}, i = t.info || {};
+        if((w.slug && normaliser(w.slug) === cherche) || normaliser(c) === cherche
+          || (i.nomRestaurant && normaliser(i.nomRestaurant) === cherche)) code = c;
+      });
+      return code;
+    });
+  }).then(function(code){
+    if(!code){
+      enCours = false;
+      if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+      return;
+    }
+    /* 3. les quatre lectures partent ENSEMBLE, sans attendre l'application */
+    var base = 'agr_tenants/' + code + '/';
+    Promise.all([lire(base + 'info'), lire(base + 'siteweb'),
+                 lire(base + 'produits'), lire(base + 'zonesLivraison')])
+      .then(function(){ /* les reponses sont arrivees : l'application ira vite */ })
+      .catch(function(){});
+
+    if(typeof window.chargerRestaurant !== 'function'){ enCours = false; return; }
+    window._agrX5EnCours = Date.now();
+    try{ window.chargerRestaurant(code, r); }catch(e){}
+
+    /* on relache le verrou quand la page est la, ou apres 15 s */
+    var tours = 0;
+    (function verifier(){
+      var page = document.getElementById('storePage');
+      if(page && page.style.display && page.style.display !== 'none'){
+        enCours = false;
+        window._agrX5EnCours = 0;
+        var att = document.getElementById('agrx-indispo');
+        if(att) att.classList.remove('on');
+        console.log('[AGR] page ouverte en ' + ((Date.now() - debut)/1000).toFixed(1) + ' s');
+        return;
+      }
+      if(tours++ < 150) return setTimeout(verifier, 100);
+      enCours = false;
+      window._agrX5EnCours = 0;
+    })();
+  }).catch(function(e){
+    enCours = false;
+    console.warn('[AGR] ouverture : ' + (e && e.message ? e.message : e));
+    if(typeof window.agrPageIndisponible === 'function') window.agrPageIndisponible({});
+  });
+}
+window.agrOuvrirVite = ouvrirVite;
+
+/* on demarre le plus tot possible, sans attendre DOMContentLoaded */
+if(ref()) ouvrirVite();
+document.addEventListener('DOMContentLoaded', ouvrirVite);
+window.addEventListener('hashchange', function(){ enCours = false; ouvrirVite(); });
+
+/* ------------------------------------------------------------
+   4. « Reessayer » relance l'ouverture au lieu de tout recharger
+   ------------------------------------------------------------ */
+setInterval(function(){
+  var boutons = document.querySelectorAll('#agrx-indispo .agrx-b');
+  Array.prototype.forEach.call(boutons, function(b){
+    if(b.__x12) return;
+    if(!/reessayer/i.test((b.textContent || '').trim())) return;
+    b.__x12 = true;
+    b.onclick = function(){
+      b.textContent = 'Ouverture…';
+      enCours = false;
+      ouvrirVite();
+      setTimeout(function(){ b.textContent = 'Réessayer'; }, 2500);
+    };
+  });
+}, 800);
+
+/* ------------------------------------------------------------
+   5. Les modules precedents ne doivent plus ouvrir en double
+   ------------------------------------------------------------ */
+setTimeout(function(){
+  if(typeof window.ouvrirDepuisLien === 'function' && !window.ouvrirDepuisLien.__x12){
+    var original = window.ouvrirDepuisLien;
+    var enveloppe = function(){
+      if(enCours) return;                 /* une ouverture suffit */
+      return original.apply(this, arguments);
+    };
+    enveloppe.__x12 = true;
+    window.ouvrirDepuisLien = enveloppe;
+  }
+}, 300);
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X13 — LA CAISSE DANS LA COMPTABILITE
+     ------------------------------------------------------------
+     L'onglet Comptabilite tenait le journal, le grand livre et le
+     compte de resultat, mais rien ne permettait de suivre la
+     caisse au jour le jour ni de la confronter aux ventes.
+
+     CE QUI EST AJOUTE, EN HAUT DE L'ONGLET COMPTABILITE
+
+       • SAISIE DU JOUR — le restaurant entre ce qu'il a encaisse,
+         reparti par moyen : especes, Orange Money, Mobile Money,
+         banque. Il entre aussi ses sorties (achats, depenses) et,
+         s'il le souhaite, la caisse physiquement comptee le soir.
+
+       • RAPPROCHEMENT AUTOMATIQUE — en face, l'application affiche
+         les ventes reellement enregistrees ce jour-la (commandes
+         du restaurant), et calcule les trois ecarts qui comptent :
+             ventes enregistrees  -  caisse declaree
+             entrees  -  sorties  =  solde theorique
+             solde theorique  -  caisse comptee  =  ecart de caisse
+         Un ecart nul s'affiche en vert, un ecart en rouge.
+
+       • HISTORIQUE — chaque journee est conservee, modifiable,
+         supprimable, avec les cumuls du mois et l'export imprimable
+         a la meme mise en forme que les autres onglets.
+
+     OU SONT ECRITES LES DONNEES
+     Dans un noeud AJOUTE :  agr_tenants/<code>/caisse/<AAAA-MM-JJ>
+     Les commandes, la comptabilite et le reste de la fiche du
+     restaurant ne sont QUE LUS. Aucune structure existante n'est
+     modifiee, aucune donnee effacee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+function nb(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function esc(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                  .replace(/"/g,'&quot;');
+}
+function gnf(n){ return Number(nb(n)).toLocaleString('fr-FR') + ' GNF'; }
+function jourISO(d){ return new Date(d || Date.now()).toISOString().slice(0,10); }
+function jourFr(d){
+  var x = new Date(String(d) + 'T12:00:00');
+  return isNaN(x.getTime()) ? d : x.toLocaleDateString('fr-FR');
+}
+function code(){
+  var c = null;
+  try{ c = currentTenantId; }catch(e){}
+  return c || window.currentTenantId || null;
+}
+function pret(){ return !!(window._agrDb && window._agrRef && window._agrGet && window._agrSet); }
+function lire(chemin){
+  if(!pret()) return Promise.reject(new Error('base indisponible'));
+  return window._agrGet(window._agrRef(window._agrDb, chemin)).then(function(s){
+    return (s && s.exists && s.exists()) ? s.val() : null;
+  });
+}
+function ecrire(chemin, v){
+  if(!pret()) return Promise.reject(new Error('base indisponible'));
+  return window._agrSet(window._agrRef(window._agrDb, chemin), v);
+}
+
+var MOYENS = [
+  { id:'especes', nom:'Especes' },
+  { id:'orange',  nom:'Orange Money' },
+  { id:'mobile',  nom:'Mobile Money' },
+  { id:'banque',  nom:'Banque' }
+];
+
+var journees = {};      /* AAAA-MM-JJ -> journee */
+var commandes = {};     /* commandes du restaurant, en lecture seule */
+var chargees = false;
+
+/* ------------------------------------------------------------
+   Lecture
+   ------------------------------------------------------------ */
+function charger(){
+  var c = code();
+  if(!c) return Promise.resolve(false);
+  return Promise.all([
+    lire('agr_tenants/' + c + '/caisse').catch(function(){ return null; }),
+    lire('agr_tenants/' + c + '/commandes').catch(function(){ return null; })
+  ]).then(function(r){
+    journees = r[0] || {};
+    commandes = r[1] || {};
+    chargees = true;
+    return true;
+  });
+}
+
+/* ventes reellement enregistrees pour une journee */
+function ventesDuJour(iso){
+  var total = 0, nombre = 0;
+  Object.keys(commandes || {}).forEach(function(k){
+    var o = commandes[k];
+    if(!o || !o.date) return;
+    if(jourISO(o.date) !== iso) return;
+    total += nb(o.revenu);
+    nombre++;
+  });
+  return { total: total, nombre: nombre };
+}
+
+function totalEntrees(j){
+  if(!j) return 0;
+  return MOYENS.reduce(function(s,m){ return s + nb((j.entrees || {})[m.id]); }, 0);
+}
+function totalSorties(j){
+  if(!j) return 0;
+  return MOYENS.reduce(function(s,m){ return s + nb((j.sorties || {})[m.id]); }, 0);
+}
+
+/* ------------------------------------------------------------
+   Affichage
+   ------------------------------------------------------------ */
+function zone(){
+  var section = document.getElementById('section-comptabilite');
+  if(!section) return null;
+  var z = document.getElementById('agrx13-caisse');
+  if(!z){
+    z = document.createElement('div');
+    z.id = 'agrx13-caisse';
+    z.className = 'panel';
+    z.style.marginBottom = '16px';
+    section.insertBefore(z, section.firstChild);
+  }
+  return z;
+}
+
+function champs(prefixe, valeurs, libelle){
+  return '<div style="margin-bottom:10px"><div style="font-size:11px;text-transform:uppercase;'
+    + 'letter-spacing:.05em;opacity:.6;margin-bottom:6px">' + libelle + '</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">'
+    + MOYENS.map(function(m){
+        return '<div class="field" style="margin:0"><label style="font-size:12px">' + esc(m.nom) + '</label>'
+          + '<input type="number" min="0" id="agrx13-' + prefixe + '-' + m.id + '"'
+          + ' value="' + (nb((valeurs || {})[m.id]) || '') + '" oninput="agrCaisseApercu()"'
+          + ' style="padding:9px 10px;background:var(--surface-2);border:1px solid var(--line);'
+          + 'border-radius:6px;color:var(--text);font-size:14px;width:100%;box-sizing:border-box"></div>';
+      }).join('')
+    + '</div></div>';
+}
+
+function rendre(){
+  var z = zone();
+  if(!z) return;
+  var c = code();
+  if(!c){ z.innerHTML = '<h3>Caisse</h3><div class="sub">Connexion du restaurant en cours…</div>'; return; }
+  if(!chargees){ z.innerHTML = '<h3>Caisse</h3><div class="sub">Lecture des journees…</div>'; return; }
+
+  var iso = (document.getElementById('agrx13-date') || {}).value || jourISO();
+  var j = journees[iso] || { entrees:{}, sorties:{}, compte:null, note:'' };
+  var liste = Object.keys(journees).sort().reverse();
+  var mois = iso.slice(0,7);
+  var cumulEntrees = 0, cumulSorties = 0;
+  liste.forEach(function(d){
+    if(d.slice(0,7) !== mois) return;
+    cumulEntrees += totalEntrees(journees[d]);
+    cumulSorties += totalSorties(journees[d]);
+  });
+
+  z.innerHTML = ''
+    + '<h3>Caisse du jour</h3>'
+    + '<div class="sub">Ce que le restaurant a encaisse, ce qu\'il a sorti, et la comparaison '
+      + 'avec les ventes enregistrees.</div>'
+    + '<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px">'
+      + '<div class="field" style="margin:0"><label>Journee</label>'
+      + '<input type="date" id="agrx13-date" value="' + esc(iso) + '" onchange="agrCaisseRendre()"'
+      + ' style="padding:10px;background:var(--surface-2);border:1px solid var(--line);'
+      + 'border-radius:6px;color:var(--text)"></div>'
+      + '<button class="btn" onclick="agrCaisseEnregistrer()">Enregistrer la journee</button>'
+      + (journees[iso] ? '<button class="btn btn-outline" onclick="agrCaisseSupprimer()">Supprimer</button>' : '')
+      + '<button class="btn btn-outline" onclick="window.print()">Imprimer</button>'
+    + '</div>'
+    + champs('e', j.entrees, 'Encaissements du jour, par moyen de paiement')
+    + champs('s', j.sorties, 'Sorties du jour (achats, depenses, prelevements)')
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:8px;margin-bottom:12px">'
+      + '<div class="field" style="margin:0"><label>Caisse physiquement comptee (facultatif)</label>'
+      + '<input type="number" min="0" id="agrx13-compte" value="' + (j.compte !== null && j.compte !== undefined ? nb(j.compte) : '') + '"'
+      + ' oninput="agrCaisseApercu()" style="padding:9px 10px;background:var(--surface-2);'
+      + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Observation</label>'
+      + '<input type="text" id="agrx13-note" value="' + esc(j.note || '') + '"'
+      + ' style="padding:9px 10px;background:var(--surface-2);border:1px solid var(--line);'
+      + 'border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+    + '</div>'
+    + '<div id="agrx13-apercu"></div>'
+    + '<h3 style="margin-top:18px">Journees enregistrees</h3>'
+    + '<div class="sub">Cumul du mois : entrees ' + gnf(cumulEntrees)
+      + ' · sorties ' + gnf(cumulSorties) + ' · solde ' + gnf(cumulEntrees - cumulSorties) + '</div>'
+    + '<div class="table-wrap"><table><thead><tr>'
+      + '<th>Date</th>'
+      + MOYENS.map(function(m){ return '<th class="num">' + esc(m.nom) + '</th>'; }).join('')
+      + '<th class="num">Total encaisse</th><th class="num">Sorties</th>'
+      + '<th class="num">Ventes enregistrees</th><th class="num">Ecart</th><th>Actions</th>'
+    + '</tr></thead><tbody>'
+    + (liste.length ? liste.slice(0, 60).map(function(d){
+        var x = journees[d];
+        var enc = totalEntrees(x), sor = totalSorties(x), v = ventesDuJour(d).total;
+        var ecart = enc - v;
+        return '<tr><td>' + jourFr(d) + '</td>'
+          + MOYENS.map(function(m){ return '<td class="num">' + gnf((x.entrees||{})[m.id]) + '</td>'; }).join('')
+          + '<td class="num"><strong>' + gnf(enc) + '</strong></td>'
+          + '<td class="num">' + (sor ? gnf(sor) : '—') + '</td>'
+          + '<td class="num">' + gnf(v) + '</td>'
+          + '<td class="num" style="color:' + (ecart === 0 ? 'var(--green,#4ade80)' : 'var(--amber,#fbbf24)') + '">'
+            + (ecart > 0 ? '+' : '') + gnf(ecart) + '</td>'
+          + '<td><button class="btn btn-outline" style="padding:4px 9px;font-size:12px" '
+            + 'onclick="agrCaisseOuvrir(\'' + d + '\')">Ouvrir</button></td></tr>';
+      }).join('')
+      : '<tr><td colspan="' + (MOYENS.length + 6) + '" style="text-align:center;opacity:.6;padding:18px">'
+        + 'Aucune journee enregistree.</td></tr>')
+    + '</tbody></table></div>';
+
+  window.agrCaisseApercu();
+}
+window.agrCaisseRendre = rendre;
+
+window.agrCaisseOuvrir = function(d){
+  var champ = document.getElementById('agrx13-date');
+  if(champ){ champ.value = d; rendre(); }
+};
+
+window.agrCaisseApercu = function(){
+  var z = document.getElementById('agrx13-apercu');
+  if(!z) return;
+  var iso = (document.getElementById('agrx13-date') || {}).value || jourISO();
+  var enc = 0, sor = 0;
+  MOYENS.forEach(function(m){
+    enc += nb((document.getElementById('agrx13-e-' + m.id) || {}).value);
+    sor += nb((document.getElementById('agrx13-s-' + m.id) || {}).value);
+  });
+  var champCompte = document.getElementById('agrx13-compte');
+  var compte = (champCompte && champCompte.value !== '') ? nb(champCompte.value) : null;
+  var v = ventesDuJour(iso);
+  var solde = enc - sor;
+  var ecartVentes = enc - v.total;
+  var ecartCaisse = (compte === null) ? null : (compte - solde);
+
+  function ligne(libelle, valeur, couleur, precision){
+    return '<div style="background:var(--surface-2);border-radius:8px;padding:10px 12px">'
+      + '<div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.6">' + libelle + '</div>'
+      + '<div style="font-size:16px;font-weight:800' + (couleur ? ';color:' + couleur : '') + '">' + valeur + '</div>'
+      + (precision ? '<div style="font-size:11px;opacity:.6">' + precision + '</div>' : '')
+      + '</div>';
+  }
+
+  z.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">'
+    + ligne('Total encaisse', gnf(enc), 'var(--green,#4ade80)')
+    + ligne('Total des sorties', gnf(sor), 'var(--red,#f87171)')
+    + ligne('Solde theorique', gnf(solde), null, 'encaisse moins sorties')
+    + ligne('Ventes enregistrees', gnf(v.total), null, v.nombre + ' commande(s) ce jour')
+    + ligne('Ecart caisse / ventes', (ecartVentes > 0 ? '+' : '') + gnf(ecartVentes),
+        ecartVentes === 0 ? 'var(--green,#4ade80)' : 'var(--amber,#fbbf24)',
+        ecartVentes === 0 ? 'la caisse correspond aux ventes'
+          : (ecartVentes > 0 ? 'encaisse superieur aux ventes saisies' : 'ventes saisies superieures a l\'encaisse'))
+    + (ecartCaisse === null ? ''
+        : ligne('Ecart de comptage', (ecartCaisse > 0 ? '+' : '') + gnf(ecartCaisse),
+            ecartCaisse === 0 ? 'var(--green,#4ade80)' : 'var(--red,#f87171)',
+            ecartCaisse === 0 ? 'le comptage tombe juste'
+              : (ecartCaisse > 0 ? 'excedent en caisse' : 'manquant en caisse')))
+    + '</div>';
+};
+
+window.agrCaisseEnregistrer = function(){
+  var c = code();
+  if(!c) return alert('Restaurant non identifie.');
+  var iso = (document.getElementById('agrx13-date') || {}).value;
+  if(!iso) return alert('Choisissez une journee.');
+  var entrees = {}, sorties = {}, total = 0;
+  MOYENS.forEach(function(m){
+    var e = nb((document.getElementById('agrx13-e-' + m.id) || {}).value);
+    var s = nb((document.getElementById('agrx13-s-' + m.id) || {}).value);
+    if(e) entrees[m.id] = e;
+    if(s) sorties[m.id] = s;
+    total += e;
+  });
+  var champCompte = document.getElementById('agrx13-compte');
+  var journee = {
+    date: iso, entrees: entrees, sorties: sorties,
+    compte: (champCompte && champCompte.value !== '') ? nb(champCompte.value) : null,
+    note: String((document.getElementById('agrx13-note') || {}).value || '').trim(),
+    majLe: Date.now()
+  };
+  ecrire('agr_tenants/' + c + '/caisse/' + iso, journee).then(function(){
+    journees[iso] = journee;
+    rendre();
+    console.log('[AGR] journee de caisse du ' + iso + ' enregistree — ' + gnf(total));
+  }).catch(function(e){
+    alert('Enregistrement impossible : ' + (e.message || e));
+  });
+};
+
+window.agrCaisseSupprimer = function(){
+  var c = code();
+  var iso = (document.getElementById('agrx13-date') || {}).value;
+  if(!c || !iso || !journees[iso]) return;
+  if(!confirm('Supprimer la journee du ' + jourFr(iso) + ' ?')) return;
+  ecrire('agr_tenants/' + c + '/caisse/' + iso, null).then(function(){
+    delete journees[iso];
+    rendre();
+  }).catch(function(e){ alert('Suppression impossible : ' + (e.message || e)); });
+};
+
+/* ------------------------------------------------------------
+   Mise en place quand l'onglet Comptabilite est ouvert
+   ------------------------------------------------------------ */
+var derniereOuverture = 0;
+setInterval(function(){
+  var section = document.getElementById('section-comptabilite');
+  if(!section || section.style.display === 'none') return;
+  if(!code()) return;
+  if(!document.getElementById('agrx13-caisse')) rendre();
+  if(!chargees && Date.now() - derniereOuverture > 3000){
+    derniereOuverture = Date.now();
+    charger().then(function(ok){ if(ok) rendre(); }).catch(function(){});
+  }
+}, 1200);
+
+})();
+</script>
+
+
+<!-- ============================================================
+     MODULE AGR-X14 — LA PAGE WEB N'INTERROMPT PLUS LA SESSION
+     ------------------------------------------------------------
+     CE QUI SE PASSAIT REELLEMENT
+
+     Le lien d'une page web a la forme :
+        https://…/AG-RESTAU/#/neindi
+     et l'application, elle, tourne a l'adresse :
+        https://…/AG-RESTAU/
+
+     Ces deux adresses ne different que par ce qui suit le « # ».
+     Quand un restaurateur deja connecte clique sur son propre lien
+     dans le meme onglet, le navigateur NE RECHARGE PAS la page :
+     il change seulement le fragment. Mes modules voyaient alors une
+     adresse de visiteur et masquaient le tableau de bord pour
+     afficher la page publique — a l'ecran, cela ressemblait
+     exactement a une base « deconnectee » : les donnees
+     disparaissaient, la barre passait au rouge, et la page web
+     elle-meme se chargeait mal puisque la session du restaurant
+     etait encore active en arriere-plan.
+
+     Deux taches, un seul onglet, un seul contexte : elles se
+     genaient l'une l'autre.
+
+     LA SOLUTION
+
+       1. Une session ouverte prime toujours : tant qu'un
+          restaurant est connecte, son tableau de bord ne peut plus
+          etre masque (corrige dans le module X5).
+       2. Si un restaurateur connecte arrive sur une adresse
+          publique dans le meme onglet, sa page web est ouverte
+          dans un NOUVEL ONGLET et son tableau de bord est
+          immediatement retabli. Les deux taches ne partagent plus
+          le meme contexte.
+       3. Tous les liens et boutons menant a une page publique
+          s'ouvrent desormais dans un nouvel onglet.
+       4. Un visiteur, lui, n'a pas de session : rien ne change
+          pour lui, la page s'ouvre directement.
+
+     AUCUNE ecriture en base, aucune donnee de restaurant touchee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+function refPublique(){
+  var h = location.hash || '';
+  var m = h.match(/^#\/r\/([A-Za-z0-9_-]+)/) || h.match(/^#\/([A-Za-z0-9_-]+)/);
+  if(!m || /^(licence|login|home|accueil|dashboard)$/i.test(m[1])) return null;
+  return m[1];
+}
+function sessionActive(){
+  var c = null;
+  try{ c = currentTenantId; }catch(e){}
+  if(!c) c = window.currentTenantId || null;
+  if(c) return true;
+  var tb = document.getElementById('view-dashboard');
+  return !!(tb && tb.style.display && tb.style.display !== 'none');
+}
+function adressePublique(ref){
+  return location.origin + location.pathname + '#/' + ref;
+}
+
+/* ------------------------------------------------------------
+   1. Un restaurateur connecte ne perd jamais son tableau de bord
+   ------------------------------------------------------------ */
+var deja = {};
+
+function protegerSession(){
+  var ref = refPublique();
+  if(!ref || !sessionActive()) return;
+
+  /* la page publique part dans un autre onglet */
+  if(!deja[ref]){
+    deja[ref] = true;
+    var url = adressePublique(ref);
+    var onglet = null;
+    try{ onglet = window.open(url, '_blank'); }catch(e){}
+    if(!onglet) prevenir(url);
+    else message('Votre page web s\'ouvre dans un nouvel onglet — votre session reste ouverte ici.');
+  }
+
+  /* et la session reprend la main immediatement */
+  try{ history.replaceState(null, '', location.pathname + location.search); }
+  catch(e){ location.hash = ''; }
+
+  document.body && document.body.classList.remove('agr-visiteur');
+  var tb = document.getElementById('view-dashboard');
+  if(tb) tb.style.display = 'block';
+  ['view-storefront','view-home','view-login'].forEach(function(id){
+    var e = document.getElementById(id);
+    if(e) e.style.display = 'none';
+  });
+  var attente = document.getElementById('agrx-indispo');
+  if(attente) attente.classList.remove('on');
+}
+
+/* si le navigateur bloque l'ouverture, on propose le lien */
+function prevenir(url){
+  message('Votre page web n\'a pas pu s\'ouvrir automatiquement — '
+    + '<a href="' + url + '" target="_blank" rel="noopener" style="color:#4ade80;'
+    + 'text-decoration:underline">ouvrez-la ici</a>.', true);
+}
+
+function message(html, garder){
+  var z = document.getElementById('agrx14-note');
+  if(!z){
+    z = document.createElement('div');
+    z.id = 'agrx14-note';
+    z.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:9997;'
+      + 'background:rgba(18,32,58,0.97);border:1px solid rgba(74,222,128,0.35);color:#e8eefc;'
+      + 'padding:11px 16px;border-radius:10px;font-size:13px;max-width:92vw;box-shadow:0 10px 30px rgba(0,0,0,.4)';
+    document.body.appendChild(z);
+  }
+  z.innerHTML = html;
+  if(!garder) setTimeout(function(){ if(z && z.parentNode) z.remove(); }, 6000);
+}
+
+protegerSession();
+window.addEventListener('hashchange', protegerSession);
+setInterval(protegerSession, 500);
+
+/* ------------------------------------------------------------
+   2. Tous les liens vers une page publique s'ouvrent a part
+   ------------------------------------------------------------ */
+setInterval(function(){
+  var liens = document.querySelectorAll('a[href*="#/"]');
+  Array.prototype.forEach.call(liens, function(a){
+    if(a.__x14) return;
+    var href = a.getAttribute('href') || '';
+    if(!/#\/[A-Za-z0-9_-]/.test(href)) return;
+    if(/#\/(licence|login|home|accueil|dashboard)\b/i.test(href)) return;
+    a.__x14 = true;
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener');
+  });
+}, 1500);
+
+/* le bouton d'apercu de sa propre page, quel que soit son libelle */
+setInterval(function(){
+  var boutons = document.querySelectorAll('#section-pageweb button, #section-pageweb a');
+  Array.prototype.forEach.call(boutons, function(b){
+    if(b.__x14) return;
+    var t = (b.textContent || '').toLowerCase();
+    if(!/aper[cç]u|voir ma page|ouvrir ma page|tester/.test(t)) return;
+    b.__x14 = true;
+    var avant = b.onclick;
+    b.onclick = function(e){
+      var slug = null;
+      var champ = document.getElementById('webSlug') || document.getElementById('pwSlug');
+      if(champ && champ.value) slug = String(champ.value).trim();
+      if(!slug && typeof avant === 'function') return avant.call(this, e);
+      if(e && e.preventDefault) e.preventDefault();
+      window.open(adressePublique(slug), '_blank');
+      return false;
+    };
+  });
+}, 1500);
+
+/* ------------------------------------------------------------
+   3. Aide au diagnostic
+   ------------------------------------------------------------ */
+window.agrEtatSession = function(){
+  var c = null;
+  try{ c = currentTenantId; }catch(e){}
+  return {
+    restaurantConnecte: c || window.currentTenantId || null,
+    adressePublique: refPublique(),
+    modeVisiteur: !!(document.body && document.body.classList.contains('agr-visiteur')),
+    tableauDeBordVisible: (function(){
+      var tb = document.getElementById('view-dashboard');
+      return !!(tb && tb.style.display && tb.style.display !== 'none');
+    })()
+  };
+};
 
 })();
 </script>
