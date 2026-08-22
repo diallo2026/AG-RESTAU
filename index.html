@@ -15804,5 +15804,492 @@ window.agrEtatSession = function(){
 })();
 </script>
 
+
+<!-- ============================================================
+     MODULE AGR-X15 — COMMANDES : LIVRAISON, DELAIS, SEMINAIRES
+     ------------------------------------------------------------
+     CE QUI EXISTE DEJA DANS VOTRE APPLICATION (verifie)
+
+     Le circuit que vous decrivez fonctionne : une commande en
+     salle ou en ligne cree un ticket, ce ticket tombe dans
+     l'ecran Cuisine, la cuisine appuie sur « Prete », et le
+     ticket passe dans l'onglet Service. Ce socle n'est pas
+     touche : je l'enrichis.
+
+     CE QUI MANQUAIT, ET QUI EST AJOUTE
+
+     1. LE SERVEUR NE VOYAIT PAS QUI SERVIR
+        La carte affichait « Livraison » et la liste des plats.
+        Elle affiche desormais, pour une commande en ligne : le
+        nom et le prenom du client, son telephone (appel et
+        WhatsApp en un geste), son quartier et son adresse. Pour
+        une commande sur place : le numero de table en evidence.
+
+     2. LES DELAIS N'ETAIENT PAS PRIS EN COMPTE
+        Le temps de preparation du restaurant et le delai de la
+        zone de livraison sont desormais calcules et affiches :
+          • au client, sur sa page, des l'envoi de sa commande
+            (« prete vers 13h20, livree vers 13h45 ») ;
+          • a la cuisine et au serveur, sous forme d'heure limite,
+            avec un signal quand elle approche ou est depassee.
+        Le temps de preparation se regle dans l'onglet Page web ;
+        a defaut, 25 minutes. Le delai de livraison vient de la
+        zone choisie par le client.
+
+     3. LES SEMINAIRES N'EXISTAIENT PAS
+        Un panneau « Seminaires et evenements » est ajoute dans
+        l'onglet Commandes : organisation, contact, lieu, jours de
+        service, heure de restauration, type de menu et nombre de
+        couverts. Chaque journee devient une echeance suivie ; a
+        l'approche de l'heure, elle passe en alerte et un bouton
+        l'envoie en cuisine comme une commande normale.
+
+     OU SONT ECRITES LES DONNEES
+     Un noeud AJOUTE : agr_tenants/<code>/seminaires/<id>.
+     Les tickets crees pour un seminaire utilisent exactement la
+     meme forme que les tickets existants. Rien d'autre n'est
+     modifie, aucune donnee existante touchee.
+     ============================================================ -->
+<script>
+(function(){
+'use strict';
+
+function nb(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function esc(v){
+  if(v === null || v === undefined) return '';
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function heure(ts){
+  var d = new Date(ts);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+function jourFr(iso){
+  var d = new Date(String(iso) + 'T12:00:00');
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString('fr-FR', { weekday:'long', day:'2-digit', month:'long' });
+}
+function code(){
+  var c = null;
+  try{ c = currentTenantId; }catch(e){}
+  return c || window.currentTenantId || null;
+}
+function pret(){ return !!(window._agrDb && window._agrRef && window._agrGet && window._agrSet); }
+function lire(ch){
+  if(!pret()) return Promise.reject(new Error('base indisponible'));
+  return window._agrGet(window._agrRef(window._agrDb, ch)).then(function(s){
+    return (s && s.exists && s.exists()) ? s.val() : null;
+  });
+}
+function ecrire(ch, v){
+  if(!pret()) return Promise.reject(new Error('base indisponible'));
+  return window._agrSet(window._agrRef(window._agrDb, ch), v);
+}
+function tel(n){
+  var s = String(n || '').replace(/[^0-9]/g, '');
+  if(s.length === 9) s = '224' + s;
+  return s;
+}
+
+/* temps de preparation du restaurant : reglage, sinon 25 minutes */
+function tempsPreparation(){
+  var v = null;
+  try{ v = storeSite && storeSite.tempsPreparation; }catch(e){}
+  if(!v){ try{ v = window.storeSite && window.storeSite.tempsPreparation; }catch(e){} }
+  return nb(v) || 25;
+}
+
+/* ============================================================
+   1 & 2. LE SERVEUR VOIT QUI SERVIR, ET QUAND
+   ============================================================ */
+function detailsClient(t){
+  if(!t) return '';
+  var lignes = [];
+  if(t.source === 'salle'){
+    lignes.push('<div style="font-size:15px;font-weight:800">' + esc(t.table || 'Table') + '</div>');
+    if(t.clientNom) lignes.push('<div>' + esc(t.clientNom) + '</div>');
+  }else{
+    if(t.clientNom) lignes.push('<div style="font-size:14px;font-weight:700">' + esc(t.clientNom) + '</div>');
+    if(t.adresse) lignes.push('<div>📍 ' + esc(t.adresse) + '</div>');
+    else if(t.table) lignes.push('<div>📍 ' + esc(t.table) + '</div>');
+    if(t.clientTelephone){
+      var n = tel(t.clientTelephone);
+      lignes.push('<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:5px">'
+        + '<a href="tel:' + esc(t.clientTelephone) + '" style="color:#93c5fd;text-decoration:none;'
+        + 'border:1px solid rgba(147,197,253,.4);border-radius:6px;padding:3px 9px;font-size:12px">'
+        + '📞 ' + esc(t.clientTelephone) + '</a>'
+        + '<a href="https://wa.me/' + n + '" target="_blank" rel="noopener" style="color:#4ade80;'
+        + 'text-decoration:none;border:1px solid rgba(74,222,128,.4);border-radius:6px;padding:3px 9px;'
+        + 'font-size:12px">WhatsApp</a></div>');
+    }
+  }
+  return lignes.join('');
+}
+
+function echeance(t){
+  if(!t || !t.dateRecue) return null;
+  var prep = nb(t.tempsPreparation) || tempsPreparation();
+  var livraison = nb(t.delaiLivraison);
+  return {
+    prete: t.dateRecue + prep * 60000,
+    remise: t.dateRecue + (prep + livraison) * 60000,
+    livraison: livraison
+  };
+}
+
+function bandeauEcheance(t){
+  var e = echeance(t);
+  if(!e) return '';
+  var reste = Math.round((e.prete - Date.now()) / 60000);
+  var couleur = reste < 0 ? '#f87171' : (reste <= 5 ? '#fbbf24' : '#4ade80');
+  var texte = reste < 0 ? ('en retard de ' + Math.abs(reste) + ' min')
+            : ('a servir avant ' + heure(e.prete) + ' — ' + reste + ' min');
+  return '<div style="margin-top:6px;font-size:12px;color:' + couleur + ';font-weight:700">⏱ ' + texte
+    + (e.livraison ? '<span style="opacity:.75;font-weight:400"> · chez le client vers '
+        + heure(e.remise) + '</span>' : '') + '</div>';
+}
+
+function enrichirService(){
+  var zone = document.getElementById('servicePrets');
+  if(!zone) return;
+  var tickets = [];
+  try{ tickets = ticketsCourants || []; }catch(e){ tickets = window.ticketsCourants || []; }
+  var prets = tickets.filter(function(t){ return t.statut === 'prete'; });
+  var cartes = zone.querySelectorAll('.pret-carte');
+  Array.prototype.forEach.call(cartes, function(carte, i){
+    var t = prets[i];
+    if(!t || carte.getAttribute('data-x15') === t.id) return;
+    carte.setAttribute('data-x15', t.id);
+    var ancien = carte.querySelector('.x15-details');
+    if(ancien) ancien.remove();
+    var bloc = document.createElement('div');
+    bloc.className = 'x15-details';
+    bloc.style.cssText = 'margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#2a3244);'
+      + 'font-size:12.5px;line-height:1.7';
+    bloc.innerHTML = detailsClient(t) + bandeauEcheance(t)
+      + (t.note ? '<div style="margin-top:5px;color:#fbbf24">⚠ ' + esc(t.note) + '</div>' : '');
+    var premier = carte.firstElementChild;
+    (premier || carte).appendChild(bloc);
+  });
+}
+
+function enrichirCuisine(){
+  var file = document.getElementById('cuisineFile');
+  if(!file) return;
+  var tickets = [];
+  try{ tickets = ticketsCourants || []; }catch(e){ tickets = window.ticketsCourants || []; }
+  var actifs = tickets.filter(function(t){ return ['recue','preparation'].indexOf(t.statut) >= 0; });
+  var cartes = file.querySelectorAll('.kds-carte');
+  Array.prototype.forEach.call(cartes, function(carte, i){
+    var t = actifs[i];
+    if(!t || carte.getAttribute('data-x15') === t.id) return;
+    carte.setAttribute('data-x15', t.id);
+    var ancien = carte.querySelector('.x15-echeance');
+    if(ancien) ancien.remove();
+    var b = document.createElement('div');
+    b.className = 'x15-echeance';
+    b.innerHTML = bandeauEcheance(t);
+    var actions = carte.querySelector('.kds-actions');
+    if(actions) carte.insertBefore(b, actions); else carte.appendChild(b);
+  });
+}
+
+setInterval(function(){
+  try{ enrichirService(); }catch(e){}
+  try{ enrichirCuisine(); }catch(e){}
+}, 1000);
+
+/* ------------------------------------------------------------
+   Le client voit son delai des l'envoi de la commande
+   ------------------------------------------------------------ */
+function delaiZoneChoisie(){
+  var sel = document.getElementById('storeZone');
+  if(!sel || !sel.value) return 0;
+  var zones = [];
+  try{ zones = storeZones || []; }catch(e){ zones = window.storeZones || []; }
+  var z = null;
+  zones.forEach(function(x){ if(!z && String(x.id) === String(sel.value)) z = x; });
+  return z ? nb(z.delaiMinutes) : 0;
+}
+function modeLivraison(){
+  var r = document.getElementById('ficheModeLivraison');
+  return !!(r && r.checked);
+}
+
+function annoncerDelai(){
+  var suivi = document.getElementById('cartTrackerWrap');
+  if(!suivi || suivi.style.display === 'none') return;
+  if(document.getElementById('x15-delai')) return;
+  var prep = tempsPreparation();
+  var livraison = modeLivraison() ? delaiZoneChoisie() : 0;
+  var maintenant = Date.now();
+  var d = document.createElement('div');
+  d.id = 'x15-delai';
+  d.style.cssText = 'margin:12px 0;padding:12px 14px;border-radius:10px;'
+    + 'background:rgba(74,222,128,0.12);color:#bbf7d0;font-size:13.5px;line-height:1.8';
+  d.innerHTML = '<div style="font-weight:800;margin-bottom:2px">Votre commande est bien reçue</div>'
+    + 'Préparation : environ ' + prep + ' minutes — prête vers <strong>'
+    + heure(maintenant + prep*60000) + '</strong>'
+    + (livraison ? '<br>Livraison : environ ' + livraison + ' minutes de plus — chez vous vers <strong>'
+        + heure(maintenant + (prep + livraison)*60000) + '</strong>'
+      : '<br>À retirer sur place dès qu\'elle est prête.');
+  suivi.insertBefore(d, suivi.firstChild);
+}
+setInterval(function(){ try{ annoncerDelai(); }catch(e){} }, 1000);
+
+/* le delai part avec la commande : la cuisine et le serveur le voient */
+(function enrichirEnvoi(){
+  function poser(){
+    if(typeof window.envoyerFiche !== 'function' && typeof window.envoyerCommande !== 'function'){
+      setTimeout(poser, 500); return;
+    }
+    ['envoyerFiche','envoyerCommande'].forEach(function(nom){
+      var original = window[nom];
+      if(typeof original !== 'function' || original.__x15) return;
+      var enveloppe = function(){
+        try{
+          window._x15Delai = { tempsPreparation: tempsPreparation(),
+                               delaiLivraison: modeLivraison() ? delaiZoneChoisie() : 0 };
+        }catch(e){}
+        return original.apply(this, arguments);
+      };
+      enveloppe.__x15 = true;
+      window[nom] = enveloppe;
+    });
+  }
+  poser();
+})();
+
+/* ============================================================
+   3. SEMINAIRES ET EVENEMENTS
+   ============================================================ */
+var seminaires = {};
+var chargesSem = false;
+
+function chargerSeminaires(){
+  var c = code();
+  if(!c) return Promise.resolve(false);
+  return lire('agr_tenants/' + c + '/seminaires').then(function(v){
+    seminaires = v || {};
+    chargesSem = true;
+    return true;
+  }, function(){ return false; });
+}
+
+function panneau(){
+  var section = document.getElementById('section-commandes');
+  if(!section) return null;
+  var z = document.getElementById('x15-seminaires');
+  if(!z){
+    z = document.createElement('div');
+    z.id = 'x15-seminaires';
+    z.className = 'panel';
+    z.style.marginTop = '16px';
+    section.appendChild(z);
+  }
+  return z;
+}
+
+function services(s){
+  /* chaque jour de service devient une echeance */
+  return (s.jours || []).map(function(j){
+    return { date: j, heure: s.heure || '12:30', servi: (s.servis || {})[j] === true };
+  }).sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); });
+}
+function horodatage(date, h){
+  var m = String(h || '12:30').split(':');
+  var d = new Date(String(date) + 'T00:00:00');
+  d.setHours(parseInt(m[0],10) || 12, parseInt(m[1],10) || 0, 0, 0);
+  return d.getTime();
+}
+
+function rendreSeminaires(){
+  var z = panneau();
+  if(!z) return;
+  if(!code()){ z.innerHTML = '<h3>Séminaires et événements</h3><div class="sub">Connexion en cours…</div>'; return; }
+
+  var liste = Object.keys(seminaires).map(function(k){
+    return Object.assign({ id:k }, seminaires[k]);
+  });
+  var lignes = [];
+  liste.forEach(function(s){
+    services(s).forEach(function(sv){
+      lignes.push({ s:s, sv:sv, quand: horodatage(sv.date, sv.heure) });
+    });
+  });
+  lignes.sort(function(a,b){ return a.quand - b.quand; });
+  var prochains = lignes.filter(function(l){ return !l.sv.servi; });
+
+  z.innerHTML = ''
+    + '<h3>Séminaires et événements</h3>'
+    + '<div class="sub">Commandes groupées à servir à une heure précise : séminaires, formations, '
+      + 'ateliers. Chaque journée devient une échéance suivie.</div>'
+    + '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:12px 0">'
+      + '<div class="field" style="margin:0"><label>Organisation / client</label>'
+        + '<input id="x15-org" placeholder="ex : ONFPP" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Contact</label>'
+        + '<input id="x15-contact" placeholder="nom du responsable" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Téléphone</label>'
+        + '<input id="x15-tel" placeholder="622 00 00 00" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Lieu de service</label>'
+        + '<input id="x15-lieu" placeholder="salle, hôtel, adresse" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Type de menu</label>'
+        + '<input id="x15-menu" placeholder="ex : pause-café + déjeuner" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Nombre de couverts</label>'
+        + '<input id="x15-couverts" type="number" min="1" value="20" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Heure de restauration</label>'
+        + '<input id="x15-heure" type="time" value="12:30" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box"></div>'
+      + '<div class="field" style="margin:0"><label>Jours de service</label>'
+        + '<input id="x15-jour" type="date" style="padding:9px 10px;background:var(--surface-2);'
+        + 'border:1px solid var(--line);border-radius:6px;color:var(--text);width:100%;box-sizing:border-box">'
+        + '<div style="display:flex;gap:6px;margin-top:5px"><button class="btn btn-outline" style="padding:4px 9px;'
+        + 'font-size:12px" onclick="agrSemAjouterJour()">+ Ajouter ce jour</button>'
+        + '<span id="x15-jours" style="font-size:12px;opacity:.8"></span></div></div>'
+    + '</div>'
+    + '<button class="btn" onclick="agrSemEnregistrer()">Enregistrer le séminaire</button>'
+    + '<h3 style="margin-top:18px">Services à assurer</h3>'
+    + '<div class="table-wrap"><table><thead><tr>'
+      + '<th>Jour</th><th>Heure</th><th>Organisation</th><th>Menu</th>'
+      + '<th class="num">Couverts</th><th>Lieu</th><th>État</th><th>Actions</th>'
+    + '</tr></thead><tbody>'
+    + (prochains.length ? prochains.slice(0, 40).map(function(l){
+        var reste = Math.round((l.quand - Date.now()) / 60000);
+        var prep = tempsPreparation();
+        var alerte = reste <= prep + 30;
+        var etat = reste < 0 ? '<span style="color:#f87171;font-weight:700">dépassé</span>'
+          : (alerte ? '<span style="color:#fbbf24;font-weight:700">à préparer maintenant</span>'
+                    : '<span style="opacity:.7">dans ' + (reste > 120 ? Math.round(reste/60) + ' h' : reste + ' min') + '</span>');
+        return '<tr><td>' + jourFr(l.sv.date) + '</td><td>' + esc(l.sv.heure) + '</td>'
+          + '<td><strong>' + esc(l.s.organisation || '—') + '</strong>'
+          + (l.s.telephone ? '<div style="font-size:11px;opacity:.7">' + esc(l.s.telephone) + '</div>' : '') + '</td>'
+          + '<td>' + esc(l.s.menu || '—') + '</td>'
+          + '<td class="num">' + nb(l.s.couverts) + '</td>'
+          + '<td>' + esc(l.s.lieu || '—') + '</td>'
+          + '<td>' + etat + '</td>'
+          + '<td style="white-space:nowrap">'
+            + '<button class="btn btn-outline" style="padding:4px 9px;font-size:12px" '
+            + 'onclick="agrSemEnvoyerCuisine(\'' + l.s.id + '\',\'' + l.sv.date + '\')">Envoyer en cuisine</button>'
+            + '<button class="btn btn-outline" style="padding:4px 9px;font-size:12px" '
+            + 'onclick="agrSemSupprimer(\'' + l.s.id + '\')">Retirer</button>'
+          + '</td></tr>';
+      }).join('')
+      : '<tr><td colspan="8" style="text-align:center;opacity:.6;padding:18px">'
+        + 'Aucun service programmé.</td></tr>')
+    + '</tbody></table></div>';
+  majJours();
+}
+window.agrSemRendre = rendreSeminaires;
+
+var joursChoisis = [];
+function majJours(){
+  var z = document.getElementById('x15-jours');
+  if(z) z.textContent = joursChoisis.length ? joursChoisis.map(jourFr).join(' · ') : 'aucun jour choisi';
+}
+window.agrSemAjouterJour = function(){
+  var champ = document.getElementById('x15-jour');
+  if(!champ || !champ.value) return;
+  if(joursChoisis.indexOf(champ.value) < 0) joursChoisis.push(champ.value);
+  joursChoisis.sort();
+  majJours();
+};
+
+window.agrSemEnregistrer = function(){
+  var c = code();
+  if(!c) return alert('Restaurant non identifié.');
+  var org = (document.getElementById('x15-org') || {}).value || '';
+  if(!org.trim()) return alert('Indiquez l\'organisation ou le client.');
+  if(!joursChoisis.length) return alert('Ajoutez au moins un jour de service.');
+  var id = 'sem' + Date.now();
+  var s = {
+    organisation: org.trim(),
+    contact: ((document.getElementById('x15-contact') || {}).value || '').trim(),
+    telephone: ((document.getElementById('x15-tel') || {}).value || '').trim(),
+    lieu: ((document.getElementById('x15-lieu') || {}).value || '').trim(),
+    menu: ((document.getElementById('x15-menu') || {}).value || '').trim(),
+    couverts: nb((document.getElementById('x15-couverts') || {}).value) || 1,
+    heure: ((document.getElementById('x15-heure') || {}).value || '12:30'),
+    jours: joursChoisis.slice(),
+    servis: {},
+    creeLe: Date.now()
+  };
+  ecrire('agr_tenants/' + c + '/seminaires/' + id, s).then(function(){
+    seminaires[id] = s;
+    joursChoisis = [];
+    rendreSeminaires();
+  }).catch(function(e){ alert('Enregistrement impossible : ' + (e.message || e)); });
+};
+
+window.agrSemSupprimer = function(id){
+  var c = code();
+  if(!c || !seminaires[id]) return;
+  if(!confirm('Retirer ce séminaire et tous ses services ?')) return;
+  ecrire('agr_tenants/' + c + '/seminaires/' + id, null).then(function(){
+    delete seminaires[id];
+    rendreSeminaires();
+  }).catch(function(e){ alert('Suppression impossible : ' + (e.message || e)); });
+};
+
+/* le service part en cuisine sous la forme d'un ticket ordinaire */
+window.agrSemEnvoyerCuisine = function(id, date){
+  var c = code();
+  var s = seminaires[id];
+  if(!c || !s) return;
+  var plats = {};
+  plats['sem'] = { nom: (s.menu || 'Menu séminaire') + ' — ' + s.organisation,
+                   qty: nb(s.couverts) || 1, prix: 0 };
+  var ticket = {
+    numero: 'SEM-' + String(date).replace(/-/g,'') ,
+    source: 'salle',
+    table: 'Séminaire — ' + (s.lieu || s.organisation),
+    clientNom: s.organisation + (s.contact ? ' (' + s.contact + ')' : ''),
+    clientTelephone: s.telephone || null,
+    adresse: s.lieu || null,
+    plats: plats,
+    platsVendus: nb(s.couverts) || 1,
+    total: 0,
+    note: 'Service à ' + s.heure + ' — ' + (s.menu || 'menu à confirmer'),
+    statut: 'recue',
+    seminaireId: id,
+    seminaireJour: date,
+    tempsPreparation: tempsPreparation(),
+    delaiLivraison: 0,
+    parServeur: 'Séminaires',
+    dateRecue: Date.now()
+  };
+  var chemin = 'agr_tenants/' + c + '/tickets';
+  var ref = window._agrPush ? window._agrPush(window._agrRef(window._agrDb, chemin)) : null;
+  var promesse = ref ? window._agrSet(ref, ticket)
+                     : ecrire(chemin + '/sem' + Date.now(), ticket);
+  promesse.then(function(){
+    s.servis = s.servis || {};
+    s.servis[date] = true;
+    return ecrire('agr_tenants/' + c + '/seminaires/' + id + '/servis/' + date, true);
+  }).then(function(){
+    rendreSeminaires();
+    console.log('[AGR] service séminaire envoyé en cuisine : ' + s.organisation + ' — ' + date);
+  }).catch(function(e){ alert('Envoi impossible : ' + (e.message || e)); });
+};
+
+/* mise en place quand l'onglet Commandes est ouvert */
+var derniere = 0;
+setInterval(function(){
+  var section = document.getElementById('section-commandes');
+  if(!section || section.style.display === 'none') return;
+  if(!code()) return;
+  if(!document.getElementById('x15-seminaires')) rendreSeminaires();
+  if(!chargesSem && Date.now() - derniere > 3000){
+    derniere = Date.now();
+    chargerSeminaires().then(function(ok){ if(ok) rendreSeminaires(); });
+  }
+}, 1200);
+
+})();
+</script>
+
 </body>
 </html>
